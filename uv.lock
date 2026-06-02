@@ -1,0 +1,29 @@
+version = 1
+revision = 3
+requires-python = "==3.13.*"
+
+[[package]]
+name = "bluetooth-auth"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "dbus-fast" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "dbus-fast", specifier = ">=4.0.4,<6" }]
+
+[[package]]
+name = "dbus-fast"
+version = "5.0.17"
+source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple" }
+sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/c3/a3/7dec17915085ee776c14a211c1defc58c8f0e51ea235bc8e750f1744ceca/dbus_fast-5.0.17.tar.gz", hash = "sha256:c8dbe4c30adeee61d2c84005a1ad1bccfd2961fee7d995e876db5117f502a20f", size = 83213, upload-time = "2026-06-02T04:23:48.699Z" }
+wheels = [
+    { url = "https://pypi.tuna.tsinghua.edu.cn/packages/62/cb/dcff763a7290ddc777989e5b9f50503275a3116ba29d7f807cde44fcab5d/dbus_fast-5.0.17-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:efff07c56458fefeb025f6071cb3368e9f5ed92f2ebc3d6936c35c0934d2c7e2", size = 686269, upload-time = "2026-06-02T04:40:51.427Z" },
+    { url = "https://pypi.tuna.tsinghua.edu.cn/packages/4c/9b/0393b13c984f4aa71d0b89d876d0b32022dd34affb0231796871f397acce/dbus_fast-5.0.17-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:f587d2a9edf356eebcfc70e8e947822a84bafbb22c809cd4dc2393e309e032f4", size = 799119, upload-time = "2026-06-02T04:40:53.072Z" },
+    { url = "https://pypi.tuna.tsinghua.edu.cn/packages/84/d0/70685abf074c1776b3633b669462a52fd7883f4391934ea32ce0cd3877c4/dbus_fast-5.0.17-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:cd40dbaf55bff29ecba400db47ac9e5e626247dc3c3e8755836fd7beee610d8f", size = 851034, upload-time = "2026-06-02T04:40:54.994Z" },
+    { url = "https://pypi.tuna.tsinghua.edu.cn/packages/30/fa/51ea45d2beed7b4c0443f945e110f876be105e99fcfceeb618865186e46a/dbus_fast-5.0.17-cp313-cp313-manylinux_2_31_riscv64.manylinux_2_39_riscv64.whl", hash = "sha256:3a773ef28aba076a1b14cd1fb86163b97f4fe4632269f69cea922558537ce3eb", size = 829154, upload-time = "2026-06-02T04:40:56.649Z" },
+    { url = "https://pypi.tuna.tsinghua.edu.cn/packages/0a/45/16293d65e76adc1043142d9337d1f30ba0c322979afd3f0efe4962f750b4/dbus_fast-5.0.17-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:b5b33b2b161947a22cd75976900653d1fbc5e7c687fb8fc76fcc06180841415c", size = 806936, upload-time = "2026-06-02T04:40:58.937Z" },
+    { url = "https://pypi.tuna.tsinghua.edu.cn/packages/2a/8a/a295004470d38187f98e1d72d7ec0a50317fb88a0e16a964e8dd74191a33/dbus_fast-5.0.17-cp313-cp313-musllinux_1_2_riscv64.whl", hash = "sha256:d5fc9a082f208d985bae49cabe06e16744d75dff1e06809e1400d1323ffa2278", size = 829017, upload-time = "2026-06-02T04:41:00.816Z" },
+    { url = "https://pypi.tuna.tsinghua.edu.cn/packages/a5/36/a6f0e2f4b5c48e91aedeac7226525922210154a2c441bdff36977891cb64/dbus_fast-5.0.17-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:72203bf27829cc3564efdaf2dce47f815716f9c98bf08d8e3b11da63004a7dac", size = 858673, upload-time = "2026-06-02T04:41:02.723Z" },
+]
