@@ -3,7 +3,7 @@ name = "bluetooth-auth"
 version = "0.1.0"
 description = "Small BlueZ D-Bus helpers for Bluetooth auth workflows"
 readme = "README.md"
-requires-python = ">=3.13,<3.14"
+requires-python = ">=3.14,<3.15"
 dependencies = [
     "dbus-fast>=4.0.4,<6",
 ]
