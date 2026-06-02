@@ -1,7 +1,7 @@
 # bluetooth-auth
 
 [![CI](https://github.com/sshawn9/bluetooth-auth/actions/workflows/ci.yml/badge.svg)](https://github.com/sshawn9/bluetooth-auth/actions/workflows/ci.yml)
-[![Renovate](https://img.shields.io/badge/renovate-enabled-brightgreen.svg)](./renovate.json)
+[![Renovate](https://img.shields.io/badge/renovate-enabled-brightgreen.svg)](https://github.com/sshawn9/bluetooth-auth/issues/2)
 [![English](https://img.shields.io/badge/lang-English-blue)](./README.md)
 [![简体中文](https://img.shields.io/badge/lang-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-red)](./README.zh-CN.md)
 
