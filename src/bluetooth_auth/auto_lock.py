@@ -12,7 +12,7 @@ from .bluetooth_device import BluetoothDevice
 from .session import Session
 
 
-async def main() -> int:
+async def async_main() -> int:
     try:
         config_path = (
             Path(sys.argv[1].strip())
@@ -43,8 +43,24 @@ async def main() -> int:
             or exception_grace_seconds <= 0
         ):
             raise ValueError
-    except (OSError, ValueError, KeyError, TypeError):
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        print(
+            "bluetooth-auth-auto-lock: failed to load config or address file: "
+            f"{type(error).__name__}: {error}",
+            file=sys.stderr,
+            flush=True,
+        )
         return 2
+
+    print(
+        "bluetooth-auth-auto-lock: starting "
+        f"config={config_path} "
+        f"user={user} "
+        f"check_interval_seconds={check_interval_seconds} "
+        f"sleep_after_lock_seconds={sleep_after_lock_seconds} "
+        f"exception_grace_seconds={exception_grace_seconds}",
+        flush=True,
+    )
 
     async def async_sleep(interval: int) -> bool:
         try:
@@ -59,53 +75,140 @@ async def main() -> int:
     while True:
         try:
             if not device.is_initialized():
+                print(
+                    "bluetooth-auth-auto-lock: initializing BlueZ D-Bus proxy",
+                    flush=True,
+                )
                 await device.initialize()
+                print(
+                    "bluetooth-auth-auto-lock: BlueZ D-Bus proxy initialized",
+                    flush=True,
+                )
             connected = await device.is_connected()
-        except (DBusError, InterfaceNotFoundError, OSError):
+        except (DBusError, InterfaceNotFoundError, OSError) as error:
             device.close()
+            print(
+                "bluetooth-auth-auto-lock: BlueZ or D-Bus error; "
+                f"retrying in {exception_grace_seconds}s: "
+                f"{type(error).__name__}: {error}",
+                file=sys.stderr,
+                flush=True,
+            )
             if not await async_sleep(exception_grace_seconds):
+                print(
+                    "bluetooth-auth-auto-lock: interrupted during retry sleep",
+                    flush=True,
+                )
                 return 130
             continue
         except (asyncio.CancelledError, KeyboardInterrupt):
             device.close()
+            print("bluetooth-auth-auto-lock: interrupted", flush=True)
             return 130
-        except Exception:
+        except Exception as error:
             device.close()
+            print(
+                "bluetooth-auth-auto-lock: unexpected BlueZ check error: "
+                f"{type(error).__name__}: {error}",
+                file=sys.stderr,
+                flush=True,
+            )
             return 2
 
         try:
             is_locked = session.is_locked()
         except KeyboardInterrupt:
             device.close()
+            print("bluetooth-auth-auto-lock: interrupted", flush=True)
             return 130
-        except Exception:
+        except Exception as error:
             device.close()
+            print(
+                "bluetooth-auth-auto-lock: failed to read session lock state: "
+                f"{type(error).__name__}: {error}",
+                file=sys.stderr,
+                flush=True,
+            )
             return 2
 
-        if connected or is_locked:
+        if connected:
             if not await async_sleep(check_interval_seconds):
                 device.close()
+                print(
+                    "bluetooth-auth-auto-lock: interrupted during normal sleep",
+                    flush=True,
+                )
+                return 130
+            continue
+
+        if is_locked:
+            if not await async_sleep(check_interval_seconds):
+                device.close()
+                print(
+                    "bluetooth-auth-auto-lock: interrupted during normal sleep",
+                    flush=True,
+                )
                 return 130
             continue
 
         try:
+            print(
+                "bluetooth-auth-auto-lock: device is disconnected and session is unlocked; "
+                "starting noctalia-lock.service",
+                flush=True,
+            )
             subprocess.run(
                 ("systemctl", "start", "noctalia-lock.service"),
                 check=True,
             )
+            print(
+                "bluetooth-auth-auto-lock: noctalia-lock.service start completed; "
+                f"sleeping {sleep_after_lock_seconds}s",
+                flush=True,
+            )
             if not await async_sleep(sleep_after_lock_seconds):
                 device.close()
+                print(
+                    "bluetooth-auth-auto-lock: interrupted after starting lock service",
+                    flush=True,
+                )
                 return 130
-        except subprocess.CalledProcessError:
+        except subprocess.CalledProcessError as error:
             device.close()
+            print(
+                "bluetooth-auth-auto-lock: noctalia-lock.service failed: "
+                f"returncode={error.returncode}",
+                file=sys.stderr,
+                flush=True,
+            )
             return 1
+        except OSError as error:
+            device.close()
+            print(
+                "bluetooth-auth-auto-lock: failed to execute systemctl: "
+                f"{type(error).__name__}: {error}",
+                file=sys.stderr,
+                flush=True,
+            )
+            return 2
         except KeyboardInterrupt:
             device.close()
+            print("bluetooth-auth-auto-lock: interrupted", flush=True)
             return 130
-        except Exception:
+        except Exception as error:
             device.close()
+            print(
+                "bluetooth-auth-auto-lock: unexpected lock command error: "
+                f"{type(error).__name__}: {error}",
+                file=sys.stderr,
+                flush=True,
+            )
             return 2
 
 
+def main() -> int:
+    return asyncio.run(async_main())
+
+
 if __name__ == "__main__":
-    raise SystemExit(asyncio.run(main()))
+    raise SystemExit(main())
