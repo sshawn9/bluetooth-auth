@@ -88,18 +88,41 @@ Import the NixOS module and configure the trusted user and device address:
       {
         my.security.bluetoothAuth = {
           enable = true;
-          user = "alice";
-          bluetoothAddress = "AA:BB:CC:DD:EE:FF";
+          config = {
+            user = "alice";
+            bluetoothAddressFile = "/run/secrets/auth_bluetooth_address";
+            autoConnect.checkIntervalSeconds = 30;
+            autoConnect.deviceUnvailableGraceSeconds = 300;
+            autoConnect.exceptionGraceSeconds = 300;
+            autoLock.checkIntervalSeconds = 40;
+            autoLock.sleepAfterLockSeconds = 3;
+            autoLock.exceptionGraceSeconds = 300;
+            sudoAuth.timeoutSeconds = 2;
+          };
 
           autoConnect.enable = true;
-          autoLock = {
-            enable = true;
-            checkIntervalSeconds = 30;
-          };
+          autoLock.enable = true;
           sudoAuth.enable = true;
         };
       }
     ];
+  };
+}
+```
+
+If you manage the device address with a runtime secret manager such as
+`sops-nix`, point `config.bluetoothAddressFile` at the generated secret path:
+
+```nix
+{
+  sops.secrets.auth_bluetooth_address = { };
+
+  my.security.bluetoothAuth = {
+    enable = true;
+    config = {
+      user = "alice";
+      bluetoothAddressFile = config.sops.secrets.auth_bluetooth_address.path;
+    };
   };
 }
 ```
@@ -111,14 +134,15 @@ by default:
 - `autoLock.enable`
 - `sudoAuth.enable`
 
-Set `my.security.bluetoothAuth.user` whenever `autoLock` or `sudoAuth` is
-enabled. If you only want automatic reconnects, disable the other integrations:
+Set `my.security.bluetoothAuth.config.user` whenever `autoLock` or
+`sudoAuth` is enabled. If you only want automatic reconnects, disable the other
+integrations:
 
 ```nix
 {
   my.security.bluetoothAuth = {
     enable = true;
-    bluetoothAddress = "AA:BB:CC:DD:EE:FF";
+    config.bluetoothAddressFile = "/run/secrets/auth_bluetooth_address";
     autoLock.enable = false;
     sudoAuth.enable = false;
   };
@@ -131,11 +155,18 @@ enabled. If you only want automatic reconnects, disable the other integrations:
 | --- | --- | --- |
 | `my.security.bluetoothAuth.enable` | `false` | Enables the Bluetooth authentication services. |
 | `my.security.bluetoothAuth.package` | flake package | Package that provides the command-line tools. |
-| `my.security.bluetoothAuth.user` | `null` | User trusted by sudo auth and targeted by auto-lock. |
-| `my.security.bluetoothAuth.bluetoothAddress` | `""` | Bluetooth device address to monitor through BlueZ. |
+| `my.security.bluetoothAuth.config` | `{}` | Attribute set converted to the generated JSON config passed to the commands. |
+| `my.security.bluetoothAuth.config.user` | `""` | User trusted by sudo auth and targeted by auto-lock. |
+| `my.security.bluetoothAuth.config.bluetoothAddressFile` | `""` | Runtime file containing the Bluetooth device address. |
+| `my.security.bluetoothAuth.config.autoConnect.checkIntervalSeconds` | `30` | Polling interval when the device is already connected. Values below 5 seconds are treated as 5 seconds by the CLI. |
+| `my.security.bluetoothAuth.config.autoConnect.deviceUnvailableGraceSeconds` | `300` | Delay when the adapter is powered off or the device is not paired/trusted. Values below 10 seconds are treated as 10 seconds by the CLI. |
+| `my.security.bluetoothAuth.config.autoConnect.exceptionGraceSeconds` | `300` | Delay after a BlueZ or D-Bus error before retrying. Values below 10 seconds are treated as 10 seconds by the CLI. |
+| `my.security.bluetoothAuth.config.autoLock.checkIntervalSeconds` | `40` | Polling interval for connection and lock checks. Values below 5 seconds are treated as 5 seconds by the CLI. |
+| `my.security.bluetoothAuth.config.autoLock.sleepAfterLockSeconds` | `3` | Delay after successfully starting the lock service. Values below 0 seconds are treated as 0 seconds by the CLI. |
+| `my.security.bluetoothAuth.config.autoLock.exceptionGraceSeconds` | `300` | Delay after a BlueZ or D-Bus error before retrying. Values below 10 seconds are treated as 10 seconds by the CLI. |
+| `my.security.bluetoothAuth.config.sudoAuth.timeoutSeconds` | `2` | Timeout for the sudo PAM Bluetooth check. Values above 5 seconds are treated as 5 seconds by the CLI. |
 | `my.security.bluetoothAuth.autoConnect.enable` | `true` | Keeps the trusted device connected. |
 | `my.security.bluetoothAuth.autoLock.enable` | `true` | Locks the session when the device disconnects. |
-| `my.security.bluetoothAuth.autoLock.checkIntervalSeconds` | `30` | Polling interval for connection and lock checks. Values below 30 seconds are treated as 30 seconds by the CLI. |
 | `my.security.bluetoothAuth.sudoAuth.enable` | `true` | Allows the trusted user to pass `sudo` auth when the device is connected. |
 
 ## Services
@@ -162,27 +193,58 @@ systemctl --user status noctalia-lock.service
 
 The package exposes three commands:
 
-```console
-bluetooth-auth-auto-connect AA:BB:CC:DD:EE:FF
+Each command accepts an optional path to a JSON config file. When no path is
+provided, it reads the package's built-in `config.json`.
+
+```json
+{
+  "user": "alice",
+  "bluetoothAddressFile": "/run/secrets/auth_bluetooth_address",
+  "autoConnect": {
+    "checkIntervalSeconds": 30,
+    "deviceUnvailableGraceSeconds": 300,
+    "exceptionGraceSeconds": 300
+  },
+  "autoLock": {
+    "checkIntervalSeconds": 40,
+    "sleepAfterLockSeconds": 3,
+    "exceptionGraceSeconds": 300
+  },
+  "sudoAuth": {
+    "timeoutSeconds": 2
+  }
+}
 ```
 
-Keeps a paired and trusted BlueZ device connected. The command exits only when
-interrupted.
-
 ```console
-bluetooth-auth-auto-lock alice AA:BB:CC:DD:EE:FF 30
+bluetooth-auth-auto-connect /path/to/config.json
 ```
 
-Polls the device connection state and starts `noctalia-lock.service` when the
-device is disconnected and the user's active local Wayland session is unlocked.
+Keeps the configured paired and trusted BlueZ device connected. The command
+exits only when interrupted. `autoConnect.checkIntervalSeconds` controls the
+normal connected-device polling interval, `deviceUnvailableGraceSeconds`
+controls the wait when the adapter or device is unavailable, and
+`exceptionGraceSeconds` controls retries after BlueZ or D-Bus errors.
 
 ```console
-bluetooth-auth-sudo-auth alice AA:BB:CC:DD:EE:FF
+bluetooth-auth-auto-lock /path/to/config.json
 ```
 
-Checks whether the current PAM request belongs to `alice` and whether the
-device is connected. Exit status `0` means the check succeeded. Exit status `1`
-means authentication should continue to the next PAM rule.
+Polls the configured device connection state and starts
+`noctalia-lock.service` when the device is disconnected and the configured
+user's active local Wayland session is unlocked. `autoLock.checkIntervalSeconds`
+controls normal polling, `sleepAfterLockSeconds` controls the delay after
+starting the lock service, and `exceptionGraceSeconds` controls retries after
+BlueZ or D-Bus errors.
+
+```console
+bluetooth-auth-sudo-auth /path/to/config.json
+```
+
+Checks whether the current PAM request belongs to the configured user and
+whether the configured device is connected. Exit status `0` means the check
+succeeded. Exit status `1` means authentication should continue to the next PAM
+rule. `sudoAuth.timeoutSeconds` controls the Bluetooth check timeout.
 
 ## Build and Development
 
@@ -222,8 +284,16 @@ Important implications:
 - Keep the normal `sudo` password path available.
 - Consider disabling `sudoAuth` if you only want auto-connect and auto-lock.
 - Review the PAM rule before using this on a shared or high-risk machine.
+- Prefer `config.bluetoothAddressFile` for secret-managed device addresses so
+  the address is read at runtime instead of embedded in generated Nix artifacts.
 - A connected Bluetooth device does not prove that the device owner is present
   or attentive.
+
+When using `config.bluetoothAddressFile`, make sure the generated secret file
+is readable by every enabled integration. The systemd services normally run as
+root. The `sudoAuth` PAM helper is invoked through `pam_exec.so seteuid`, so its
+effective user may need permission to read the secret file depending on your
+PAM setup.
 
 ## Troubleshooting
 

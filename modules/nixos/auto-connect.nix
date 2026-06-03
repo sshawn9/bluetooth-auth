@@ -6,6 +6,7 @@
 
 let
   cfg = config.my.security.bluetoothAuth;
+  configFile = builtins.toFile "bluetooth-auth-config.json" (builtins.toJSON cfg.config);
 in
 {
   options.my.security.bluetoothAuth.autoConnect.enable =
@@ -28,7 +29,7 @@ in
         Type = "simple";
         ExecStart = lib.escapeShellArgs [
           "${cfg.package}/bin/bluetooth-auth-auto-connect"
-          cfg.bluetoothAddress
+          configFile
         ];
         Restart = "always";
         RestartSec = "5s";

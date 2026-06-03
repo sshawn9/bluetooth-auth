@@ -6,7 +6,7 @@
 
 let
   cfg = config.my.security.bluetoothAuth;
-  user = if cfg.user == null then "" else cfg.user;
+  configFile = builtins.toFile "bluetooth-auth-config.json" (builtins.toJSON cfg.config);
 in
 {
   options.my.security.bluetoothAuth.sudoAuth.enable =
@@ -16,13 +16,6 @@ in
     };
 
   config = lib.mkIf (cfg.enable && cfg.sudoAuth.enable) {
-    assertions = [
-      {
-        assertion = cfg.user != null;
-        message = "my.security.bluetoothAuth.user must be set for sudoAuth.";
-      }
-    ];
-
     security.pam.services.sudo.rules.auth.bluetooth-auth = {
       order = config.security.pam.services.sudo.rules.auth.unix.order - 100;
       control = "sufficient";
@@ -31,8 +24,7 @@ in
         "seteuid"
         "quiet"
         "${cfg.package}/bin/bluetooth-auth-sudo-auth"
-        user
-        cfg.bluetoothAddress
+        configFile
       ];
     };
   };

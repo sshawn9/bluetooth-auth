@@ -77,18 +77,41 @@ quit
       {
         my.security.bluetoothAuth = {
           enable = true;
-          user = "alice";
-          bluetoothAddress = "AA:BB:CC:DD:EE:FF";
+          config = {
+            user = "alice";
+            bluetoothAddressFile = "/run/secrets/auth_bluetooth_address";
+            autoConnect.checkIntervalSeconds = 30;
+            autoConnect.deviceUnvailableGraceSeconds = 300;
+            autoConnect.exceptionGraceSeconds = 300;
+            autoLock.checkIntervalSeconds = 40;
+            autoLock.sleepAfterLockSeconds = 3;
+            autoLock.exceptionGraceSeconds = 300;
+            sudoAuth.timeoutSeconds = 2;
+          };
 
           autoConnect.enable = true;
-          autoLock = {
-            enable = true;
-            checkIntervalSeconds = 30;
-          };
+          autoLock.enable = true;
           sudoAuth.enable = true;
         };
       }
     ];
+  };
+}
+```
+
+如果你用 `sops-nix` 这类运行时 secret 管理器保存设备地址，请改用
+`config.bluetoothAddressFile` 指向生成的 secret 路径：
+
+```nix
+{
+  sops.secrets.auth_bluetooth_address = { };
+
+  my.security.bluetoothAuth = {
+    enable = true;
+    config = {
+      user = "alice";
+      bluetoothAddressFile = config.sops.secrets.auth_bluetooth_address.path;
+    };
   };
 }
 ```
@@ -99,13 +122,13 @@ quit
 - `autoLock.enable`
 - `sudoAuth.enable`
 
-当启用 `autoLock` 或 `sudoAuth` 时，必须设置 `my.security.bluetoothAuth.user`。如果你只想自动重连设备，可以禁用其他集成：
+当启用 `autoLock` 或 `sudoAuth` 时，必须设置 `my.security.bluetoothAuth.config.user`。如果你只想自动重连设备，可以禁用其他集成：
 
 ```nix
 {
   my.security.bluetoothAuth = {
     enable = true;
-    bluetoothAddress = "AA:BB:CC:DD:EE:FF";
+    config.bluetoothAddressFile = "/run/secrets/auth_bluetooth_address";
     autoLock.enable = false;
     sudoAuth.enable = false;
   };
@@ -118,11 +141,18 @@ quit
 | --- | --- | --- |
 | `my.security.bluetoothAuth.enable` | `false` | 启用蓝牙认证服务。 |
 | `my.security.bluetoothAuth.package` | flake package | 提供命令行工具的包。 |
-| `my.security.bluetoothAuth.user` | `null` | 被 sudo auth 信任、并作为 auto-lock 目标的用户。 |
-| `my.security.bluetoothAuth.bluetoothAddress` | `""` | 要通过 BlueZ 监控的蓝牙设备地址。 |
+| `my.security.bluetoothAuth.config` | `{}` | 会转换成 JSON 配置并传给命令的 attrset。 |
+| `my.security.bluetoothAuth.config.user` | `""` | 被 sudo auth 信任、并作为 auto-lock 目标的用户。 |
+| `my.security.bluetoothAuth.config.bluetoothAddressFile` | `""` | 包含蓝牙设备地址的运行时文件。 |
+| `my.security.bluetoothAuth.config.autoConnect.checkIntervalSeconds` | `30` | 设备已连接时的轮询间隔。CLI 会把低于 5 秒的值视为 5 秒。 |
+| `my.security.bluetoothAuth.config.autoConnect.deviceUnvailableGraceSeconds` | `300` | 适配器关闭或设备未配对/未信任时的等待时间。CLI 会把低于 10 秒的值视为 10 秒。 |
+| `my.security.bluetoothAuth.config.autoConnect.exceptionGraceSeconds` | `300` | BlueZ 或 D-Bus 异常后的重试等待时间。CLI 会把低于 10 秒的值视为 10 秒。 |
+| `my.security.bluetoothAuth.config.autoLock.checkIntervalSeconds` | `40` | 连接状态和锁屏状态检查的轮询间隔。CLI 会把低于 5 秒的值视为 5 秒。 |
+| `my.security.bluetoothAuth.config.autoLock.sleepAfterLockSeconds` | `3` | 成功启动锁屏服务后的等待时间。CLI 会把低于 0 秒的值视为 0 秒。 |
+| `my.security.bluetoothAuth.config.autoLock.exceptionGraceSeconds` | `300` | BlueZ 或 D-Bus 异常后的重试等待时间。CLI 会把低于 10 秒的值视为 10 秒。 |
+| `my.security.bluetoothAuth.config.sudoAuth.timeoutSeconds` | `2` | sudo PAM 蓝牙检查超时时间。CLI 会把高于 5 秒的值视为 5 秒。 |
 | `my.security.bluetoothAuth.autoConnect.enable` | `true` | 保持受信任设备连接。 |
 | `my.security.bluetoothAuth.autoLock.enable` | `true` | 当设备断开连接时锁定会话。 |
-| `my.security.bluetoothAuth.autoLock.checkIntervalSeconds` | `30` | 连接状态和锁屏检查的轮询间隔。CLI 会把低于 30 秒的值视为 30 秒。 |
 | `my.security.bluetoothAuth.sudoAuth.enable` | `true` | 当设备已连接时，允许受信任用户通过 `sudo` 认证。 |
 
 ## 服务
@@ -149,23 +179,46 @@ systemctl --user status noctalia-lock.service
 
 这个包提供三个命令：
 
-```console
-bluetooth-auth-auto-connect AA:BB:CC:DD:EE:FF
+每个命令都接受一个可选的 JSON 配置文件路径。没有传路径时，会读取包内置的
+`config.json`。
+
+```json
+{
+  "user": "alice",
+  "bluetoothAddressFile": "/run/secrets/auth_bluetooth_address",
+  "autoConnect": {
+    "checkIntervalSeconds": 30,
+    "deviceUnvailableGraceSeconds": 300,
+    "exceptionGraceSeconds": 300
+  },
+  "autoLock": {
+    "checkIntervalSeconds": 40,
+    "sleepAfterLockSeconds": 3,
+    "exceptionGraceSeconds": 300
+  },
+  "sudoAuth": {
+    "timeoutSeconds": 2
+  }
+}
 ```
 
-保持一个已配对且受信任的 BlueZ 设备连接。命令会一直运行，直到被中断。
-
 ```console
-bluetooth-auth-auto-lock alice AA:BB:CC:DD:EE:FF 30
+bluetooth-auth-auto-connect /path/to/config.json
 ```
 
-轮询设备连接状态；当设备断开且用户的活跃本地 Wayland 会话未锁定时，启动 `noctalia-lock.service`。
+保持配置中已配对且受信任的 BlueZ 设备连接。命令会一直运行，直到被中断。`autoConnect.checkIntervalSeconds` 控制设备已连接时的普通轮询间隔，`deviceUnvailableGraceSeconds` 控制适配器或设备不可用时的等待时间，`exceptionGraceSeconds` 控制 BlueZ 或 D-Bus 异常后的重试等待时间。
 
 ```console
-bluetooth-auth-sudo-auth alice AA:BB:CC:DD:EE:FF
+bluetooth-auth-auto-lock /path/to/config.json
 ```
 
-检查当前 PAM 请求是否属于 `alice`，以及设备是否已连接。退出状态 `0` 表示检查成功；退出状态 `1` 表示认证应继续交给下一条 PAM 规则。
+轮询配置中的设备连接状态；当设备断开且配置用户的活跃本地 Wayland 会话未锁定时，启动 `noctalia-lock.service`。`autoLock.checkIntervalSeconds` 控制普通轮询间隔，`sleepAfterLockSeconds` 控制启动锁屏服务后的等待时间，`exceptionGraceSeconds` 控制 BlueZ 或 D-Bus 异常后的重试等待时间。
+
+```console
+bluetooth-auth-sudo-auth /path/to/config.json
+```
+
+检查当前 PAM 请求是否属于配置用户，以及配置中的设备是否已连接。退出状态 `0` 表示检查成功；退出状态 `1` 表示认证应继续交给下一条 PAM 规则。`sudoAuth.timeoutSeconds` 控制蓝牙检查超时时间。
 
 ## 构建与开发
 
@@ -203,7 +256,10 @@ uv sync
 - 保留普通 `sudo` 密码路径。
 - 如果你只需要自动连接和自动锁屏，可以考虑禁用 `sudoAuth`。
 - 在共享机器或高风险机器上使用前，请先审阅 PAM 规则。
+- 对 secret 管理的设备地址，优先使用 `config.bluetoothAddressFile`，让地址在运行时读取，而不是嵌入生成出的 Nix 配置产物。
 - 蓝牙设备处于连接状态，并不能证明设备持有人就在旁边或正在注意这台机器。
+
+使用 `config.bluetoothAddressFile` 时，请确认生成的 secret 文件能被所有已启用集成读取。systemd 服务通常以 root 运行。`sudoAuth` 的 PAM helper 通过 `pam_exec.so seteuid` 调用，所以根据你的 PAM 设置，它的有效用户也可能需要 secret 文件的读取权限。
 
 ## 排障
 

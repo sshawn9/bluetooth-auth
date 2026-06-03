@@ -1,0 +1,17 @@
+{
+    "user": "alice",
+    "bluetoothAddressFile": "/run/secrets/auth_bluetooth_address",
+    "autoConnect": {
+        "checkIntervalSeconds": 30,
+        "deviceUnvailableGraceSeconds": 300,
+        "exceptionGraceSeconds": 300
+    },
+    "autoLock": {
+        "checkIntervalSeconds": 40,
+        "sleepAfterLockSeconds": 3,
+        "exceptionGraceSeconds": 300
+    },
+    "sudoAuth": {
+        "timeoutSeconds": 2
+    }
+}

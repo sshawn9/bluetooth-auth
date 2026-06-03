@@ -20,6 +20,9 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/bluetooth_auth"]
 
+[tool.hatch.build.targets.wheel.force-include]
+"src/bluetooth_auth/config.json" = "bluetooth_auth/config.json"
+
 [tool.hatch.build.targets.sdist]
 include = [
     "/pyproject.toml",

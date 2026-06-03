@@ -7,7 +7,7 @@
 
 let
   cfg = config.my.security.bluetoothAuth;
-  user = if cfg.user == null then "" else cfg.user;
+  user = cfg.config.user;
 in
 {
   config = lib.mkIf (cfg.enable && cfg.autoLock.enable) {
