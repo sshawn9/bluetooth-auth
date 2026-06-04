@@ -11,10 +11,7 @@ let
 in
 {
   options.my.security.bluetoothAuth.autoLock.enable =
-    (lib.mkEnableOption "automatic locking when the Bluetooth auth device is disconnected")
-    // {
-      default = true;
-    };
+    lib.mkEnableOption "automatic locking when the Bluetooth auth device is disconnected";
 
   config = lib.mkIf (cfg.enable && cfg.autoLock.enable) {
     systemd.services.bluetooth-auth-auto-lock = {

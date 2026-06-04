@@ -7,17 +7,54 @@ import sys
 import syslog
 from importlib import resources
 from pathlib import Path
-from dbus_fast.errors import DBusError, InterfaceNotFoundError
 
+from dbus_fast.errors import DBusError, InterfaceNotFoundError
 
 from .bluetooth_device import BluetoothDevice
 
 
+MODE_SETTINGS = {
+    "sudo": {
+        "ident": "bluetooth-auth-sudo-auth",
+        "configKey": "sudoAuth",
+        "userMatches": lambda trusted_user: trusted_user
+        in {
+            os.environ.get("PAM_USER", "").strip(),
+            os.environ.get("PAM_RUSER", "").strip(),
+        },
+    },
+    "polkit": {
+        "ident": "bluetooth-auth-polkit-auth",
+        "configKey": "polkitAuth",
+        "userMatches": lambda _trusted_user: True,
+    },
+    "locker": {
+        "ident": "bluetooth-auth-locker-auth",
+        "configKey": "lockerAuth",
+        "userMatches": lambda trusted_user: os.environ.get("PAM_USER", "").strip()
+        == trusted_user,
+    },
+    "greetd": {
+        "ident": "bluetooth-auth-greetd-auth",
+        "configKey": "greetdAuth",
+        "userMatches": lambda trusted_user: os.environ.get("PAM_USER", "").strip()
+        == trusted_user,
+    },
+}
+
+
 async def async_main() -> int:
+    mode = sys.argv[2].strip() if len(sys.argv) > 2 else ""
     syslog.openlog(
-        "bluetooth-auth-sudo-auth",
+        MODE_SETTINGS.get(mode, {}).get("ident", "bluetooth-auth-oneshot-auth"),
         syslog.LOG_PID,
         syslog.LOG_AUTHPRIV,
+    )
+    syslog.syslog(
+        syslog.LOG_INFO,
+        "PAM context "
+        f"PAM_USER={os.environ.get('PAM_USER', '').strip()!r} "
+        f"PAM_RUSER={os.environ.get('PAM_RUSER', '').strip()!r}",
     )
 
     try:
@@ -31,39 +68,37 @@ async def async_main() -> int:
         bluetooth_address = (
             Path(config["bluetoothAddressFile"]).read_text(encoding="utf-8").strip()
         )
-        timeout_seconds = min(float(config["sudoAuth"]["timeoutSeconds"]), 5.0)
+        settings = MODE_SETTINGS[mode]
+        if not settings["userMatches"](trusted_user):
+            syslog.syslog(
+                syslog.LOG_INFO,
+                "PAM request is not for the trusted user; skipping auth",
+            )
+            syslog.closelog()
+            return 1
+
+        timeout_seconds = min(
+            float(config[settings["configKey"]]["timeoutSeconds"]),
+            5.0,
+        )
         if not trusted_user or not bluetooth_address or timeout_seconds <= 0:
             raise ValueError
     except (OSError, ValueError, KeyError, TypeError) as error:
         syslog.syslog(
             syslog.LOG_ERR,
-            "failed to load config or address file: "
-            f"{type(error).__name__}: {error}",
+            f"failed to load config or auth context: {type(error).__name__}: {error}",
         )
+        syslog.closelog()
         return 2
 
     syslog.syslog(
         syslog.LOG_INFO,
-        "starting "
-        f"config={config_path} "
-        f"trusted_user={trusted_user} "
+        f"starting mode={mode} config={config_path} "
         f"timeout_seconds={timeout_seconds}",
     )
 
     device = BluetoothDevice(bluetooth_address)
     try:
-        pam_users = {
-            os.environ.get("PAM_USER", ""),
-            os.environ.get("PAM_RUSER", ""),
-            os.environ.get("SUDO_USER", ""),
-        }
-        if trusted_user not in pam_users:
-            syslog.syslog(
-                syslog.LOG_INFO,
-                "PAM request is not for the trusted user; skipping Bluetooth auth",
-            )
-            return 1
-
         async with asyncio.timeout(timeout_seconds):
             if not device.is_initialized():
                 syslog.syslog(
@@ -71,48 +106,43 @@ async def async_main() -> int:
                     "initializing BlueZ D-Bus proxy",
                 )
                 await device.initialize()
-                syslog.syslog(
-                    syslog.LOG_INFO,
-                    "BlueZ D-Bus proxy initialized",
-                )
 
             if await device.is_connected():
                 syslog.syslog(
                     syslog.LOG_INFO,
-                    "trusted device is connected; accepting sudo authentication",
+                    "trusted device is connected; accepting authentication",
                 )
                 return 0
 
             syslog.syslog(
                 syslog.LOG_INFO,
-                "trusted device is not connected; falling back to the next PAM rule",
+                "trusted device is not connected; falling back to the next auth rule",
             )
             return 1
-
     except (DBusError, InterfaceNotFoundError) as error:
         syslog.syslog(
             syslog.LOG_NOTICE,
-            "BlueZ or D-Bus check failed; falling back to the next PAM rule: "
+            "BlueZ or D-Bus check failed; falling back to the next auth rule: "
             f"{type(error).__name__}: {error}",
         )
         return 1
     except asyncio.CancelledError:
         syslog.syslog(
             syslog.LOG_NOTICE,
-            "Bluetooth check was cancelled; falling back to the next PAM rule",
+            "Bluetooth check was cancelled; falling back to the next auth rule",
         )
         return 1
     except TimeoutError as error:
         syslog.syslog(
             syslog.LOG_NOTICE,
-            "Bluetooth check timed out; falling back to the next PAM rule: "
+            "Bluetooth check timed out; falling back to the next auth rule: "
             f"{type(error).__name__}: {error}",
         )
         return 1
     except OSError as error:
         syslog.syslog(
             syslog.LOG_NOTICE,
-            "Bluetooth check unavailable; falling back to the next PAM rule: "
+            "Bluetooth check unavailable; falling back to the next auth rule: "
             f"{type(error).__name__}: {error}",
         )
         return 1
@@ -131,7 +161,7 @@ async def async_main() -> int:
     except Exception as error:
         syslog.syslog(
             syslog.LOG_ERR,
-            "unexpected error; falling back to the next PAM rule: "
+            "unexpected error; falling back to the next auth rule: "
             f"{type(error).__name__}: {error}",
         )
         return 1

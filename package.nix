@@ -29,6 +29,7 @@ let
             root = old.src;
             fileset = lib.fileset.unions [
               (old.src + "/pyproject.toml")
+              (lib.fileset.maybeMissing (old.src + "/LICENSE"))
               (old.src + "/README.md")
               (old.src + "/src/bluetooth_auth")
             ];
@@ -46,6 +47,7 @@ in
   (old: {
     meta = (old.meta or { }) // {
       inherit (project) description;
+      license = lib.licenses.mit;
       platforms = lib.platforms.linux;
     };
   })

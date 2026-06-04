@@ -13,5 +13,42 @@
     },
     "sudoAuth": {
         "timeoutSeconds": 2
+    },
+    "polkitAuth": {
+        "timeoutSeconds": 2,
+        "allowedActions": [
+            "org.freedesktop.login1.power-off",
+            "org.freedesktop.login1.power-off-multiple-sessions",
+            "org.freedesktop.login1.reboot",
+            "org.freedesktop.login1.reboot-multiple-sessions",
+            "org.freedesktop.login1.suspend",
+            "org.freedesktop.login1.suspend-multiple-sessions",
+            "org.freedesktop.login1.hibernate",
+            "org.freedesktop.login1.hibernate-multiple-sessions",
+            "org.freedesktop.login1.lock-sessions",
+            "org.freedesktop.systemd1.manage-units",
+            "org.freedesktop.systemd1.reload-daemon",
+            "org.freedesktop.NetworkManager.enable-disable-network",
+            "org.freedesktop.NetworkManager.enable-disable-wifi",
+            "org.freedesktop.NetworkManager.network-control",
+            "org.freedesktop.NetworkManager.settings.modify.own",
+            "org.freedesktop.NetworkManager.settings.modify.system",
+            "org.freedesktop.NetworkManager.wifi.scan",
+            "org.freedesktop.udisks2.filesystem-mount",
+            "org.freedesktop.udisks2.filesystem-mount-system",
+            "org.freedesktop.udisks2.filesystem-unmount-others",
+            "org.freedesktop.udisks2.encrypted-unlock",
+            "org.freedesktop.udisks2.encrypted-unlock-system",
+            "org.freedesktop.udisks2.eject-media",
+            "org.freedesktop.udisks2.power-off-drive",
+            "org.freedesktop.UPower.PowerProfiles.switch-profile",
+            "org.freedesktop.UPower.enable-charging-limit"
+        ]
+    },
+    "lockerAuth": {
+        "timeoutSeconds": 2
+    },
+    "greetdAuth": {
+        "timeoutSeconds": 2
     }
 }

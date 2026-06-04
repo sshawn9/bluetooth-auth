@@ -9,6 +9,38 @@
 let
   cfg = config.my.security.bluetoothAuth;
   jsonFormat = pkgs.formats.json { };
+  defaultPolkitAllowedActions = [
+    "org.freedesktop.login1.power-off"
+    "org.freedesktop.login1.power-off-multiple-sessions"
+    "org.freedesktop.login1.reboot"
+    "org.freedesktop.login1.reboot-multiple-sessions"
+    "org.freedesktop.login1.suspend"
+    "org.freedesktop.login1.suspend-multiple-sessions"
+    "org.freedesktop.login1.hibernate"
+    "org.freedesktop.login1.hibernate-multiple-sessions"
+    "org.freedesktop.login1.lock-sessions"
+
+    "org.freedesktop.systemd1.manage-units"
+    "org.freedesktop.systemd1.reload-daemon"
+
+    "org.freedesktop.NetworkManager.enable-disable-network"
+    "org.freedesktop.NetworkManager.enable-disable-wifi"
+    "org.freedesktop.NetworkManager.network-control"
+    "org.freedesktop.NetworkManager.settings.modify.own"
+    "org.freedesktop.NetworkManager.settings.modify.system"
+    "org.freedesktop.NetworkManager.wifi.scan"
+
+    "org.freedesktop.udisks2.filesystem-mount"
+    "org.freedesktop.udisks2.filesystem-mount-system"
+    "org.freedesktop.udisks2.filesystem-unmount-others"
+    "org.freedesktop.udisks2.encrypted-unlock"
+    "org.freedesktop.udisks2.encrypted-unlock-system"
+    "org.freedesktop.udisks2.eject-media"
+    "org.freedesktop.udisks2.power-off-drive"
+
+    "org.freedesktop.UPower.PowerProfiles.switch-profile"
+    "org.freedesktop.UPower.enable-charging-limit"
+  ];
 in
 {
   imports = [
@@ -16,6 +48,9 @@ in
     ./noctalia-lock.nix
     ./auto-lock.nix
     ./sudo-auth.nix
+    ./polkit-auth.nix
+    ./locker-auth.nix
+    ./greetd-auth.nix
   ];
 
   options.my.security.bluetoothAuth = {
@@ -115,6 +150,54 @@ in
             default = { };
             description = "sudo auth JSON configuration.";
           };
+
+          polkitAuth = lib.mkOption {
+            type = lib.types.submodule {
+              freeformType = jsonFormat.type;
+              options = {
+                timeoutSeconds = lib.mkOption {
+                  type = lib.types.ints.between 1 2147483647;
+                  default = 2;
+                  description = "Maximum time to wait for the Bluetooth connection check during polkit auth.";
+                };
+
+                allowedActions = lib.mkOption {
+                  type = lib.types.listOf lib.types.str;
+                  default = defaultPolkitAllowedActions;
+                  example = [ "org.freedesktop.systemd1.manage-units" ];
+                  description = "polkit action ids that Bluetooth auth may authorize.";
+                };
+              };
+            };
+            default = { };
+            description = "polkit auth JSON configuration.";
+          };
+
+          lockerAuth = lib.mkOption {
+            type = lib.types.submodule {
+              freeformType = jsonFormat.type;
+              options.timeoutSeconds = lib.mkOption {
+                type = lib.types.ints.between 1 2147483647;
+                default = 2;
+                description = "Maximum time to wait for the Bluetooth connection check during locker PAM auth.";
+              };
+            };
+            default = { };
+            description = "locker PAM auth JSON configuration.";
+          };
+
+          greetdAuth = lib.mkOption {
+            type = lib.types.submodule {
+              freeformType = jsonFormat.type;
+              options.timeoutSeconds = lib.mkOption {
+                type = lib.types.ints.between 1 2147483647;
+                default = 2;
+                description = "Maximum time to wait for the Bluetooth connection check during greetd PAM auth.";
+              };
+            };
+            default = { };
+            description = "greetd PAM auth JSON configuration.";
+          };
         };
       };
       default = { };
@@ -129,6 +212,9 @@ in
           autoLock.sleepAfterLockSeconds = 3;
           autoLock.exceptionGraceSeconds = 300;
           sudoAuth.timeoutSeconds = 2;
+          polkitAuth.timeoutSeconds = 2;
+          lockerAuth.timeoutSeconds = 2;
+          greetdAuth.timeoutSeconds = 2;
         }
       '';
       description = ''

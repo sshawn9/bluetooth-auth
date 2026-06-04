@@ -10,10 +10,7 @@ let
 in
 {
   options.my.security.bluetoothAuth.sudoAuth.enable =
-    (lib.mkEnableOption "sudo authentication bypass when the Bluetooth device is connected")
-    // {
-      default = true;
-    };
+    lib.mkEnableOption "sudo authentication bypass when the Bluetooth device is connected";
 
   config = lib.mkIf (cfg.enable && cfg.sudoAuth.enable) {
     security.pam.services.sudo.rules.auth.bluetooth-auth = {
@@ -23,8 +20,9 @@ in
       args = [
         "seteuid"
         "quiet"
-        "${cfg.package}/bin/bluetooth-auth-sudo-auth"
+        "${cfg.package}/bin/bluetooth-auth-oneshot-auth"
         configFile
+        "sudo"
       ];
     };
   };

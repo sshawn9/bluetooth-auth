@@ -3,6 +3,7 @@ name = "bluetooth-auth"
 version = "0.1.0"
 description = "Small BlueZ D-Bus helpers for Bluetooth auth workflows"
 readme = "README.md"
+license = "MIT"
 requires-python = ">=3.13,<3.14"
 dependencies = [
     "dbus-fast>=4.0.4,<6",
@@ -11,7 +12,7 @@ dependencies = [
 [project.scripts]
 bluetooth-auth-auto-connect = "bluetooth_auth.auto_connect:main"
 bluetooth-auth-auto-lock = "bluetooth_auth.auto_lock:main"
-bluetooth-auth-sudo-auth = "bluetooth_auth.sudo_auth:main"
+bluetooth-auth-oneshot-auth = "bluetooth_auth.oneshot_auth:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -26,6 +27,7 @@ packages = ["src/bluetooth_auth"]
 [tool.hatch.build.targets.sdist]
 include = [
     "/pyproject.toml",
+    "/LICENSE",
     "/README.md",
     "/src/bluetooth_auth",
 ]
