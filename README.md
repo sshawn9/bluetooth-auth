@@ -160,111 +160,77 @@ automatic reconnects, enable just that integration:
 
 ## NixOS Options
 
+Option paths below are relative to `my.security.bluetoothAuth`. Fields under
+`config.*` are written into the generated JSON config passed to the Python
+commands.
+
 **Core**
 
-`my.security.bluetoothAuth.enable`
-: Default: `false`. Enables the module namespace. Individual integrations still
-  need to be enabled explicitly.
-
-`my.security.bluetoothAuth.package`
-: Default: flake package. Package that provides the command-line tools.
-
-`my.security.bluetoothAuth.config`
-: Default: `{}`. Attribute set converted to the generated JSON config passed to
-  the commands.
-
-`my.security.bluetoothAuth.config.user`
-: Default: `""`. User trusted by sudo/polkit/PAM auth and targeted by
-  auto-lock.
-
-`my.security.bluetoothAuth.config.bluetoothAddressFile`
-: Default: `""`. Runtime file containing the Bluetooth device address.
+| Option | Default | Description |
+| --- | --- | --- |
+| `enable` | `false` | Enables the module namespace. Individual integrations still need to be enabled explicitly. |
+| `package` | flake package | Package that provides the command-line tools. |
+| `config` | `{}` | Attribute set converted to the generated JSON config passed to the commands. |
+| `config.user` | `""` | User trusted by sudo/polkit/PAM auth and targeted by auto-lock. |
+| `config.bluetoothAddressFile` | `""` | Runtime file containing the Bluetooth device address. |
 
 **Auto Connect**
 
-`my.security.bluetoothAuth.autoConnect.enable`
-: Default: `false`. Keeps the trusted device connected. The system must already
-  provide `bluetooth.service`.
-
-`my.security.bluetoothAuth.config.autoConnect.checkIntervalSeconds`
-: Default: `30`. Polling interval when the device is already connected. Values
-  below 5 seconds are treated as 5 seconds by the CLI.
-
-`my.security.bluetoothAuth.config.autoConnect.deviceUnvailableGraceSeconds`
-: Default: `300`. Delay when the adapter is powered off or the device is not
-  paired/trusted. Values below 10 seconds are treated as 10 seconds by the CLI.
-
-`my.security.bluetoothAuth.config.autoConnect.exceptionGraceSeconds`
-: Default: `300`. Delay after a BlueZ or D-Bus error before retrying. Values
-  below 10 seconds are treated as 10 seconds by the CLI.
+| Option | Default | Description |
+| --- | --- | --- |
+| `autoConnect.enable` | `false` | Keeps the trusted device connected. The system must already provide `bluetooth.service`. |
+| `config.autoConnect.checkIntervalSeconds` | `30` | Polling interval when the device is already connected. Values below 5 seconds are treated as 5 seconds by the CLI. |
+| `config.autoConnect.deviceUnvailableGraceSeconds` | `300` | Delay when the adapter is powered off or the device is not paired/trusted. Values below 10 seconds are treated as 10 seconds by the CLI. |
+| `config.autoConnect.exceptionGraceSeconds` | `300` | Delay after a BlueZ or D-Bus error before retrying. Values below 10 seconds are treated as 10 seconds by the CLI. |
 
 **Auto Lock**
 
-`my.security.bluetoothAuth.autoLock.enable`
-: Default: `false`. Locks the session when the device disconnects.
-
-`my.security.bluetoothAuth.config.autoLock.checkIntervalSeconds`
-: Default: `40`. Polling interval for connection and lock checks. Values below
-  5 seconds are treated as 5 seconds by the CLI.
-
-`my.security.bluetoothAuth.config.autoLock.sleepAfterLockSeconds`
-: Default: `3`. Delay after successfully starting the lock service. Values
-  below 0 seconds are treated as 0 seconds by the CLI.
-
-`my.security.bluetoothAuth.config.autoLock.exceptionGraceSeconds`
-: Default: `300`. Delay after a BlueZ or D-Bus error before retrying. Values
-  below 10 seconds are treated as 10 seconds by the CLI.
+| Option | Default | Description |
+| --- | --- | --- |
+| `autoLock.enable` | `false` | Locks the session when the device disconnects. |
+| `config.autoLock.checkIntervalSeconds` | `40` | Polling interval for connection and lock checks. Values below 5 seconds are treated as 5 seconds by the CLI. |
+| `config.autoLock.sleepAfterLockSeconds` | `3` | Delay after successfully starting the lock service. Values below 0 seconds are treated as 0 seconds by the CLI. |
+| `config.autoLock.exceptionGraceSeconds` | `300` | Delay after a BlueZ or D-Bus error before retrying. Values below 10 seconds are treated as 10 seconds by the CLI. |
 
 **sudo PAM**
 
-`my.security.bluetoothAuth.sudoAuth.enable`
-: Default: `false`. Allows the trusted user to pass `sudo` auth when the device
-  is connected.
-
-`my.security.bluetoothAuth.config.sudoAuth.timeoutSeconds`
-: Default: `2`. Timeout for the sudo PAM Bluetooth check. Values above 5
-  seconds are treated as 5 seconds by the CLI.
+| Option | Default | Description |
+| --- | --- | --- |
+| `sudoAuth.enable` | `false` | Allows the trusted user to pass `sudo` auth when the device is connected. |
+| `config.sudoAuth.timeoutSeconds` | `2` | Timeout for the sudo PAM Bluetooth check. Values above 5 seconds are treated as 5 seconds by the CLI. |
 
 **polkit**
 
-`my.security.bluetoothAuth.polkitAuth.enable`
-: Default: `false`. Adds a polkit rule that calls the Bluetooth auth helper.
+| Option | Default | Description |
+| --- | --- | --- |
+| `polkitAuth.enable` | `false` | Adds a polkit rule that calls the Bluetooth auth helper. |
+| `config.polkitAuth.timeoutSeconds` | `2` | Timeout for the polkit Bluetooth check. Values above 5 seconds are treated as 5 seconds by the CLI. |
+| `config.polkitAuth.allowedActions` | common desktop actions | polkit action ids that Bluetooth auth may authorize. |
 
-`my.security.bluetoothAuth.config.polkitAuth.timeoutSeconds`
-: Default: `2`. Timeout for the polkit Bluetooth check. Values above 5 seconds
-  are treated as 5 seconds by the CLI.
-
-`my.security.bluetoothAuth.config.polkitAuth.allowedActions`
-: Default: common desktop actions. polkit action ids that Bluetooth auth may
-  authorize. Defaults include login1 power/session actions, systemd unit
-  management, NetworkManager, UDisks mount/unlock/eject, and power profile
-  controls. Set to `[]` to authorize no polkit actions.
+The default polkit actions include login1 power/session actions, systemd unit
+management, NetworkManager, UDisks mount/unlock/eject, and power profile
+controls. Set `config.polkitAuth.allowedActions = []` to authorize no polkit
+actions.
 
 **Locker PAM**
 
-`my.security.bluetoothAuth.lockerAuth.enable`
-: Default: `false`. Adds a PAM rule to the configured locker PAM service.
+| Option | Default | Description |
+| --- | --- | --- |
+| `lockerAuth.enable` | `false` | Adds a PAM rule to the configured locker PAM service. |
+| `lockerAuth.pamService` | `"login"` | PAM service name used by the locker. |
+| `config.lockerAuth.timeoutSeconds` | `2` | Timeout for the locker PAM Bluetooth check. Values above 5 seconds are treated as 5 seconds by the CLI. |
 
-`my.security.bluetoothAuth.lockerAuth.pamService`
-: Default: `"login"`. PAM service name used by the locker. This default matches
-  Noctalia v4.7.7 when `NOCTALIA_PAM_SERVICE` is unset; review before enabling
-  because `/etc/pam.d/login` is broader than Noctalia alone.
-
-`my.security.bluetoothAuth.config.lockerAuth.timeoutSeconds`
-: Default: `2`. Timeout for the locker PAM Bluetooth check. Values above 5
-  seconds are treated as 5 seconds by the CLI.
+The default locker PAM service matches Noctalia v4.7.7 when
+`NOCTALIA_PAM_SERVICE` is unset. Review before enabling because
+`/etc/pam.d/login` is broader than Noctalia alone.
 
 **greetd PAM**
 
-`my.security.bluetoothAuth.greetdAuth.enable`
-: Default: `false`. Adds a PAM rule to the configured greetd PAM service.
-
-`my.security.bluetoothAuth.greetdAuth.pamService`
-: Default: `"greetd"`. PAM service name used by greetd.
-
-`my.security.bluetoothAuth.config.greetdAuth.timeoutSeconds`
-: Default: `2`. Timeout for the greetd PAM Bluetooth check. Values above 5
-  seconds are treated as 5 seconds by the CLI.
+| Option | Default | Description |
+| --- | --- | --- |
+| `greetdAuth.enable` | `false` | Adds a PAM rule to the configured greetd PAM service. |
+| `greetdAuth.pamService` | `"greetd"` | PAM service name used by greetd. |
+| `config.greetdAuth.timeoutSeconds` | `2` | Timeout for the greetd PAM Bluetooth check. Values above 5 seconds are treated as 5 seconds by the CLI. |
 
 ## Services
 

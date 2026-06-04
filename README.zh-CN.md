@@ -133,91 +133,70 @@
 
 ## NixOS 选项
 
+下面的选项路径都相对于 `my.security.bluetoothAuth`。`config.*` 下的字段会写入生成的 JSON 配置，并传给 Python 命令。
+
 **核心**
 
-`my.security.bluetoothAuth.enable`
-: 默认值：`false`。启用模块命名空间。具体集成仍然需要单独显式启用。
-
-`my.security.bluetoothAuth.package`
-: 默认值：flake package。提供命令行工具的包。
-
-`my.security.bluetoothAuth.config`
-: 默认值：`{}`。会转换成 JSON 配置并传给命令的 attrset。
-
-`my.security.bluetoothAuth.config.user`
-: 默认值：`""`。被 sudo/polkit/PAM 认证信任，并作为 auto-lock 目标的用户。
-
-`my.security.bluetoothAuth.config.bluetoothAddressFile`
-: 默认值：`""`。包含蓝牙设备地址的运行时文件。
+| 选项 | 默认值 | 说明 |
+| --- | --- | --- |
+| `enable` | `false` | 启用模块命名空间。具体集成仍然需要单独显式启用。 |
+| `package` | flake package | 提供命令行工具的包。 |
+| `config` | `{}` | 会转换成 JSON 配置并传给命令的 attrset。 |
+| `config.user` | `""` | 被 sudo/polkit/PAM 认证信任，并作为 auto-lock 目标的用户。 |
+| `config.bluetoothAddressFile` | `""` | 包含蓝牙设备地址的运行时文件。 |
 
 **Auto Connect**
 
-`my.security.bluetoothAuth.autoConnect.enable`
-: 默认值：`false`。保持受信任设备连接。系统需要已经提供 `bluetooth.service`。
-
-`my.security.bluetoothAuth.config.autoConnect.checkIntervalSeconds`
-: 默认值：`30`。设备已连接时的轮询间隔。CLI 会把低于 5 秒的值视为 5 秒。
-
-`my.security.bluetoothAuth.config.autoConnect.deviceUnvailableGraceSeconds`
-: 默认值：`300`。适配器关闭或设备未配对/未信任时的等待时间。CLI 会把低于 10 秒的值视为 10 秒。
-
-`my.security.bluetoothAuth.config.autoConnect.exceptionGraceSeconds`
-: 默认值：`300`。BlueZ 或 D-Bus 异常后的重试等待时间。CLI 会把低于 10 秒的值视为 10 秒。
+| 选项 | 默认值 | 说明 |
+| --- | --- | --- |
+| `autoConnect.enable` | `false` | 保持受信任设备连接。系统需要已经提供 `bluetooth.service`。 |
+| `config.autoConnect.checkIntervalSeconds` | `30` | 设备已连接时的轮询间隔。CLI 会把低于 5 秒的值视为 5 秒。 |
+| `config.autoConnect.deviceUnvailableGraceSeconds` | `300` | 适配器关闭或设备未配对/未信任时的等待时间。CLI 会把低于 10 秒的值视为 10 秒。 |
+| `config.autoConnect.exceptionGraceSeconds` | `300` | BlueZ 或 D-Bus 异常后的重试等待时间。CLI 会把低于 10 秒的值视为 10 秒。 |
 
 **Auto Lock**
 
-`my.security.bluetoothAuth.autoLock.enable`
-: 默认值：`false`。当设备断开连接时锁定会话。
-
-`my.security.bluetoothAuth.config.autoLock.checkIntervalSeconds`
-: 默认值：`40`。连接状态和锁屏状态检查的轮询间隔。CLI 会把低于 5 秒的值视为 5 秒。
-
-`my.security.bluetoothAuth.config.autoLock.sleepAfterLockSeconds`
-: 默认值：`3`。成功启动锁屏服务后的等待时间。CLI 会把低于 0 秒的值视为 0 秒。
-
-`my.security.bluetoothAuth.config.autoLock.exceptionGraceSeconds`
-: 默认值：`300`。BlueZ 或 D-Bus 异常后的重试等待时间。CLI 会把低于 10 秒的值视为 10 秒。
+| 选项 | 默认值 | 说明 |
+| --- | --- | --- |
+| `autoLock.enable` | `false` | 当设备断开连接时锁定会话。 |
+| `config.autoLock.checkIntervalSeconds` | `40` | 连接状态和锁屏状态检查的轮询间隔。CLI 会把低于 5 秒的值视为 5 秒。 |
+| `config.autoLock.sleepAfterLockSeconds` | `3` | 成功启动锁屏服务后的等待时间。CLI 会把低于 0 秒的值视为 0 秒。 |
+| `config.autoLock.exceptionGraceSeconds` | `300` | BlueZ 或 D-Bus 异常后的重试等待时间。CLI 会把低于 10 秒的值视为 10 秒。 |
 
 **sudo PAM**
 
-`my.security.bluetoothAuth.sudoAuth.enable`
-: 默认值：`false`。当设备已连接时，允许受信任用户通过 `sudo` 认证。
-
-`my.security.bluetoothAuth.config.sudoAuth.timeoutSeconds`
-: 默认值：`2`。sudo PAM 蓝牙检查超时时间。CLI 会把高于 5 秒的值视为 5 秒。
+| 选项 | 默认值 | 说明 |
+| --- | --- | --- |
+| `sudoAuth.enable` | `false` | 当设备已连接时，允许受信任用户通过 `sudo` 认证。 |
+| `config.sudoAuth.timeoutSeconds` | `2` | sudo PAM 蓝牙检查超时时间。CLI 会把高于 5 秒的值视为 5 秒。 |
 
 **polkit**
 
-`my.security.bluetoothAuth.polkitAuth.enable`
-: 默认值：`false`。添加调用蓝牙认证 helper 的 polkit rule。
+| 选项 | 默认值 | 说明 |
+| --- | --- | --- |
+| `polkitAuth.enable` | `false` | 添加调用蓝牙认证 helper 的 polkit rule。 |
+| `config.polkitAuth.timeoutSeconds` | `2` | polkit 蓝牙检查超时时间。CLI 会把高于 5 秒的值视为 5 秒。 |
+| `config.polkitAuth.allowedActions` | 常用桌面 actions | 允许由蓝牙认证放行的 polkit action id。 |
 
-`my.security.bluetoothAuth.config.polkitAuth.timeoutSeconds`
-: 默认值：`2`。polkit 蓝牙检查超时时间。CLI 会把高于 5 秒的值视为 5 秒。
-
-`my.security.bluetoothAuth.config.polkitAuth.allowedActions`
-: 默认值：常用桌面 actions。允许由蓝牙认证放行的 polkit action id。默认包含 login1 电源/会话操作、systemd unit 管理、NetworkManager、UDisks 挂载/解锁/弹出，以及电源配置切换。设为 `[]` 表示不放行任何 polkit action。
+默认 polkit actions 包含 login1 电源/会话操作、systemd unit 管理、NetworkManager、UDisks 挂载/解锁/弹出，以及电源配置切换。设为 `config.polkitAuth.allowedActions = []` 表示不放行任何 polkit action。
 
 **Locker PAM**
 
-`my.security.bluetoothAuth.lockerAuth.enable`
-: 默认值：`false`。给配置的 locker PAM service 添加 PAM 规则。
+| 选项 | 默认值 | 说明 |
+| --- | --- | --- |
+| `lockerAuth.enable` | `false` | 给配置的 locker PAM service 添加 PAM 规则。 |
+| `lockerAuth.pamService` | `"login"` | locker 使用的 PAM service 名。 |
+| `config.lockerAuth.timeoutSeconds` | `2` | locker PAM 蓝牙检查超时时间。CLI 会把高于 5 秒的值视为 5 秒。 |
 
-`my.security.bluetoothAuth.lockerAuth.pamService`
-: 默认值：`"login"`。locker 使用的 PAM service 名。这个默认值匹配 `NOCTALIA_PAM_SERVICE` 未设置时的 Noctalia v4.7.7；启用前请审阅，因为 `/etc/pam.d/login` 的影响范围比 Noctalia 本身更宽。
-
-`my.security.bluetoothAuth.config.lockerAuth.timeoutSeconds`
-: 默认值：`2`。locker PAM 蓝牙检查超时时间。CLI 会把高于 5 秒的值视为 5 秒。
+默认 locker PAM service 匹配 `NOCTALIA_PAM_SERVICE` 未设置时的 Noctalia v4.7.7。启用前请审阅，因为 `/etc/pam.d/login` 的影响范围比 Noctalia 本身更宽。
 
 **greetd PAM**
 
-`my.security.bluetoothAuth.greetdAuth.enable`
-: 默认值：`false`。给配置的 greetd PAM service 添加 PAM 规则。
-
-`my.security.bluetoothAuth.greetdAuth.pamService`
-: 默认值：`"greetd"`。greetd 使用的 PAM service 名。
-
-`my.security.bluetoothAuth.config.greetdAuth.timeoutSeconds`
-: 默认值：`2`。greetd PAM 蓝牙检查超时时间。CLI 会把高于 5 秒的值视为 5 秒。
+| 选项 | 默认值 | 说明 |
+| --- | --- | --- |
+| `greetdAuth.enable` | `false` | 给配置的 greetd PAM service 添加 PAM 规则。 |
+| `greetdAuth.pamService` | `"greetd"` | greetd 使用的 PAM service 名。 |
+| `config.greetdAuth.timeoutSeconds` | `2` | greetd PAM 蓝牙检查超时时间。CLI 会把高于 5 秒的值视为 5 秒。 |
 
 ## 服务
 
