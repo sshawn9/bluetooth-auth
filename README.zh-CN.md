@@ -7,7 +7,7 @@
 
 用于 NixOS 蓝牙认证工作流的小型 BlueZ D-Bus 工具集。
 
-`bluetooth-auth` 会监控一个受信任的蓝牙设备，并把它的连接状态作为本地桌面安全工作流的便利信号。它可以保持设备连接、在设备断开时锁定会话，也可以在设备已连接时允许指定的受信任用户通过 `sudo` 认证。
+`bluetooth-auth` 会监控一个受信任的蓝牙设备，并把它的连接状态作为本地桌面安全工作流的便利信号。它可以保持设备连接、在设备断开时锁定会话，也可以在设备已连接时允许指定的受信任用户通过部分本地认证检查。
 
 > 蓝牙接近性是一种便利因素，而不是强认证。它适合用在可信的个人机器上，并且应当始终保留普通密码认证作为后备路径。
 
@@ -21,7 +21,7 @@
 
 - 为已配对且受信任的设备维护 BlueZ `org.bluez.Device1` 连接。
 - 当设备不再连接时，锁定当前活跃的本地 Wayland 会话。
-- 可选添加一条 `sudo` PAM 规则：当受信任的蓝牙设备已连接时，让指定用户通过认证。
+- 可选添加 `sudo` PAM、locker PAM 和 polkit 集成：当受信任的蓝牙设备已连接时，让指定用户通过认证。
 - 以 Nix flake 形式提供，包含 NixOS 模块和 Python 包。
 - 通过 `dbus-fast` 使用系统 D-Bus 上的 BlueZ。
 
@@ -37,7 +37,7 @@
 
 ## 设备状态
 
-`bluetooth-auth` 不负责管理配对。配置中的设备只需要已经在 BlueZ 中配对并设为受信任即可。你可以用自己系统里惯用的蓝牙管理方式完成这一步，然后把设备地址写入 `config.bluetoothAddressFile` 指向的运行时文件。
+`bluetooth-auth` 不负责管理配对。配置中的设备只需要已经在 BlueZ 中配对并设为受信任即可。你可以用自己系统里惯用的蓝牙管理方式完成这一步，然后把设备地址写入 `bluetoothAddressFile` 指向的运行时文件。
 
 ## NixOS 安装
 
@@ -68,31 +68,42 @@
       {
         my.security.bluetoothAuth = {
           enable = true;
-          config = {
-            user = "alice";
-            bluetoothAddressFile = "/run/secrets/auth_bluetooth_address";
-            autoConnect.checkIntervalSeconds = 30;
-            autoConnect.deviceUnvailableGraceSeconds = 300;
-            autoConnect.exceptionGraceSeconds = 300;
-            autoLock.checkIntervalSeconds = 40;
-            autoLock.sleepAfterLockSeconds = 3;
-            autoLock.exceptionGraceSeconds = 300;
-            sudoAuth.timeoutSeconds = 2;
-            polkitAuth.timeoutSeconds = 2;
-            lockerAuth.timeoutSeconds = 2;
-            greetdAuth.timeoutSeconds = 2;
+          user = "alice";
+          bluetoothAddressFile = "/run/secrets/auth_bluetooth_address";
+
+          autoConnect = {
+            enable = true;
+            checkIntervalSeconds = 30;
+            deviceUnvailableGraceSeconds = 300;
+            exceptionGraceSeconds = 300;
+            reconnectTimes = 5;
+            reconnectIntervalSeconds = 6;
+          };
+
+          autoLock = {
+            enable = true;
+            checkIntervalSeconds = 40;
+            sleepAfterLockSeconds = 30;
+            exceptionGraceSeconds = 300;
+          };
+
+          sudoAuth = {
+            enable = true;
+            timeoutSeconds = 2;
           };
 
           # 所有集成都默认关闭。只启用和你系统匹配的部分。
-          autoConnect.enable = true;
-          autoLock.enable = true;
-          sudoAuth.enable = true;
-          # polkitAuth.enable = true;
+          # polkitAuth = {
+          #   enable = true;
+          #   timeoutSeconds = 2;
+          # };
           # lockerAuth = {
           #   enable = true;
           #   pamService = "login";
+          #   timeoutSeconds = 2;
           # };
-          # greetdAuth.enable = true;
+          # greetdAuth 选项仍然存在，但当前发布的模块会强制
+          # greetdAuth.enable = false。
         };
       }
     ];
@@ -101,7 +112,7 @@
 ```
 
 如果你用 `sops-nix` 这类运行时 secret 管理器保存设备地址，请改用
-`config.bluetoothAddressFile` 指向生成的 secret 路径：
+`bluetoothAddressFile` 指向生成的 secret 路径：
 
 ```nix
 {
@@ -109,23 +120,21 @@
 
   my.security.bluetoothAuth = {
     enable = true;
-    config = {
-      user = "alice";
-      bluetoothAddressFile = config.sops.secrets.auth_bluetooth_address.path;
-    };
+    user = "alice";
+    bluetoothAddressFile = config.sops.secrets.auth_bluetooth_address.path;
   };
 }
 ```
 
 `my.security.bluetoothAuth.enable = true` 只启用模块命名空间。每个集成都有自己的 `enable` 选项，并且全部默认关闭。
 
-当启用 `autoLock`、`sudoAuth`、`polkitAuth`、`lockerAuth` 或 `greetdAuth` 时，必须设置 `my.security.bluetoothAuth.config.user`。如果你只想自动重连设备，只启用 auto-connect 即可：
+当启用 `autoLock`、`sudoAuth`、`polkitAuth` 或 `lockerAuth` 时，必须设置 `my.security.bluetoothAuth.user`。当前发布的模块会强制关闭 `greetdAuth.enable`；它的选项仍保留在文档中，用于 CLI settings schema 和本地实验。如果你只想自动重连设备，只启用 auto-connect 即可：
 
 ```nix
 {
   my.security.bluetoothAuth = {
     enable = true;
-    config.bluetoothAddressFile = "/run/secrets/auth_bluetooth_address";
+    bluetoothAddressFile = "/run/secrets/auth_bluetooth_address";
     autoConnect.enable = true;
   };
 }
@@ -133,7 +142,7 @@
 
 ## NixOS 选项
 
-下面的选项路径都相对于 `my.security.bluetoothAuth`。`config.*` 下的字段会写入生成的 JSON 配置，并传给 Python 命令。
+下面的选项路径都相对于 `my.security.bluetoothAuth`。这些选项同时包含 NixOS-only 控制项和运行时 settings。只有 Python 命令需要的运行时字段会被组装成生成的 JSON settings 文件。
 
 **核心**
 
@@ -141,44 +150,45 @@
 | --- | --- | --- |
 | `enable` | `false` | 启用模块命名空间。具体集成仍然需要单独显式启用。 |
 | `package` | flake package | 提供命令行工具的包。 |
-| `config` | `{}` | 会转换成 JSON 配置并传给命令的 attrset。 |
-| `config.user` | `""` | 被 sudo/polkit/PAM 认证信任，并作为 auto-lock 目标的用户。 |
-| `config.bluetoothAddressFile` | `""` | 包含蓝牙设备地址的运行时文件。 |
+| `user` | `""` | 被 sudo/polkit/PAM 认证信任，并作为 auto-lock 目标的用户。 |
+| `bluetoothAddressFile` | `""` | 包含蓝牙设备地址的运行时文件。 |
 
 **Auto Connect**
 
 | 选项 | 默认值 | 说明 |
 | --- | --- | --- |
 | `autoConnect.enable` | `false` | 保持受信任设备连接。系统需要已经提供 `bluetooth.service`。 |
-| `config.autoConnect.checkIntervalSeconds` | `30` | 设备已连接时的轮询间隔。CLI 会把低于 5 秒的值视为 5 秒。 |
-| `config.autoConnect.deviceUnvailableGraceSeconds` | `300` | 适配器关闭或设备未配对/未信任时的等待时间。CLI 会把低于 10 秒的值视为 10 秒。 |
-| `config.autoConnect.exceptionGraceSeconds` | `300` | BlueZ 或 D-Bus 异常后的重试等待时间。CLI 会把低于 10 秒的值视为 10 秒。 |
+| `autoConnect.checkIntervalSeconds` | `30` | 设备已连接时的轮询间隔。CLI 会把低于 5 秒的值视为 5 秒。 |
+| `autoConnect.deviceUnvailableGraceSeconds` | `300` | 适配器关闭或设备未配对/未信任时的等待时间。CLI 会把低于 10 秒的值视为 10 秒。 |
+| `autoConnect.exceptionGraceSeconds` | `300` | BlueZ 或 D-Bus 异常后的重试等待时间。CLI 会把低于 10 秒的值视为 10 秒。 |
+| `autoConnect.reconnectTimes` | `5` | 重新检查设备状态前重试 BlueZ `Device1.Connect` 的次数。 |
+| `autoConnect.reconnectIntervalSeconds` | `6` | BlueZ `Device1.Connect` 重试之间的等待时间。CLI 会把低于 2 秒的值视为 2 秒。 |
 
 **Auto Lock**
 
 | 选项 | 默认值 | 说明 |
 | --- | --- | --- |
 | `autoLock.enable` | `false` | 当设备断开连接时锁定会话。 |
-| `config.autoLock.checkIntervalSeconds` | `40` | 连接状态和锁屏状态检查的轮询间隔。CLI 会把低于 5 秒的值视为 5 秒。 |
-| `config.autoLock.sleepAfterLockSeconds` | `3` | 成功启动锁屏服务后的等待时间。CLI 会把低于 0 秒的值视为 0 秒。 |
-| `config.autoLock.exceptionGraceSeconds` | `300` | BlueZ 或 D-Bus 异常后的重试等待时间。CLI 会把低于 10 秒的值视为 10 秒。 |
+| `autoLock.checkIntervalSeconds` | `40` | 连接状态和锁屏状态检查的轮询间隔。CLI 会把低于 5 秒的值视为 5 秒。 |
+| `autoLock.sleepAfterLockSeconds` | `30` | 确认会话已锁定后的宽限时间，方便用户手动解锁后停止 auto-lock 等紧急操作。NixOS 选项要求至少 30 秒；CLI 也会把低于 30 秒的值视为 30 秒。 |
+| `autoLock.exceptionGraceSeconds` | `300` | BlueZ 或 D-Bus 异常后的重试等待时间。CLI 会把低于 10 秒的值视为 10 秒。 |
 
 **sudo PAM**
 
 | 选项 | 默认值 | 说明 |
 | --- | --- | --- |
 | `sudoAuth.enable` | `false` | 当设备已连接时，允许受信任用户通过 `sudo` 认证。 |
-| `config.sudoAuth.timeoutSeconds` | `2` | sudo PAM 蓝牙检查超时时间。CLI 会把高于 5 秒的值视为 5 秒。 |
+| `sudoAuth.timeoutSeconds` | `2` | sudo PAM 蓝牙检查超时时间。CLI 会把高于 5 秒的值视为 5 秒。 |
 
 **polkit**
 
 | 选项 | 默认值 | 说明 |
 | --- | --- | --- |
 | `polkitAuth.enable` | `false` | 添加调用蓝牙认证 helper 的 polkit rule。 |
-| `config.polkitAuth.timeoutSeconds` | `2` | polkit 蓝牙检查超时时间。CLI 会把高于 5 秒的值视为 5 秒。 |
-| `config.polkitAuth.allowedActions` | 常用桌面 actions | 允许由蓝牙认证放行的 polkit action id。 |
+| `polkitAuth.timeoutSeconds` | `2` | polkit 蓝牙检查超时时间。CLI 会把高于 5 秒的值视为 5 秒。 |
+| `polkitAuth.allowedActions` | 常用桌面 actions | 允许由蓝牙认证放行的 polkit action id。 |
 
-默认 polkit actions 包含 login1 电源/会话操作、systemd unit 管理、NetworkManager、UDisks 挂载/解锁/弹出，以及电源配置切换。设为 `config.polkitAuth.allowedActions = []` 表示不放行任何 polkit action。
+默认 polkit actions 包含 login1 电源/会话操作、systemd unit 管理、NetworkManager、UDisks 挂载/解锁/弹出，以及电源配置切换。设为 `polkitAuth.allowedActions = []` 表示不放行任何 polkit action。
 
 **Locker PAM**
 
@@ -186,17 +196,22 @@
 | --- | --- | --- |
 | `lockerAuth.enable` | `false` | 给配置的 locker PAM service 添加 PAM 规则。 |
 | `lockerAuth.pamService` | `"login"` | locker 使用的 PAM service 名。 |
-| `config.lockerAuth.timeoutSeconds` | `2` | locker PAM 蓝牙检查超时时间。CLI 会把高于 5 秒的值视为 5 秒。 |
+| `lockerAuth.timeoutSeconds` | `2` | locker PAM 蓝牙检查超时时间。CLI 会把高于 5 秒的值视为 5 秒。 |
 
 默认 locker PAM service 匹配 `NOCTALIA_PAM_SERVICE` 未设置时的 Noctalia v4.7.7。启用前请审阅，因为 `/etc/pam.d/login` 的影响范围比 Noctalia 本身更宽。
 
 **greetd PAM**
 
+当前发布的 NixOS 模块在 `my.security.bluetoothAuth.enable = true` 时会设置
+`greetdAuth.enable = lib.mkForce false`。这些选项仍然存在，Python helper 也仍支持
+`greetd` 模式，但除非本地修改这个强制关闭逻辑，否则模块不会安装 greetd PAM 规则，也不会启用 early media endpoint 设置。
+
 | 选项 | 默认值 | 说明 |
 | --- | --- | --- |
-| `greetdAuth.enable` | `false` | 给配置的 greetd PAM service 添加 PAM 规则。 |
+| `greetdAuth.enable` | `false` | 模块定义了该选项，但当前会被根 bluetooth-auth 模块强制为 `false`。 |
 | `greetdAuth.pamService` | `"greetd"` | greetd 使用的 PAM service 名。 |
-| `config.greetdAuth.timeoutSeconds` | `2` | greetd PAM 蓝牙检查超时时间。CLI 会把高于 5 秒的值视为 5 秒。 |
+| `greetdAuth.timeoutSeconds` | `2` | greetd PAM 蓝牙检查超时时间。CLI 会把高于 5 秒的值视为 5 秒。 |
+| `greetdAuth.earlyMediaEndpoints.enable` | `false` | 用于在 greetd 阶段提前启动 PipeWire/WirePlumber 并注册 A2DP endpoints。当前发布的模块中它不会生效，因为 `greetdAuth.enable` 被强制关闭。 |
 
 ## 服务
 
@@ -222,8 +237,8 @@ systemctl --user status noctalia-lock.service
 
 这个包提供以下命令：
 
-每个命令都接受一个可选的 JSON 配置文件路径。没有传路径时，会读取包内置的
-`config.json`。
+每个命令都接受一个可选的 JSON settings 文件路径。没有传路径时，会读取包内置的
+`settings.json`。
 
 ```json
 {
@@ -232,11 +247,13 @@ systemctl --user status noctalia-lock.service
   "autoConnect": {
     "checkIntervalSeconds": 30,
     "deviceUnvailableGraceSeconds": 300,
-    "exceptionGraceSeconds": 300
+    "exceptionGraceSeconds": 300,
+    "reconnectTimes": 5,
+    "reconnectIntervalSeconds": 6
   },
   "autoLock": {
     "checkIntervalSeconds": 40,
-    "sleepAfterLockSeconds": 3,
+    "sleepAfterLockSeconds": 30,
     "exceptionGraceSeconds": 300
   },
   "sudoAuth": {
@@ -283,35 +300,35 @@ systemctl --user status noctalia-lock.service
 ```
 
 ```console
-bluetooth-auth-auto-connect /path/to/config.json
+bluetooth-auth-auto-connect /path/to/settings.json
 ```
 
-保持配置中已配对且受信任的 BlueZ 设备连接。命令会一直运行，直到被中断。`autoConnect.checkIntervalSeconds` 控制设备已连接时的普通轮询间隔，`deviceUnvailableGraceSeconds` 控制适配器或设备不可用时的等待时间，`exceptionGraceSeconds` 控制 BlueZ 或 D-Bus 异常后的重试等待时间。
+保持配置中已配对且受信任的 BlueZ 设备连接。命令会一直运行，直到被中断。`autoConnect.checkIntervalSeconds` 控制设备已连接时的普通轮询间隔，`deviceUnvailableGraceSeconds` 控制适配器或设备不可用时的等待时间，`exceptionGraceSeconds` 控制 BlueZ 或 D-Bus 异常后的重试等待时间。`reconnectTimes` 和 `reconnectIntervalSeconds` 控制设备断开后重复调用 `Device1.Connect` 的次数和间隔。
 
 ```console
-bluetooth-auth-auto-lock /path/to/config.json
+bluetooth-auth-auto-lock /path/to/settings.json
 ```
 
-轮询配置中的设备连接状态；当设备断开且配置用户的活跃本地 Wayland 会话未锁定时，启动 `noctalia-lock.service`。`autoLock.checkIntervalSeconds` 控制普通轮询间隔，`sleepAfterLockSeconds` 控制启动锁屏服务后的等待时间，`exceptionGraceSeconds` 控制 BlueZ 或 D-Bus 异常后的重试等待时间。
+轮询配置中的设备连接状态；当设备断开且配置用户的活跃本地 Wayland 会话未锁定时，启动 `noctalia-lock.service`。`autoLock.checkIntervalSeconds` 控制普通轮询间隔，`sleepAfterLockSeconds` 控制确认会话已锁定后的宽限时间，`exceptionGraceSeconds` 控制 BlueZ 或 D-Bus 异常后的重试等待时间。
 
 ```console
-bluetooth-auth-oneshot-auth /path/to/config.json sudo
+bluetooth-auth-oneshot-auth /path/to/settings.json sudo
 ```
 
 检查当前 PAM 请求是否属于配置用户，以及配置中的设备是否已连接。退出状态 `0` 表示检查成功；退出状态 `1` 表示认证应继续交给下一条 PAM 规则。`sudoAuth.timeoutSeconds` 控制蓝牙检查超时时间。
 
 ```console
-bluetooth-auth-oneshot-auth /path/to/config.json polkit
+bluetooth-auth-oneshot-auth /path/to/settings.json polkit
 ```
 
 检查配置设备是否已连接。NixOS polkit rule 会先检查 subject user、活跃本地会话状态，以及 `polkitAuth.allowedActions`。
 
 ```console
-bluetooth-auth-oneshot-auth /path/to/config.json locker
-bluetooth-auth-oneshot-auth /path/to/config.json greetd
+bluetooth-auth-oneshot-auth /path/to/settings.json locker
+bluetooth-auth-oneshot-auth /path/to/settings.json greetd
 ```
 
-locker 和 greetd 集成使用的 PAM helper。它们会检查 `PAM_USER` 是否等于配置用户，然后检查配置设备是否已连接。
+locker 和 greetd 集成使用的 PAM helper。它们会检查 `PAM_USER` 是否等于配置用户，然后检查配置设备是否已连接。`greetd` CLI 模式存在，但当前发布的 NixOS 模块会强制关闭 greetd PAM 集成。
 
 ## 构建与开发
 
@@ -349,10 +366,10 @@ uv sync
 - 保留普通 `sudo` 密码路径。
 - 如果你只需要自动连接和自动锁屏，可以考虑禁用 `sudoAuth`。
 - 在共享机器或高风险机器上使用前，请先审阅 PAM 规则。
-- 对 secret 管理的设备地址，优先使用 `config.bluetoothAddressFile`，让地址在运行时读取，而不是嵌入生成出的 Nix 配置产物。
+- 对 secret 管理的设备地址，优先使用 `bluetoothAddressFile`，让地址在运行时读取，而不是嵌入生成出的 Nix 配置产物。
 - 蓝牙设备处于连接状态，并不能证明设备持有人就在旁边或正在注意这台机器。
 
-使用 `config.bluetoothAddressFile` 时，请确认生成的 secret 文件能被所有已启用集成读取。systemd 服务通常以 root 运行。`sudoAuth` 的 PAM helper 通过 `pam_exec.so seteuid` 调用，所以根据你的 PAM 设置，它的有效用户也可能需要 secret 文件的读取权限。
+使用 `bluetoothAddressFile` 时，请确认生成的 secret 文件能被所有已启用集成读取。systemd 服务通常以 root 运行。PAM helper 通过 `pam_exec.so seteuid` 调用，所以根据你的 PAM 设置，它们的有效用户也可能需要 secret 文件的读取权限。polkit helper 由 `polkitd` 启动，而 `polkitd` 通常运行在 `polkituser` 下；使用 `polkitAuth` 且 secret 权限较严格时，请参考 [POLKIT-SECRET-GROUP.zh-CN.md](./POLKIT-SECRET-GROUP.zh-CN.md)。
 
 ## 排障
 

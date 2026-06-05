@@ -16,29 +16,33 @@ from .bluetooth_device import BluetoothDevice
 MODE_SETTINGS = {
     "sudo": {
         "ident": "bluetooth-auth-sudo-auth",
-        "configKey": "sudoAuth",
-        "userMatches": lambda trusted_user: trusted_user
-        in {
-            os.environ.get("PAM_USER", "").strip(),
-            os.environ.get("PAM_RUSER", "").strip(),
-        },
+        "settingsKey": "sudoAuth",
+        "userMatches": lambda trusted_user: (
+            trusted_user
+            in {
+                os.environ.get("PAM_USER", "").strip(),
+                os.environ.get("PAM_RUSER", "").strip(),
+            }
+        ),
     },
     "polkit": {
         "ident": "bluetooth-auth-polkit-auth",
-        "configKey": "polkitAuth",
+        "settingsKey": "polkitAuth",
         "userMatches": lambda _trusted_user: True,
     },
     "locker": {
         "ident": "bluetooth-auth-locker-auth",
-        "configKey": "lockerAuth",
-        "userMatches": lambda trusted_user: os.environ.get("PAM_USER", "").strip()
-        == trusted_user,
+        "settingsKey": "lockerAuth",
+        "userMatches": lambda trusted_user: (
+            os.environ.get("PAM_USER", "").strip() == trusted_user
+        ),
     },
     "greetd": {
         "ident": "bluetooth-auth-greetd-auth",
-        "configKey": "greetdAuth",
-        "userMatches": lambda trusted_user: os.environ.get("PAM_USER", "").strip()
-        == trusted_user,
+        "settingsKey": "greetdAuth",
+        "userMatches": lambda trusted_user: (
+            os.environ.get("PAM_USER", "").strip() == trusted_user
+        ),
     },
 }
 
@@ -58,18 +62,18 @@ async def async_main() -> int:
     )
 
     try:
-        config_path = (
+        settings_path = (
             Path(sys.argv[1].strip())
             if len(sys.argv) > 1
-            else resources.files("bluetooth_auth").joinpath("config.json")
+            else resources.files("bluetooth_auth").joinpath("settings.json")
         )
-        config = json.loads(config_path.read_text(encoding="utf-8"))
-        trusted_user = config["user"].strip()
+        settings = json.loads(settings_path.read_text(encoding="utf-8"))
+        trusted_user = settings["user"].strip()
         bluetooth_address = (
-            Path(config["bluetoothAddressFile"]).read_text(encoding="utf-8").strip()
+            Path(settings["bluetoothAddressFile"]).read_text(encoding="utf-8").strip()
         )
-        settings = MODE_SETTINGS[mode]
-        if not settings["userMatches"](trusted_user):
+        mode_settings = MODE_SETTINGS[mode]
+        if not mode_settings["userMatches"](trusted_user):
             syslog.syslog(
                 syslog.LOG_INFO,
                 "PAM request is not for the trusted user; skipping auth",
@@ -78,7 +82,7 @@ async def async_main() -> int:
             return 1
 
         timeout_seconds = min(
-            float(config[settings["configKey"]]["timeoutSeconds"]),
+            float(settings[mode_settings["settingsKey"]]["timeoutSeconds"]),
             5.0,
         )
         if not trusted_user or not bluetooth_address or timeout_seconds <= 0:
@@ -86,14 +90,14 @@ async def async_main() -> int:
     except (OSError, ValueError, KeyError, TypeError) as error:
         syslog.syslog(
             syslog.LOG_ERR,
-            f"failed to load config or auth context: {type(error).__name__}: {error}",
+            f"failed to load settings or auth context: {type(error).__name__}: {error}",
         )
         syslog.closelog()
         return 2
 
     syslog.syslog(
         syslog.LOG_INFO,
-        f"starting mode={mode} config={config_path} "
+        f"starting mode={mode} settings={settings_path} "
         f"timeout_seconds={timeout_seconds}",
     )
 

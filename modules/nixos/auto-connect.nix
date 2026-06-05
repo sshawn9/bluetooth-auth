@@ -6,11 +6,43 @@
 
 let
   cfg = config.my.security.bluetoothAuth;
-  configFile = builtins.toFile "bluetooth-auth-config.json" (builtins.toJSON cfg.config);
+  mkSettingsFile = import ./settings-file.nix;
+  settingsFile = mkSettingsFile cfg;
 in
 {
-  options.my.security.bluetoothAuth.autoConnect.enable =
-    lib.mkEnableOption "automatic BlueZ Device1.Connect maintainer";
+  options.my.security.bluetoothAuth.autoConnect = {
+    enable = lib.mkEnableOption "automatic BlueZ Device1.Connect maintainer";
+
+    checkIntervalSeconds = lib.mkOption {
+      type = lib.types.ints.between 1 2147483647;
+      default = 30;
+      description = "How often to check whether the Bluetooth device is already connected.";
+    };
+
+    deviceUnvailableGraceSeconds = lib.mkOption {
+      type = lib.types.ints.between 1 2147483647;
+      default = 300;
+      description = "How long to wait when the adapter is off or the device is unavailable.";
+    };
+
+    exceptionGraceSeconds = lib.mkOption {
+      type = lib.types.ints.between 1 2147483647;
+      default = 300;
+      description = "How long to wait before retrying after a BlueZ or D-Bus error.";
+    };
+
+    reconnectTimes = lib.mkOption {
+      type = lib.types.ints.between 1 2147483647;
+      default = 5;
+      description = "How many times to retry BlueZ Device1.Connect before rechecking device state.";
+    };
+
+    reconnectIntervalSeconds = lib.mkOption {
+      type = lib.types.ints.between 1 2147483647;
+      default = 6;
+      description = "How long to wait between BlueZ Device1.Connect retries.";
+    };
+  };
 
   config = lib.mkIf (cfg.enable && cfg.autoConnect.enable) {
     systemd.services.bluetooth-auth-auto-connect = {
@@ -27,7 +59,7 @@ in
         Type = "simple";
         ExecStart = lib.escapeShellArgs [
           "${cfg.package}/bin/bluetooth-auth-auto-connect"
-          configFile
+          settingsFile
         ];
         Restart = "always";
         RestartSec = "5s";

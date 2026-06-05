@@ -13,24 +13,28 @@ from .bluetooth_device import BluetoothDevice
 
 async def async_main() -> int:
     try:
-        config_path = (
+        settings_path = (
             Path(sys.argv[1].strip())
             if len(sys.argv) > 1
-            else resources.files("bluetooth_auth").joinpath("config.json")
+            else resources.files("bluetooth_auth").joinpath("settings.json")
         )
-        config = json.loads(config_path.read_text(encoding="utf-8"))
+        settings = json.loads(settings_path.read_text(encoding="utf-8"))
         bluetooth_address = (
-            Path(config["bluetoothAddressFile"]).read_text(encoding="utf-8").strip()
+            Path(settings["bluetoothAddressFile"]).read_text(encoding="utf-8").strip()
         )
-        auto_connect_config = config["autoConnect"]
+        auto_connect_settings = settings["autoConnect"]
         check_interval_seconds = max(
-            int(auto_connect_config["checkIntervalSeconds"]), 5
+            int(auto_connect_settings["checkIntervalSeconds"]), 5
         )
         device_unavailable_grace_seconds = max(
-            int(auto_connect_config["deviceUnvailableGraceSeconds"]), 10
+            int(auto_connect_settings["deviceUnvailableGraceSeconds"]), 10
         )
         exception_grace_seconds = max(
-            int(auto_connect_config["exceptionGraceSeconds"]), 10
+            int(auto_connect_settings["exceptionGraceSeconds"]), 10
+        )
+        reconnect_times = max(int(auto_connect_settings["reconnectTimes"]), 1)
+        reconnect_interval_seconds = max(
+            int(auto_connect_settings["reconnectIntervalSeconds"]), 2
         )
         if (
             not bluetooth_address
@@ -41,7 +45,7 @@ async def async_main() -> int:
             raise ValueError
     except (OSError, ValueError, KeyError, TypeError) as error:
         print(
-            "bluetooth-auth-auto-connect: failed to load config or address file: "
+            "bluetooth-auth-auto-connect: failed to load settings or address file: "
             f"{type(error).__name__}: {error}",
             file=sys.stderr,
             flush=True,
@@ -50,10 +54,12 @@ async def async_main() -> int:
 
     print(
         "bluetooth-auth-auto-connect: starting "
-        f"config={config_path} "
+        f"settings={settings_path} "
         f"check_interval_seconds={check_interval_seconds} "
         f"device_unavailable_grace_seconds={device_unavailable_grace_seconds} "
-        f"exception_grace_seconds={exception_grace_seconds}",
+        f"exception_grace_seconds={exception_grace_seconds} "
+        f"reconnect_times={reconnect_times} "
+        f"reconnect_interval_seconds={reconnect_interval_seconds}",
         flush=True,
     )
 
@@ -93,13 +99,6 @@ async def async_main() -> int:
                 )
                 await asyncio.sleep(device_unavailable_grace_seconds)
                 continue
-
-            print(
-                "bluetooth-auth-auto-connect: device is disconnected; "
-                "requesting BlueZ connection",
-                flush=True,
-            )
-            await device.bluez_device_iface.call_connect()
         except (DBusError, InterfaceNotFoundError, OSError) as error:
             device.close()
             print(
@@ -117,6 +116,7 @@ async def async_main() -> int:
                     flush=True,
                 )
                 return 130
+            continue
         except (asyncio.CancelledError, KeyboardInterrupt):
             device.close()
             print("bluetooth-auth-auto-connect: interrupted", flush=True)
@@ -139,6 +139,66 @@ async def async_main() -> int:
                 flush=True,
             )
             return 2
+
+        retries = 0
+        while retries < reconnect_times:
+            retries += 1
+            try:
+                print(
+                    "bluetooth-auth-auto-connect: device is disconnected; "
+                    f"requesting BlueZ connection attempt={retries}/{reconnect_times}",
+                    flush=True,
+                )
+                await device.bluez_device_iface.call_connect()
+                break
+            except DBusError as error:
+                print(
+                    "bluetooth-auth-auto-connect: failed to request BlueZ connection; "
+                    f"retrying in {reconnect_interval_seconds}s: "
+                    f"{type(error).__name__}: {error}",
+                    file=sys.stderr,
+                    flush=True,
+                )
+                try:
+                    await asyncio.sleep(reconnect_interval_seconds)
+                except (asyncio.CancelledError, KeyboardInterrupt):
+                    print(
+                        "bluetooth-auth-auto-connect: interrupted during connection retry sleep",
+                        flush=True,
+                    )
+                    return 130
+                continue
+            except OSError as error:
+                device.close()
+                print(
+                    "bluetooth-auth-auto-connect: failed to request BlueZ connection; "
+                    f"retrying state check in {exception_grace_seconds}s: "
+                    f"{type(error).__name__}: {error}",
+                    file=sys.stderr,
+                    flush=True,
+                )
+                try:
+                    await asyncio.sleep(exception_grace_seconds)
+                except (asyncio.CancelledError, KeyboardInterrupt):
+                    print(
+                        "bluetooth-auth-auto-connect: interrupted during connection retry sleep",
+                        flush=True,
+                    )
+                    return 130
+                break
+            except (asyncio.CancelledError, KeyboardInterrupt):
+                device.close()
+                print("bluetooth-auth-auto-connect: interrupted", flush=True)
+                return 130
+            except Exception as error:
+                device.close()
+                print(
+                    "bluetooth-auth-auto-connect: unexpected connection error: "
+                    f"{type(error).__name__}: {error}",
+                    file=sys.stderr,
+                    flush=True,
+                )
+                return 2
 
 
 def main() -> int:

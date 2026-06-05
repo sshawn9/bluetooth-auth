@@ -14,26 +14,26 @@ from .session import Session
 
 async def async_main() -> int:
     try:
-        config_path = (
+        settings_path = (
             Path(sys.argv[1].strip())
             if len(sys.argv) > 1
-            else resources.files("bluetooth_auth").joinpath("config.json")
+            else resources.files("bluetooth_auth").joinpath("settings.json")
         )
-        config = json.loads(config_path.read_text(encoding="utf-8"))
-        user = config["user"].strip()
+        settings = json.loads(settings_path.read_text(encoding="utf-8"))
+        user = settings["user"].strip()
         bluetooth_address = (
-            Path(config["bluetoothAddressFile"]).read_text(encoding="utf-8").strip()
+            Path(settings["bluetoothAddressFile"]).read_text(encoding="utf-8").strip()
         )
-        auto_lock_config = config["autoLock"]
+        auto_lock_settings = settings["autoLock"]
         check_interval_seconds = max(
-            int(auto_lock_config["checkIntervalSeconds"]),
+            int(auto_lock_settings["checkIntervalSeconds"]),
             5,
         )
         sleep_after_lock_seconds = max(
-            int(auto_lock_config["sleepAfterLockSeconds"]), 0
+            int(auto_lock_settings["sleepAfterLockSeconds"]), 30
         )
         exception_grace_seconds = max(
-            int(auto_lock_config["exceptionGraceSeconds"]), 10
+            int(auto_lock_settings["exceptionGraceSeconds"]), 10
         )
         if (
             not user
@@ -45,7 +45,7 @@ async def async_main() -> int:
             raise ValueError
     except (OSError, ValueError, KeyError, TypeError) as error:
         print(
-            "bluetooth-auth-auto-lock: failed to load config or address file: "
+            "bluetooth-auth-auto-lock: failed to load settings or address file: "
             f"{type(error).__name__}: {error}",
             file=sys.stderr,
             flush=True,
@@ -54,7 +54,7 @@ async def async_main() -> int:
 
     print(
         "bluetooth-auth-auto-lock: starting "
-        f"config={config_path} "
+        f"settings={settings_path} "
         f"user={user} "
         f"check_interval_seconds={check_interval_seconds} "
         f"sleep_after_lock_seconds={sleep_after_lock_seconds} "
@@ -151,59 +151,76 @@ async def async_main() -> int:
                 return 130
             continue
 
-        try:
-            print(
-                "bluetooth-auth-auto-lock: device is disconnected and session is unlocked; "
-                "starting noctalia-lock.service",
-                flush=True,
-            )
-            subprocess.run(
-                ("systemctl", "start", "noctalia-lock.service"),
-                check=True,
-            )
-            print(
-                "bluetooth-auth-auto-lock: noctalia-lock.service start completed; "
-                f"sleeping {sleep_after_lock_seconds}s",
-                flush=True,
-            )
-            if not await async_sleep(sleep_after_lock_seconds):
-                device.close()
+        while True:
+            try:
                 print(
-                    "bluetooth-auth-auto-lock: interrupted after starting lock service",
+                    "bluetooth-auth-auto-lock: device is disconnected and session is unlocked; "
+                    "starting noctalia-lock.service",
                     flush=True,
                 )
+                subprocess.run(
+                    ("systemctl", "start", "noctalia-lock.service"),
+                    check=True,
+                )
+                if not session.is_locked():
+                    print(
+                        "bluetooth-auth-auto-lock: session is still unlocked after "
+                        "starting noctalia-lock.service; retrying in 0.2s",
+                        flush=True,
+                    )
+                    if not await async_sleep(0.2):
+                        device.close()
+                        print(
+                            "bluetooth-auth-auto-lock: interrupted during retry sleep",
+                            flush=True,
+                        )
+                        return 130
+                    continue
+                print(
+                    "bluetooth-auth-auto-lock: noctalia-lock.service start completed "
+                    "and session is locked; "
+                    f"sleeping {sleep_after_lock_seconds}s",
+                    flush=True,
+                )
+                if not await async_sleep(sleep_after_lock_seconds):
+                    device.close()
+                    print(
+                        "bluetooth-auth-auto-lock: interrupted after starting lock service",
+                        flush=True,
+                    )
+                    return 130
+                break
+            except subprocess.CalledProcessError as error:
+                device.close()
+                print(
+                    "bluetooth-auth-auto-lock: noctalia-lock.service failed: "
+                    f"returncode={error.returncode}",
+                    file=sys.stderr,
+                    flush=True,
+                )
+                return 1
+            except OSError as error:
+                device.close()
+                print(
+                    "bluetooth-auth-auto-lock: failed to execute systemctl: "
+                    f"{type(error).__name__}: {error}",
+                    file=sys.stderr,
+                    flush=True,
+                )
+                return 2
+            except KeyboardInterrupt:
+                device.close()
+                print("bluetooth-auth-auto-lock: interrupted", flush=True)
                 return 130
-        except subprocess.CalledProcessError as error:
-            device.close()
-            print(
-                "bluetooth-auth-auto-lock: noctalia-lock.service failed: "
-                f"returncode={error.returncode}",
-                file=sys.stderr,
-                flush=True,
-            )
-            return 1
-        except OSError as error:
-            device.close()
-            print(
-                "bluetooth-auth-auto-lock: failed to execute systemctl: "
-                f"{type(error).__name__}: {error}",
-                file=sys.stderr,
-                flush=True,
-            )
-            return 2
-        except KeyboardInterrupt:
-            device.close()
-            print("bluetooth-auth-auto-lock: interrupted", flush=True)
-            return 130
-        except Exception as error:
-            device.close()
-            print(
-                "bluetooth-auth-auto-lock: unexpected lock command error: "
-                f"{type(error).__name__}: {error}",
-                file=sys.stderr,
-                flush=True,
-            )
-            return 2
+            except Exception as error:
+                device.close()
+                print(
+                    "bluetooth-auth-auto-lock: unexpected lock command error: "
+                    f"{type(error).__name__}: {error}",
+                    file=sys.stderr,
+                    flush=True,
+                )
+                return 2
 
 
 def main() -> int:

@@ -11,8 +11,8 @@ NixOS.
 `bluetooth-auth` watches one trusted Bluetooth device and uses its connection
 state as a convenience signal for local desktop security workflows. It can keep
 the device connected, lock the session when the device disconnects, and allow a
-specific trusted user to pass `sudo` authentication while the device is
-connected.
+specific trusted user to pass selected local authentication checks while the
+device is connected.
 
 > Bluetooth proximity is a convenience factor, not strong authentication. Use
 > this for trusted personal machines where the ergonomics are worth the risk,
@@ -38,8 +38,9 @@ machine.
   device.
 - Locks the active local Wayland session when the device is no longer
   connected.
-- Adds an optional `sudo` PAM rule that succeeds for one configured user when
-  the trusted Bluetooth device is connected.
+- Adds optional `sudo` PAM, locker PAM, and polkit integrations that can
+  succeed for one configured user when the trusted Bluetooth device is
+  connected.
 - Ships as a Nix flake with a NixOS module and a Python package.
 - Uses BlueZ over the system D-Bus through `dbus-fast`.
 
@@ -58,7 +59,7 @@ The current device path assumes the adapter is `hci0`.
 `bluetooth-auth` does not manage pairing. The configured device only needs to
 already be paired and trusted in BlueZ. Pair it however you normally manage
 Bluetooth devices on your system, then store its address in the runtime file
-referenced by `config.bluetoothAddressFile`.
+referenced by `bluetoothAddressFile`.
 
 ## NixOS Installation
 
@@ -90,32 +91,43 @@ enable the integrations you actually want:
       {
         my.security.bluetoothAuth = {
           enable = true;
-          config = {
-            user = "alice";
-            bluetoothAddressFile = "/run/secrets/auth_bluetooth_address";
-            autoConnect.checkIntervalSeconds = 30;
-            autoConnect.deviceUnvailableGraceSeconds = 300;
-            autoConnect.exceptionGraceSeconds = 300;
-            autoLock.checkIntervalSeconds = 40;
-            autoLock.sleepAfterLockSeconds = 3;
-            autoLock.exceptionGraceSeconds = 300;
-            sudoAuth.timeoutSeconds = 2;
-            polkitAuth.timeoutSeconds = 2;
-            lockerAuth.timeoutSeconds = 2;
-            greetdAuth.timeoutSeconds = 2;
+          user = "alice";
+          bluetoothAddressFile = "/run/secrets/auth_bluetooth_address";
+
+          autoConnect = {
+            enable = true;
+            checkIntervalSeconds = 30;
+            deviceUnvailableGraceSeconds = 300;
+            exceptionGraceSeconds = 300;
+            reconnectTimes = 5;
+            reconnectIntervalSeconds = 6;
+          };
+
+          autoLock = {
+            enable = true;
+            checkIntervalSeconds = 40;
+            sleepAfterLockSeconds = 30;
+            exceptionGraceSeconds = 300;
+          };
+
+          sudoAuth = {
+            enable = true;
+            timeoutSeconds = 2;
           };
 
           # All integrations are disabled by default. Enable only the pieces
           # that match your system.
-          autoConnect.enable = true;
-          autoLock.enable = true;
-          sudoAuth.enable = true;
-          # polkitAuth.enable = true;
+          # polkitAuth = {
+          #   enable = true;
+          #   timeoutSeconds = 2;
+          # };
           # lockerAuth = {
           #   enable = true;
           #   pamService = "login";
+          #   timeoutSeconds = 2;
           # };
-          # greetdAuth.enable = true;
+          # greetdAuth options exist, but the shipped module currently forces
+          # greetdAuth.enable = false.
         };
       }
     ];
@@ -124,7 +136,7 @@ enable the integrations you actually want:
 ```
 
 If you manage the device address with a runtime secret manager such as
-`sops-nix`, point `config.bluetoothAddressFile` at the generated secret path:
+`sops-nix`, point `bluetoothAddressFile` at the generated secret path:
 
 ```nix
 {
@@ -132,10 +144,8 @@ If you manage the device address with a runtime secret manager such as
 
   my.security.bluetoothAuth = {
     enable = true;
-    config = {
-      user = "alice";
-      bluetoothAddressFile = config.sops.secrets.auth_bluetooth_address.path;
-    };
+    user = "alice";
+    bluetoothAddressFile = config.sops.secrets.auth_bluetooth_address.path;
   };
 }
 ```
@@ -144,15 +154,17 @@ If you manage the device address with a runtime secret manager such as
 Every integration has its own `enable` option, and all of them default to
 `false`.
 
-Set `my.security.bluetoothAuth.config.user` whenever `autoLock`, `sudoAuth`,
-`polkitAuth`, `lockerAuth`, or `greetdAuth` is enabled. If you only want
-automatic reconnects, enable just that integration:
+Set `my.security.bluetoothAuth.user` whenever `autoLock`, `sudoAuth`,
+`polkitAuth`, or `lockerAuth` is enabled. The shipped module currently
+force-disables `greetdAuth.enable`; its options remain documented for the CLI
+schema and local experiments. If you only want automatic reconnects, enable
+just that integration:
 
 ```nix
 {
   my.security.bluetoothAuth = {
     enable = true;
-    config.bluetoothAddressFile = "/run/secrets/auth_bluetooth_address";
+    bluetoothAddressFile = "/run/secrets/auth_bluetooth_address";
     autoConnect.enable = true;
   };
 }
@@ -160,9 +172,10 @@ automatic reconnects, enable just that integration:
 
 ## NixOS Options
 
-Option paths below are relative to `my.security.bluetoothAuth`. Fields under
-`config.*` are written into the generated JSON config passed to the Python
-commands.
+Option paths below are relative to `my.security.bluetoothAuth`. These options
+include both NixOS-only controls and runtime settings. Only the runtime fields
+needed by the Python commands are assembled into the generated JSON settings
+file.
 
 **Core**
 
@@ -170,46 +183,47 @@ commands.
 | --- | --- | --- |
 | `enable` | `false` | Enables the module namespace. Individual integrations still need to be enabled explicitly. |
 | `package` | flake package | Package that provides the command-line tools. |
-| `config` | `{}` | Attribute set converted to the generated JSON config passed to the commands. |
-| `config.user` | `""` | User trusted by sudo/polkit/PAM auth and targeted by auto-lock. |
-| `config.bluetoothAddressFile` | `""` | Runtime file containing the Bluetooth device address. |
+| `user` | `""` | User trusted by sudo/polkit/PAM auth and targeted by auto-lock. |
+| `bluetoothAddressFile` | `""` | Runtime file containing the Bluetooth device address. |
 
 **Auto Connect**
 
 | Option | Default | Description |
 | --- | --- | --- |
 | `autoConnect.enable` | `false` | Keeps the trusted device connected. The system must already provide `bluetooth.service`. |
-| `config.autoConnect.checkIntervalSeconds` | `30` | Polling interval when the device is already connected. Values below 5 seconds are treated as 5 seconds by the CLI. |
-| `config.autoConnect.deviceUnvailableGraceSeconds` | `300` | Delay when the adapter is powered off or the device is not paired/trusted. Values below 10 seconds are treated as 10 seconds by the CLI. |
-| `config.autoConnect.exceptionGraceSeconds` | `300` | Delay after a BlueZ or D-Bus error before retrying. Values below 10 seconds are treated as 10 seconds by the CLI. |
+| `autoConnect.checkIntervalSeconds` | `30` | Polling interval when the device is already connected. Values below 5 seconds are treated as 5 seconds by the CLI. |
+| `autoConnect.deviceUnvailableGraceSeconds` | `300` | Delay when the adapter is powered off or the device is not paired/trusted. Values below 10 seconds are treated as 10 seconds by the CLI. |
+| `autoConnect.exceptionGraceSeconds` | `300` | Delay after a BlueZ or D-Bus error before retrying. Values below 10 seconds are treated as 10 seconds by the CLI. |
+| `autoConnect.reconnectTimes` | `5` | Number of BlueZ `Device1.Connect` retries before rechecking device state. |
+| `autoConnect.reconnectIntervalSeconds` | `6` | Delay between BlueZ `Device1.Connect` retries. Values below 2 seconds are treated as 2 seconds by the CLI. |
 
 **Auto Lock**
 
 | Option | Default | Description |
 | --- | --- | --- |
 | `autoLock.enable` | `false` | Locks the session when the device disconnects. |
-| `config.autoLock.checkIntervalSeconds` | `40` | Polling interval for connection and lock checks. Values below 5 seconds are treated as 5 seconds by the CLI. |
-| `config.autoLock.sleepAfterLockSeconds` | `3` | Delay after successfully starting the lock service. Values below 0 seconds are treated as 0 seconds by the CLI. |
-| `config.autoLock.exceptionGraceSeconds` | `300` | Delay after a BlueZ or D-Bus error before retrying. Values below 10 seconds are treated as 10 seconds by the CLI. |
+| `autoLock.checkIntervalSeconds` | `40` | Polling interval for connection and lock checks. Values below 5 seconds are treated as 5 seconds by the CLI. |
+| `autoLock.sleepAfterLockSeconds` | `30` | Grace window after confirming the session is locked, giving the user time to unlock and stop auto-lock if needed. The NixOS option requires at least 30 seconds; the CLI also treats lower values as 30 seconds. |
+| `autoLock.exceptionGraceSeconds` | `300` | Delay after a BlueZ or D-Bus error before retrying. Values below 10 seconds are treated as 10 seconds by the CLI. |
 
 **sudo PAM**
 
 | Option | Default | Description |
 | --- | --- | --- |
 | `sudoAuth.enable` | `false` | Allows the trusted user to pass `sudo` auth when the device is connected. |
-| `config.sudoAuth.timeoutSeconds` | `2` | Timeout for the sudo PAM Bluetooth check. Values above 5 seconds are treated as 5 seconds by the CLI. |
+| `sudoAuth.timeoutSeconds` | `2` | Timeout for the sudo PAM Bluetooth check. Values above 5 seconds are treated as 5 seconds by the CLI. |
 
 **polkit**
 
 | Option | Default | Description |
 | --- | --- | --- |
 | `polkitAuth.enable` | `false` | Adds a polkit rule that calls the Bluetooth auth helper. |
-| `config.polkitAuth.timeoutSeconds` | `2` | Timeout for the polkit Bluetooth check. Values above 5 seconds are treated as 5 seconds by the CLI. |
-| `config.polkitAuth.allowedActions` | common desktop actions | polkit action ids that Bluetooth auth may authorize. |
+| `polkitAuth.timeoutSeconds` | `2` | Timeout for the polkit Bluetooth check. Values above 5 seconds are treated as 5 seconds by the CLI. |
+| `polkitAuth.allowedActions` | common desktop actions | polkit action ids that Bluetooth auth may authorize. |
 
 The default polkit actions include login1 power/session actions, systemd unit
 management, NetworkManager, UDisks mount/unlock/eject, and power profile
-controls. Set `config.polkitAuth.allowedActions = []` to authorize no polkit
+controls. Set `polkitAuth.allowedActions = []` to authorize no polkit
 actions.
 
 **Locker PAM**
@@ -218,7 +232,7 @@ actions.
 | --- | --- | --- |
 | `lockerAuth.enable` | `false` | Adds a PAM rule to the configured locker PAM service. |
 | `lockerAuth.pamService` | `"login"` | PAM service name used by the locker. |
-| `config.lockerAuth.timeoutSeconds` | `2` | Timeout for the locker PAM Bluetooth check. Values above 5 seconds are treated as 5 seconds by the CLI. |
+| `lockerAuth.timeoutSeconds` | `2` | Timeout for the locker PAM Bluetooth check. Values above 5 seconds are treated as 5 seconds by the CLI. |
 
 The default locker PAM service matches Noctalia v4.7.7 when
 `NOCTALIA_PAM_SERVICE` is unset. Review before enabling because
@@ -226,11 +240,18 @@ The default locker PAM service matches Noctalia v4.7.7 when
 
 **greetd PAM**
 
+The shipped NixOS module currently sets `greetdAuth.enable =
+lib.mkForce false` when `my.security.bluetoothAuth.enable` is true. These
+options are still present, and the Python helper still supports `greetd` mode,
+but the module will not install the greetd PAM rule or early media endpoint
+setup unless that force-disable is changed locally.
+
 | Option | Default | Description |
 | --- | --- | --- |
-| `greetdAuth.enable` | `false` | Adds a PAM rule to the configured greetd PAM service. |
+| `greetdAuth.enable` | `false` | Defined by the module, but currently forced to `false` by the root bluetooth-auth module. |
 | `greetdAuth.pamService` | `"greetd"` | PAM service name used by greetd. |
-| `config.greetdAuth.timeoutSeconds` | `2` | Timeout for the greetd PAM Bluetooth check. Values above 5 seconds are treated as 5 seconds by the CLI. |
+| `greetdAuth.timeoutSeconds` | `2` | Timeout for the greetd PAM Bluetooth check. Values above 5 seconds are treated as 5 seconds by the CLI. |
+| `greetdAuth.earlyMediaEndpoints.enable` | `false` | Early PipeWire/WirePlumber startup for greetd-stage A2DP endpoints. In the shipped module this is inert because `greetdAuth.enable` is forced off. |
 
 ## Services
 
@@ -256,8 +277,8 @@ systemctl --user status noctalia-lock.service
 
 The package exposes these commands:
 
-Each command accepts an optional path to a JSON config file. When no path is
-provided, it reads the package's built-in `config.json`.
+Each command accepts an optional path to a JSON settings file. When no path is
+provided, it reads the package's built-in `settings.json`.
 
 ```json
 {
@@ -266,11 +287,13 @@ provided, it reads the package's built-in `config.json`.
   "autoConnect": {
     "checkIntervalSeconds": 30,
     "deviceUnvailableGraceSeconds": 300,
-    "exceptionGraceSeconds": 300
+    "exceptionGraceSeconds": 300,
+    "reconnectTimes": 5,
+    "reconnectIntervalSeconds": 6
   },
   "autoLock": {
     "checkIntervalSeconds": 40,
-    "sleepAfterLockSeconds": 3,
+    "sleepAfterLockSeconds": 30,
     "exceptionGraceSeconds": 300
   },
   "sudoAuth": {
@@ -317,7 +340,7 @@ provided, it reads the package's built-in `config.json`.
 ```
 
 ```console
-bluetooth-auth-auto-connect /path/to/config.json
+bluetooth-auth-auto-connect /path/to/settings.json
 ```
 
 Keeps the configured paired and trusted BlueZ device connected. The command
@@ -325,20 +348,22 @@ exits only when interrupted. `autoConnect.checkIntervalSeconds` controls the
 normal connected-device polling interval, `deviceUnvailableGraceSeconds`
 controls the wait when the adapter or device is unavailable, and
 `exceptionGraceSeconds` controls retries after BlueZ or D-Bus errors.
+`reconnectTimes` and `reconnectIntervalSeconds` control repeated
+`Device1.Connect` attempts after the device is disconnected.
 
 ```console
-bluetooth-auth-auto-lock /path/to/config.json
+bluetooth-auth-auto-lock /path/to/settings.json
 ```
 
 Polls the configured device connection state and starts
 `noctalia-lock.service` when the device is disconnected and the configured
 user's active local Wayland session is unlocked. `autoLock.checkIntervalSeconds`
-controls normal polling, `sleepAfterLockSeconds` controls the delay after
-starting the lock service, and `exceptionGraceSeconds` controls retries after
-BlueZ or D-Bus errors.
+controls normal polling, `sleepAfterLockSeconds` controls the grace window
+after confirming the session is locked, and `exceptionGraceSeconds` controls
+retries after BlueZ or D-Bus errors.
 
 ```console
-bluetooth-auth-oneshot-auth /path/to/config.json sudo
+bluetooth-auth-oneshot-auth /path/to/settings.json sudo
 ```
 
 Checks whether the current PAM request belongs to the configured user and
@@ -347,7 +372,7 @@ succeeded. Exit status `1` means authentication should continue to the next PAM
 rule. `sudoAuth.timeoutSeconds` controls the Bluetooth check timeout.
 
 ```console
-bluetooth-auth-oneshot-auth /path/to/config.json polkit
+bluetooth-auth-oneshot-auth /path/to/settings.json polkit
 ```
 
 Checks whether the configured device is connected. The NixOS polkit rule checks
@@ -355,12 +380,14 @@ the subject user, active local session state, and `polkitAuth.allowedActions`
 before calling this mode.
 
 ```console
-bluetooth-auth-oneshot-auth /path/to/config.json locker
-bluetooth-auth-oneshot-auth /path/to/config.json greetd
+bluetooth-auth-oneshot-auth /path/to/settings.json locker
+bluetooth-auth-oneshot-auth /path/to/settings.json greetd
 ```
 
 PAM helpers for locker and greetd integrations. They check `PAM_USER` against
 the configured user and then check whether the configured device is connected.
+The `greetd` CLI mode exists, but the shipped NixOS module currently
+force-disables the greetd PAM integration.
 
 ## Build and Development
 
@@ -400,16 +427,18 @@ Important implications:
 - Keep the normal `sudo` password path available.
 - Consider disabling `sudoAuth` if you only want auto-connect and auto-lock.
 - Review the PAM rule before using this on a shared or high-risk machine.
-- Prefer `config.bluetoothAddressFile` for secret-managed device addresses so
+- Prefer `bluetoothAddressFile` for secret-managed device addresses so
   the address is read at runtime instead of embedded in generated Nix artifacts.
 - A connected Bluetooth device does not prove that the device owner is present
   or attentive.
 
-When using `config.bluetoothAddressFile`, make sure the generated secret file
+When using `bluetoothAddressFile`, make sure the generated secret file
 is readable by every enabled integration. The systemd services normally run as
-root. The `sudoAuth` PAM helper is invoked through `pam_exec.so seteuid`, so its
-effective user may need permission to read the secret file depending on your
-PAM setup.
+root. PAM helpers are invoked through `pam_exec.so seteuid`, so their effective
+users may need permission depending on your PAM setup. The polkit helper is
+spawned by `polkitd`, which normally runs as `polkituser`; see
+[POLKIT-SECRET-GROUP.md](./POLKIT-SECRET-GROUP.md) when using `polkitAuth`
+with restrictive secret permissions.
 
 ## Troubleshooting
 

@@ -6,7 +6,8 @@
 
 let
   cfg = config.my.security.bluetoothAuth;
-  configFile = builtins.toFile "bluetooth-auth-config.json" (builtins.toJSON cfg.config);
+  mkSettingsFile = import ./settings-file.nix;
+  settingsFile = mkSettingsFile cfg;
   pamService = cfg.lockerAuth.pamService;
 in
 {
@@ -19,6 +20,12 @@ in
       example = "login";
       description = "PAM service name used by the locker.";
     };
+
+    timeoutSeconds = lib.mkOption {
+      type = lib.types.ints.between 1 2147483647;
+      default = 2;
+      description = "Maximum time to wait for the Bluetooth connection check during locker PAM auth.";
+    };
   };
 
   config = lib.mkIf (cfg.enable && cfg.lockerAuth.enable) {
@@ -30,7 +37,7 @@ in
         "seteuid"
         "quiet"
         "${cfg.package}/bin/bluetooth-auth-oneshot-auth"
-        configFile
+        settingsFile
         "locker"
       ];
     };

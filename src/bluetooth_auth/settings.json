@@ -4,11 +4,13 @@
     "autoConnect": {
         "checkIntervalSeconds": 30,
         "deviceUnvailableGraceSeconds": 300,
-        "exceptionGraceSeconds": 300
+        "exceptionGraceSeconds": 300,
+        "reconnectTimes": 5,
+        "reconnectIntervalSeconds": 6
     },
     "autoLock": {
         "checkIntervalSeconds": 40,
-        "sleepAfterLockSeconds": 3,
+        "sleepAfterLockSeconds": 30,
         "exceptionGraceSeconds": 300
     },
     "sudoAuth": {

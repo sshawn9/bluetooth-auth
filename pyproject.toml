@@ -22,7 +22,7 @@ build-backend = "hatchling.build"
 packages = ["src/bluetooth_auth"]
 
 [tool.hatch.build.targets.wheel.force-include]
-"src/bluetooth_auth/config.json" = "bluetooth_auth/config.json"
+"src/bluetooth_auth/settings.json" = "bluetooth_auth/settings.json"
 
 [tool.hatch.build.targets.sdist]
 include = [
