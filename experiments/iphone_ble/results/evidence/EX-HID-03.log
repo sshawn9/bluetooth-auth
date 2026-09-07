@@ -1,0 +1,301 @@
+❯ sudo experiments/iphone_ble/.venv/bin/python -B \
+  experiments/iphone_ble/ble_lab.py run hid \
+  --adapter hci0 --cycles 3 --hold-seconds 30 \
+  --initial-timeout 45 --reconnect-timeout 30
+{
+  "event": "adapter_handoff",
+  "mode": "hid",
+  "adapter": "hci0",
+  "previous_connections": []
+}
+{
+  "event": "radio_ready",
+  "mode": "hid",
+  "controller_index": 0
+}
+{
+  "event": "advertising",
+  "mode": "hid",
+  "cycle": 1,
+  "name": "BT-Auth-HID",
+  "interval_ms": 20,
+  "name_location": "advertising",
+  "advertising_data_hex": "020106030312180319c0030c0942542d417574682d484944",
+  "scan_response_data_hex": "",
+  "packet_type": "legacy_connectable_scannable",
+  "controller_api": "extended",
+  "message": "控制器已接受广播命令；尚未收到手机连接。"
+}
+{
+  "event": "waiting_for_connection",
+  "mode": "hid",
+  "cycle": 1,
+  "name": "BT-Auth-HID",
+  "timeout_seconds": 45.0,
+  "message": "正在等待已配对的 iPhone 自动连回；重连测试期间不要操作手机。"
+}
+{
+  "event": "link",
+  "mode": "hid",
+  "cycle": 1
+}
+{
+  "event": "security_request",
+  "mode": "hid",
+  "cycle": 1
+}
+{
+  "event": "encryption",
+  "mode": "hid",
+  "cycle": 1
+}
+{
+  "event": "service_ready",
+  "mode": "hid",
+  "cycle": 1
+}
+{
+  "event": "hold_complete",
+  "mode": "hid",
+  "cycle": 1
+}
+{
+  "event": "cycle_disconnect",
+  "mode": "hid",
+  "cycle": 1
+}
+{
+  "event": "advertising",
+  "mode": "hid",
+  "cycle": 2,
+  "name": "BT-Auth-HID",
+  "interval_ms": 20,
+  "name_location": "advertising",
+  "advertising_data_hex": "020106030312180319c0030c0942542d417574682d484944",
+  "scan_response_data_hex": "",
+  "packet_type": "legacy_connectable_scannable",
+  "controller_api": "extended",
+  "message": "控制器已接受广播命令；尚未收到手机连接。"
+}
+{
+  "event": "waiting_for_connection",
+  "mode": "hid",
+  "cycle": 2,
+  "name": "BT-Auth-HID",
+  "timeout_seconds": 30.0,
+  "message": "正在等待已配对的 iPhone 自动连回；重连测试期间不要操作手机。"
+}
+{
+  "event": "link",
+  "mode": "hid",
+  "cycle": 2
+}
+{
+  "event": "security_request",
+  "mode": "hid",
+  "cycle": 2
+}
+{
+  "event": "encryption",
+  "mode": "hid",
+  "cycle": 2
+}
+{
+  "event": "service_ready",
+  "mode": "hid",
+  "cycle": 2
+}
+{
+  "event": "hold_complete",
+  "mode": "hid",
+  "cycle": 2
+}
+{
+  "event": "cycle_disconnect",
+  "mode": "hid",
+  "cycle": 2
+}
+{
+  "event": "advertising",
+  "mode": "hid",
+  "cycle": 3,
+  "name": "BT-Auth-HID",
+  "interval_ms": 20,
+  "name_location": "advertising",
+  "advertising_data_hex": "020106030312180319c0030c0942542d417574682d484944",
+  "scan_response_data_hex": "",
+  "packet_type": "legacy_connectable_scannable",
+  "controller_api": "extended",
+  "message": "控制器已接受广播命令；尚未收到手机连接。"
+}
+{
+  "event": "waiting_for_connection",
+  "mode": "hid",
+  "cycle": 3,
+  "name": "BT-Auth-HID",
+  "timeout_seconds": 30.0,
+  "message": "正在等待已配对的 iPhone 自动连回；重连测试期间不要操作手机。"
+}
+{
+  "event": "link",
+  "mode": "hid",
+  "cycle": 3
+}
+{
+  "event": "security_request",
+  "mode": "hid",
+  "cycle": 3
+}
+{
+  "event": "encryption",
+  "mode": "hid",
+  "cycle": 3
+}
+{
+  "event": "service_ready",
+  "mode": "hid",
+  "cycle": 3
+}
+{
+  "event": "hold_complete",
+  "mode": "hid",
+  "cycle": 3
+}
+{
+  "event": "cycle_disconnect",
+  "mode": "hid",
+  "cycle": 3
+}
+{
+  "event": "advertising",
+  "mode": "hid",
+  "cycle": 4,
+  "name": "BT-Auth-HID",
+  "interval_ms": 20,
+  "name_location": "advertising",
+  "advertising_data_hex": "020106030312180319c0030c0942542d417574682d484944",
+  "scan_response_data_hex": "",
+  "packet_type": "legacy_connectable_scannable",
+  "controller_api": "extended",
+  "message": "控制器已接受广播命令；尚未收到手机连接。"
+}
+{
+  "event": "waiting_for_connection",
+  "mode": "hid",
+  "cycle": 4,
+  "name": "BT-Auth-HID",
+  "timeout_seconds": 30.0,
+  "message": "正在等待已配对的 iPhone 自动连回；重连测试期间不要操作手机。"
+}
+{
+  "event": "link",
+  "mode": "hid",
+  "cycle": 4
+}
+{
+  "event": "security_request",
+  "mode": "hid",
+  "cycle": 4
+}
+{
+  "event": "encryption",
+  "mode": "hid",
+  "cycle": 4
+}
+{
+  "event": "service_ready",
+  "mode": "hid",
+  "cycle": 4
+}
+{
+  "event": "hold_complete",
+  "mode": "hid",
+  "cycle": 4
+}
+{
+  "event": "radio_closed",
+  "mode": "hid",
+  "controller_index": 0
+}
+{
+  "event": "result",
+  "mode": "hid",
+  "identity": "<HID_TEST_IDENTITY>",
+  "requested_reconnects": 3,
+  "cycles": [
+    {
+      "cycle": 1,
+      "kind": "initial",
+      "reconnect": 0,
+      "link": true,
+      "encryption": true,
+      "service_ready": true,
+      "hold": true,
+      "link_seconds": 0.007,
+      "report_subscribed": true,
+      "reports_sent": 0,
+      "service_ready_seconds": 0.573
+    },
+    {
+      "cycle": 2,
+      "kind": "reconnect",
+      "reconnect": 1,
+      "link": true,
+      "encryption": true,
+      "service_ready": true,
+      "hold": true,
+      "link_seconds": 0.034,
+      "report_subscribed": true,
+      "reports_sent": 0,
+      "service_ready_seconds": 0.541
+    },
+    {
+      "cycle": 3,
+      "kind": "reconnect",
+      "reconnect": 2,
+      "link": true,
+      "encryption": true,
+      "service_ready": true,
+      "hold": true,
+      "link_seconds": 0.035,
+      "report_subscribed": true,
+      "reports_sent": 0,
+      "service_ready_seconds": 0.542
+    },
+    {
+      "cycle": 4,
+      "kind": "reconnect",
+      "reconnect": 3,
+      "link": true,
+      "encryption": true,
+      "service_ready": true,
+      "hold": true,
+      "link_seconds": 0.035,
+      "report_subscribed": true,
+      "reports_sent": 0,
+      "service_ready_seconds": 0.542
+    }
+  ],
+  "success": true,
+  "passed": true
+}
+{
+  "event": "restore_wait",
+  "mode": "hid",
+  "property": "Powered",
+  "target": true,
+  "reason": "PowerState=off-enabling",
+  "remaining_seconds": 15.0
+}
+{
+  "event": "restore",
+  "mode": "hid",
+  "settings_restored": true,
+  "changed": true,
+  "adapter": "hci0",
+  "connections_needing_check": [],
+  "limits": [
+    "原连接需由原系统/用户重连",
+    "无法读取或还原可发现/可配对计时器的剩余时间"
+  ]
+}

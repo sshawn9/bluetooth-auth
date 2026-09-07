@@ -1,0 +1,375 @@
+❯ sudo experiments/iphone_ble/.venv/bin/python -B \
+  experiments/iphone_ble/bluez_hid_lab.py run \
+  --adapter hci0 --repair-phone-pairing --trace-advertising \
+  --wait-seconds 45 --hold-seconds 30
+{
+  "event": "gatt_exported",
+  "mode": "bluez-hid-coexist",
+  "root_path": "/org/bluetooth_auth/coexist/app"
+}
+{
+  "event": "advertisement_exported",
+  "mode": "bluez-hid-coexist",
+  "path": "/org/bluetooth_auth/coexist/advertisement"
+}
+{
+  "event": "advertising",
+  "mode": "bluez-hid-coexist",
+  "adapter": "hci0",
+  "name": "<COMPUTER_NAME>",
+  "expected_name_location": "scan_response",
+  "controller_trace_enabled": true,
+  "shared_bluez_identity": true,
+  "companion_links": [
+    {
+      "address": "<COMPANION_IDENTITY>",
+      "transport": "bredr",
+      "address_type": 0
+    }
+  ],
+  "new_pairing_allowed": true,
+  "wait_seconds": 45.0,
+  "phone_side_pairing_confirmed": false,
+  "message": "在 iPhone 蓝牙设置选择 <COMPUTER_NAME>，核对手机和终端的数字后确认；新配对保留。"
+}
+{
+  "event": "advertising_trace",
+  "mode": "bluez-hid-coexist",
+  "scope": "local_controller_commands",
+  "controller_index": 0,
+  "commands": [
+    {
+      "opcode": "0x2036",
+      "handle": 1,
+      "pdu": "legacy",
+      "connectable": true,
+      "scannable": true,
+      "interval_ms": {
+        "min": 20.0,
+        "max": 20.0
+      },
+      "channel_map": 7,
+      "filter_policy": 0,
+      "own_address_type": 0
+    },
+    {
+      "opcode": "0x2037",
+      "handle": 1,
+      "controller_api": "extended",
+      "operation": 3,
+      "data": {
+        "location": "primary",
+        "length": 11,
+        "hid_service": true,
+        "flags": [
+          6
+        ],
+        "appearance": [
+          960
+        ]
+      }
+    },
+    {
+      "opcode": "0x2038",
+      "handle": 1,
+      "controller_api": "extended",
+      "operation": 3,
+      "data": {
+        "location": "scan_response",
+        "length": 3,
+        "hid_service": false,
+        "local_name": [
+          "<COMPUTER_NAME>"
+        ]
+      }
+    },
+    {
+      "opcode": "0x2039",
+      "controller_api": "extended",
+      "enable": true,
+      "sets": [
+        {
+          "handle": 1,
+          "duration_ms": 0,
+          "max_events": 0
+        }
+      ]
+    }
+  ],
+  "statuses": [
+    {
+      "opcode": "0x2036",
+      "status": 0,
+      "event": "complete"
+    },
+    {
+      "opcode": "0x2037",
+      "status": 0,
+      "event": "complete"
+    },
+    {
+      "opcode": "0x2038",
+      "status": 0,
+      "event": "complete"
+    },
+    {
+      "opcode": "0x2039",
+      "status": 0,
+      "event": "complete"
+    }
+  ],
+  "closed": false
+}
+{
+  "event": "waiting",
+  "mode": "bluez-hid-coexist",
+  "remaining_seconds": 45.0,
+  "phone_le_connected": false,
+  "encrypted_hid_read_seen": false,
+  "report_subscribed_global": false,
+  "pairing_confirmation_accepted": false,
+  "original_links_present": true
+}
+{
+  "event": "waiting",
+  "mode": "bluez-hid-coexist",
+  "remaining_seconds": 40.0,
+  "phone_le_connected": true,
+  "encrypted_hid_read_seen": false,
+  "report_subscribed_global": false,
+  "pairing_confirmation_accepted": false,
+  "original_links_present": true
+}
+{
+  "event": "waiting",
+  "mode": "bluez-hid-coexist",
+  "remaining_seconds": 34.9,
+  "phone_le_connected": true,
+  "encrypted_hid_read_seen": false,
+  "report_subscribed_global": false,
+  "pairing_confirmation_accepted": false,
+  "original_links_present": true
+}
+{
+  "event": "gatt_subscription",
+  "mode": "bluez-hid-coexist",
+  "attribute": "battery_level",
+  "scope": "global"
+}
+{
+  "event": "waiting",
+  "mode": "bluez-hid-coexist",
+  "remaining_seconds": 29.9,
+  "phone_le_connected": true,
+  "encrypted_hid_read_seen": false,
+  "report_subscribed_global": false,
+  "pairing_confirmation_accepted": false,
+  "original_links_present": true
+}
+{
+  "event": "waiting",
+  "mode": "bluez-hid-coexist",
+  "remaining_seconds": 24.8,
+  "phone_le_connected": true,
+  "encrypted_hid_read_seen": false,
+  "report_subscribed_global": false,
+  "pairing_confirmation_accepted": false,
+  "original_links_present": true
+}
+{
+  "event": "waiting",
+  "mode": "bluez-hid-coexist",
+  "remaining_seconds": 19.8,
+  "phone_le_connected": true,
+  "encrypted_hid_read_seen": false,
+  "report_subscribed_global": false,
+  "pairing_confirmation_accepted": false,
+  "original_links_present": true
+}
+{
+  "event": "waiting",
+  "mode": "bluez-hid-coexist",
+  "remaining_seconds": 14.7,
+  "phone_le_connected": true,
+  "encrypted_hid_read_seen": false,
+  "report_subscribed_global": false,
+  "pairing_confirmation_accepted": false,
+  "original_links_present": true
+}
+{
+  "event": "waiting",
+  "mode": "bluez-hid-coexist",
+  "remaining_seconds": 9.7,
+  "phone_le_connected": true,
+  "encrypted_hid_read_seen": false,
+  "report_subscribed_global": false,
+  "pairing_confirmation_accepted": false,
+  "original_links_present": true
+}
+{
+  "event": "waiting",
+  "mode": "bluez-hid-coexist",
+  "remaining_seconds": 4.7,
+  "phone_le_connected": true,
+  "encrypted_hid_read_seen": false,
+  "report_subscribed_global": false,
+  "pairing_confirmation_accepted": false,
+  "original_links_present": true
+}
+{
+  "event": "probe_error",
+  "mode": "bluez-hid-coexist",
+  "phase": "wait_hid",
+  "type": "ObservationIncomplete",
+  "reason": "目标 LE 链路存在，但本轮没有完成数字核对；不能把电脑旧 Paired 状态当作重新配对成功"
+}
+{
+  "event": "advertisement_unexported",
+  "mode": "bluez-hid-coexist",
+  "path": "/org/bluetooth_auth/coexist/advertisement"
+}
+{
+  "event": "gatt_unexported",
+  "mode": "bluez-hid-coexist",
+  "root_path": "/org/bluetooth_auth/coexist/app"
+}
+{
+  "event": "pairing_agent_cancel",
+  "mode": "bluez-hid-coexist",
+  "source": "cleanup"
+}
+{
+  "event": "restore",
+  "mode": "bluez-hid-coexist",
+  "settings_restored": true,
+  "changed": true,
+  "adapter": "hci0",
+  "alias": "<COMPUTER_NAME>",
+  "test_bus_released": true,
+  "new_phone_le_disconnected": [
+    {
+      "address": "<PHONE_IDENTITY>",
+      "transport": "le",
+      "address_type": 1
+    }
+  ],
+  "test_hid_service_removed": true,
+  "advertising_instances": 0,
+  "original_connections_present": true,
+  "connections_restored": true,
+  "connections_needing_check": [],
+  "pairing_properties_unchanged": true,
+  "new_phone_classic_connections": [],
+  "original_links_interrupted": [],
+  "pairing_records": "retained",
+  "pairing_keys_restored": false,
+  "test_pairing_agent_removed": true,
+  "message": "广播、HID 和配对代理已撤销，适配器设置已恢复；本轮 BlueZ 配对记录保留"
+}
+{
+  "event": "result",
+  "mode": "bluez-hid-coexist",
+  "passed": false,
+  "reports_sent": 0,
+  "scope": "encrypted_phone_hid_access_and_existing_connections",
+  "phone_hid_subscription_verified": false,
+  "phone_audio_isolation_verified": false,
+  "error": {
+    "phase": "wait_hid",
+    "type": "ObservationIncomplete",
+    "reason": "目标 LE 链路存在，但本轮没有完成数字核对；不能把电脑旧 Paired 状态当作重新配对成功"
+  },
+  "verdict": "inconclusive",
+  "pairing_confirmation_accepted": false,
+  "pairing_identity_verified": false,
+  "pairing_records": "retained",
+  "advertising_trace": {
+    "scope": "local_controller_commands",
+    "controller_index": 0,
+    "commands": [
+      {
+        "opcode": "0x2036",
+        "handle": 1,
+        "pdu": "legacy",
+        "connectable": true,
+        "scannable": true,
+        "interval_ms": {
+          "min": 20.0,
+          "max": 20.0
+        },
+        "channel_map": 7,
+        "filter_policy": 0,
+        "own_address_type": 0
+      },
+      {
+        "opcode": "0x2037",
+        "handle": 1,
+        "controller_api": "extended",
+        "operation": 3,
+        "data": {
+          "location": "primary",
+          "length": 11,
+          "hid_service": true,
+          "flags": [
+            6
+          ],
+          "appearance": [
+            960
+          ]
+        }
+      },
+      {
+        "opcode": "0x2038",
+        "handle": 1,
+        "controller_api": "extended",
+        "operation": 3,
+        "data": {
+          "location": "scan_response",
+          "length": 3,
+          "hid_service": false,
+          "local_name": [
+            "<COMPUTER_NAME>"
+          ]
+        }
+      },
+      {
+        "opcode": "0x2039",
+        "controller_api": "extended",
+        "enable": true,
+        "sets": [
+          {
+            "handle": 1,
+            "duration_ms": 0,
+            "max_events": 0
+          }
+        ]
+      }
+    ],
+    "statuses": [
+      {
+        "opcode": "0x2036",
+        "status": 0,
+        "event": "complete"
+      },
+      {
+        "opcode": "0x2037",
+        "status": 0,
+        "event": "complete"
+      },
+      {
+        "opcode": "0x2038",
+        "status": 0,
+        "event": "complete"
+      },
+      {
+        "opcode": "0x2039",
+        "status": 0,
+        "event": "complete"
+      }
+    ],
+    "closed": false
+  },
+  "original_links_lost": [],
+  "new_phone_audio_transports": 0,
+  "global_report_subscription_observed": false
+}

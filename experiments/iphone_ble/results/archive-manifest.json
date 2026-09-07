@@ -1,0 +1,204 @@
+{
+  "schema_version": 2,
+  "compiled_on": "2026-09-07",
+  "scope": "代码及实验材料的版本快照；不包含本地运行数据，也不是全部历史运行的源码版本。",
+  "python_at_archive": "3.13.14",
+  "dependencies_at_archive": [
+    "bumble==0.0.234",
+    "cffi==2.1.1",
+    "click==8.5.0",
+    "cryptography==50.0.1",
+    "dbus-fast==5.0.17",
+    "importlib_resources==7.1.0",
+    "libusb-package==1.0.26.4",
+    "libusb1==3.4.0",
+    "platformdirs==4.11.7",
+    "prompt_toolkit==3.0.53",
+    "pycparser==3.0",
+    "pyee==14.0.0",
+    "pyserial-asyncio==0.6",
+    "pyserial==3.5",
+    "pyusb==1.3.1",
+    "typing_extensions==4.16.0",
+    "wcwidth==0.8.3",
+    "websockets==17.1"
+  ],
+  "exclusions": [
+    ".venv",
+    ".runtime",
+    ".coexist",
+    ".environment.json",
+    "__pycache__",
+    "Git状态",
+    "本清单自身"
+  ],
+  "files": [
+    {
+      "path": ".gitignore",
+      "sha256": "e5537b416de02daa6252376251023fa2bfe7df2f7b6dc9882646191ed50af49c"
+    },
+    {
+      "path": "README.md",
+      "sha256": "996514ce1da93031ec12c2bf7871e59e57a437ac9c406368d1b12e2a5adda434"
+    },
+    {
+      "path": "RESULTS.md",
+      "sha256": "5d911df6dd67ff431498760a2d6649b613516cf999f428d3ec90b901da9a4dba"
+    },
+    {
+      "path": "adapter.py",
+      "sha256": "cd55a4dadda4aeb62723e827a99be42a57c27aeea29e9794ce2af8a5f5794873"
+    },
+    {
+      "path": "ble_lab.py",
+      "sha256": "423f158597b698dc4a516c2b65d6944b4c7a087c4f9f5d0dda4ba0c4d114f35c"
+    },
+    {
+      "path": "bluez_hid_lab.py",
+      "sha256": "0709072f1c1ff76e0460b632077cfbc6e0d6658a730b20fe6ba692e052e2ec21"
+    },
+    {
+      "path": "check_offline.py",
+      "sha256": "14ba35d6c5b76158b6fe7826d77b60110e35860bfa5efbd0ff1cde22d2e8574c"
+    },
+    {
+      "path": "check_public_privacy.py",
+      "sha256": "047978ad7778bcdf566a5480ec6ad88a521d50d86ac871f7b88be3919d6d060b"
+    },
+    {
+      "path": "coexist_gatt.py",
+      "sha256": "aff2b6898aad66d22bace920745c23d751f695239e661b084dd6fdfdc0295c73"
+    },
+    {
+      "path": "coexist_link.py",
+      "sha256": "c5095f815af6c003323e56aa53e5faaa0a9e5447b61175dc3656244a6454b09d"
+    },
+    {
+      "path": "coexist_pairing.py",
+      "sha256": "e5a4bb9a538d06f9117db85961cb673e138f554e7e14fc3ea7cc7560a4c9c26a"
+    },
+    {
+      "path": "coexist_trace.py",
+      "sha256": "536e5213d08076b79d5eb4a0d3ba05df3a8abafea3068bf921e054edce02e70e"
+    },
+    {
+      "path": "diagnostics/monitor_rssi.py",
+      "sha256": "f72d4af282bbc3acfe6388d2e2314f5c4d8630e0274ec7ba55c7925dc1afb018"
+    },
+    {
+      "path": "docs/IMPLEMENTATION.md",
+      "sha256": "346bb7814493535b8771bdd153db8208259b50cd52909b5db3ce1e71ca81e454"
+    },
+    {
+      "path": "docs/REPRODUCE.md",
+      "sha256": "36a23513583bfd536ca752c75a0c73f35eda4291f66760860e68328a8c161606"
+    },
+    {
+      "path": "docs/RUN_RECORD_TEMPLATE.md",
+      "sha256": "ebffce5f0ca82e62c377151ec5fcc5ad31d208c59240e0c67022ac3c66858882"
+    },
+    {
+      "path": "radio.py",
+      "sha256": "c732e861394403300d6488bb641d84a00a914d71ffc36e014f1410f14a30cdf1"
+    },
+    {
+      "path": "requirements.txt",
+      "sha256": "2d0edc2e7ee11f107b99f909f92baa1fe7674c419f426bf9d3d3be0e65f4661d"
+    },
+    {
+      "path": "results/README.md",
+      "sha256": "19fb677e32a596b5d32b2caa5cf8a842351630511063339f610f4488c486b79f"
+    },
+    {
+      "path": "results/evidence/BZ-HID-03.log",
+      "sha256": "7499910033da511a3bdcf1ab29f7c298d33ef72e7110bc60426d205f82a265c3"
+    },
+    {
+      "path": "results/evidence/BZ-HID-04.json",
+      "sha256": "827374f053936c6a593eb72ec20e9a942485df04a393e7f21e6e8cce36112326"
+    },
+    {
+      "path": "results/evidence/EX-HID-03.log",
+      "sha256": "95cb2664685170e63c5ccbaa0155820ec504b2d93ee4dc10553d11dc27f1a0c7"
+    },
+    {
+      "path": "results/observations.json",
+      "sha256": "053e188df2a9a27fb67b3ae36f9535f069adaad4cf99321fe1ad7e791ee8c71c"
+    },
+    {
+      "path": "results/sources.json",
+      "sha256": "9e6d8e2d68de01e83b8f5ddda3573c6549bc8cd01a19f1ca4503347bd05d6128"
+    },
+    {
+      "path": "results/validation.json",
+      "sha256": "fb71b663ed4cfa29e6678e0c803f4397cf56fa22dfa8c79a80fb222a167787bc"
+    },
+    {
+      "path": "state.py",
+      "sha256": "de0989a5367c518cbf4f7025f25e201af1fa79e5a0e1245ba61db7b39bce1e01"
+    },
+    {
+      "path": "tests/test_adapter.py",
+      "sha256": "6a64ecdbbc9029af513b2ed86031af0fd10586530dda8e7a23ac9ea45c199ba2"
+    },
+    {
+      "path": "tests/test_cli.py",
+      "sha256": "0779767719f2f37bfa55fd850ec4c78109f8af25c07991882f5dacac09a27e21"
+    },
+    {
+      "path": "tests/test_coexist.py",
+      "sha256": "086b40570f810919d821b6d51e109874b1a2da737b6241b47ae3c76081578c9b"
+    },
+    {
+      "path": "tests/test_coexist_gatt.py",
+      "sha256": "525ad65287f29f05d19343ad2162e3e42c23d4baf97639a928e7cd90215f70cd"
+    },
+    {
+      "path": "tests/test_coexist_link.py",
+      "sha256": "b6b24a8678805246943980d9068eab8c0d18e21efc4eb5d1f7a6a67eef91571f"
+    },
+    {
+      "path": "tests/test_coexist_pairing.py",
+      "sha256": "d04f75f5f52fb350cf79bea7f83c4100599fad1380a32a5d5bcb847ea33f32cf"
+    },
+    {
+      "path": "tests/test_coexist_trace.py",
+      "sha256": "327f46f51a7a6f2d769edb96cbe2b2d0fb19cb3c2ef56bd836e3c4b10ae8afbf"
+    },
+    {
+      "path": "tests/test_offline_check.py",
+      "sha256": "2da4ff31ab4205d69644ab7e39bf1a4a96fbca66dc176b87f9e460e335a76725"
+    },
+    {
+      "path": "tests/test_public_privacy.py",
+      "sha256": "703cccd79fe470d0fedbc8de1c2fc0eee882a3f405a2b62b1a1cb84eaea6fecf"
+    },
+    {
+      "path": "tests/test_radio.py",
+      "sha256": "7d15b58a464914cddc70dc999e33e2c3d35f7380186e2267013b6700a344180c"
+    },
+    {
+      "path": "tests/test_rssi_config.py",
+      "sha256": "24007960eda727d2901d5840d378f67da184e92a8c8e64b002a88025504da061"
+    },
+    {
+      "path": "tests/test_state.py",
+      "sha256": "93a7841cc3065411477c1259119efa5317558f4eed8bb455cfb009052c0b2a5d"
+    }
+  ],
+  "repository_files": [
+    {
+      "path": "README.md",
+      "sha256": "5ec522e845dd67cf428381dda7ee45491e25f4370a44886a09cd63a02b4de003"
+    },
+    {
+      "path": "README.zh-CN.md",
+      "sha256": "bce5047a727aee7c40eeeaaa5d72bb64b75c2619a97ad6e89b5ce6633447d7b4"
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "b91214e55e5727cb5e7a307b521f5789d411d36214fb8f7d6614685ea7d5de90"
+    }
+  ],
+  "updated_on": "2026-09-08"
+}

@@ -1,0 +1,594 @@
+{
+  "schema_version": 1,
+  "compiled_on": "2026-09-07",
+  "test_dates": "原始对话未为各轮提供可核验日期；ID 按阶段排序，不伪造时间戳。",
+  "evidence_policy": "只有用户提供的实机日志和人工确认才构成实测依据；摘要不是完整日志，离线测试不替代实测。",
+  "environment": {
+    "os": "Linux",
+    "python_at_archive": "3.13.14",
+    "python_historical_record": "3.13",
+    "bluez_historical_record": "5.87",
+    "bumble": "0.0.234",
+    "dbus_fast": "5.0.17",
+    "adapter_in_user_commands": "hci0",
+    "phone": "iPhone，仅系统功能",
+    "ios_version": null,
+    "phone_model": null,
+    "adapter_model": null,
+    "kernel_version": null
+  },
+  "environment_limits": "Python/依赖版本在整理时从实验环境元数据读取；BlueZ 版本来自既有记录，未在整理时访问蓝牙。未知项留空。",
+  "observations": [
+    {
+      "id": "HIST-01",
+      "title": "初代临时 BLE 测试与名称混淆",
+      "verdict": "failed",
+      "evidence_type": "historical_handoff_and_user_statement",
+      "mode": "早于当前实验工具的共享适配器尝试",
+      "observations": [
+        "用户明确确认此前临时 BLE 设备从未成功连接",
+        "仅设广播名称 BT-Auth-IRK 时手机仍显示 <COMPUTER_NAME>",
+        "用户曾看到两个 <COMPUTER_NAME>，但条目对应的身份和缓存原因没有被确认"
+      ],
+      "conclusion": "保留为失败和设计经验，不能作为连接可行性证据。名称不等于身份，hciN 不等于手机显示名。",
+      "reproduction_limit": "旧临时脚本和完整日志未保留；当前源码已经改变身份管理方式，不能精确重放该旧版本。"
+    },
+    {
+      "id": "EX-ANCS-01",
+      "title": "ANCS 单独服务征询不可见",
+      "verdict": "failed",
+      "evidence_type": "chat_log_excerpt_and_user_statement",
+      "mode": "bumble/ancs",
+      "observations": [
+        "出现 adapter_handoff、radio_ready、advertising，但用户始终看不到目标名称",
+        "后续用户仍报告不可见；既有记录称调整了广播间隔并尝试处理自动连接服务，未获得连接成功证据"
+      ],
+      "last_observed_phase": "advertising/link",
+      "conclusion": "本机当前候选路径未通过发现/连接；不能推广为 ANCS 协议不可用。",
+      "reproduction_limit": "早期运行参数和每次代码版本不齐；复现手册给出当前固定版本的短筛选命令，非逐字重放所有旧运行。"
+    },
+    {
+      "id": "REC-01",
+      "title": "独占实验中断后 Busy，单独恢复成功",
+      "verdict": "recovered",
+      "evidence_type": "chat_log_excerpt",
+      "mode": "bumble/restore",
+      "error_excerpt": "恢复未完成：Set: org.bluez.Error.Busy: ['']。保留记录，请执行 restore。",
+      "restore_excerpt": {
+        "settings_restored": true,
+        "changed": true,
+        "adapter": "hci0",
+        "connections_needing_check": [],
+        "limits": [
+          "原连接需由原系统/用户重连",
+          "无法读取或还原可发现/可配对计时器的剩余时间"
+        ]
+      },
+      "conclusion": "恢复失败保留依据，用户单独执行 restore 后核对通过；现有实现已加入有界等待/重试。"
+    },
+    {
+      "id": "EX-HID-01",
+      "title": "独占 HID 首次数字确认配对",
+      "verdict": "passed",
+      "evidence_type": "chat_log_excerpt",
+      "mode": "bumble/hid",
+      "parameters": {
+        "enroll": true,
+        "cycles": 0,
+        "hold_seconds": 30
+      },
+      "result_excerpt": {
+        "identity": "<HID_TEST_IDENTITY>",
+        "requested_reconnects": 0,
+        "cycles": [
+          {
+            "cycle": 1,
+            "kind": "initial",
+            "reconnect": 0,
+            "link": true,
+            "encryption": true,
+            "service_ready": true,
+            "hold": true,
+            "link_seconds": 3.648,
+            "bond_saved": true,
+            "report_subscribed": true,
+            "reports_sent": 0,
+            "service_ready_seconds": 0.499
+          }
+        ],
+        "success": true,
+        "passed": true
+      },
+      "human_observation": "用户在终端确认配对数字后报告连接上了。",
+      "restoration": "用户粘贴的 restore 中 settings_restored=true、connections_needing_check=[]。",
+      "conclusion": "独占 HID 首配、加密、订阅及 30 秒保持通过；cycles=0 的正常完成会自动退出。"
+    },
+    {
+      "id": "EX-HID-02",
+      "title": "一次复用配对时加密前断线",
+      "verdict": "failed",
+      "evidence_type": "chat_log_excerpt_and_user_statement",
+      "mode": "bumble/hid",
+      "parameters": {
+        "cycles": 3,
+        "hold_seconds": 30,
+        "initial_timeout": 45,
+        "reconnect_timeout": 30
+      },
+      "result_excerpt": {
+        "passed": false,
+        "requested_reconnects": 3,
+        "cycles": [
+          {
+            "cycle": 1,
+            "kind": "initial",
+            "reconnect": 0,
+            "link": true,
+            "encryption": false,
+            "service_ready": false,
+            "hold": false,
+            "link_seconds": 0.529
+          }
+        ],
+        "error": {
+          "phase": "encryption",
+          "type": "RuntimeError",
+          "reason": "connection ended during the operation"
+        }
+      },
+      "human_observation": "用户随后表示刚刚失败是因为手机低电量，并重试。",
+      "conclusion": "这一轮确实在加密阶段失败；后续未改脚本的重试通过，低电量因果没有受控验证。",
+      "restoration": "settings_restored=true；原计时器剩余时间不在可恢复范围。"
+    },
+    {
+      "id": "EX-HID-03",
+      "title": "锁屏下初始连接与三次断开后重连",
+      "verdict": "passed",
+      "evidence_type": "attachment_log_and_user_statement",
+      "mode": "bumble/hid",
+      "parameters": {
+        "cycles": 3,
+        "hold_seconds": 30,
+        "initial_timeout": 45,
+        "reconnect_timeout": 30
+      },
+      "evidence_file": "evidence/EX-HID-03.log",
+      "result_excerpt": {
+        "event": "result",
+        "mode": "hid",
+        "identity": "<HID_TEST_IDENTITY>",
+        "requested_reconnects": 3,
+        "cycles": [
+          {
+            "cycle": 1,
+            "kind": "initial",
+            "reconnect": 0,
+            "link": true,
+            "encryption": true,
+            "service_ready": true,
+            "hold": true,
+            "link_seconds": 0.007,
+            "report_subscribed": true,
+            "reports_sent": 0,
+            "service_ready_seconds": 0.573
+          },
+          {
+            "cycle": 2,
+            "kind": "reconnect",
+            "reconnect": 1,
+            "link": true,
+            "encryption": true,
+            "service_ready": true,
+            "hold": true,
+            "link_seconds": 0.034,
+            "report_subscribed": true,
+            "reports_sent": 0,
+            "service_ready_seconds": 0.541
+          },
+          {
+            "cycle": 3,
+            "kind": "reconnect",
+            "reconnect": 2,
+            "link": true,
+            "encryption": true,
+            "service_ready": true,
+            "hold": true,
+            "link_seconds": 0.035,
+            "report_subscribed": true,
+            "reports_sent": 0,
+            "service_ready_seconds": 0.542
+          },
+          {
+            "cycle": 4,
+            "kind": "reconnect",
+            "reconnect": 3,
+            "link": true,
+            "encryption": true,
+            "service_ready": true,
+            "hold": true,
+            "link_seconds": 0.035,
+            "report_subscribed": true,
+            "reports_sent": 0,
+            "service_ready_seconds": 0.542
+          }
+        ],
+        "success": true,
+        "passed": true
+      },
+      "restore_excerpt": {
+        "event": "restore",
+        "mode": "hid",
+        "settings_restored": true,
+        "changed": true,
+        "adapter": "hci0",
+        "connections_needing_check": [],
+        "limits": [
+          "原连接需由原系统/用户重连",
+          "无法读取或还原可发现/可配对计时器的剩余时间"
+        ]
+      },
+      "human_observation": "用户明确确认上一轮就是锁屏测试。",
+      "conclusion": "共四轮（初始连接加三次重连），每轮加密、订阅、30 秒保持通过；重连由电脑重新广播、iPhone 连回。",
+      "limits": [
+        "日志中的 link_seconds 不是广播启动到完整服务就绪的总耗时",
+        "未覆盖走远返回或长期保持"
+      ]
+    },
+    {
+      "id": "EX-CTS-01",
+      "title": "CTS 单独征询 45 秒不可见/未连接",
+      "verdict": "failed",
+      "evidence_type": "chat_log_excerpt_and_user_statement",
+      "mode": "bumble/cts",
+      "parameters": {
+        "enroll": true,
+        "cycles": 0,
+        "hold_seconds": 30,
+        "initial_timeout": 45
+      },
+      "result_excerpt": {
+        "identity": "<CTS_TEST_IDENTITY>",
+        "requested_reconnects": 0,
+        "cycles": [
+          {
+            "cycle": 1,
+            "kind": "initial",
+            "reconnect": 0,
+            "link": false,
+            "encryption": false,
+            "service_ready": false,
+            "hold": false
+          }
+        ],
+        "success": false,
+        "passed": false,
+        "error": {
+          "phase": "link",
+          "type": "TimeoutError",
+          "reason": "45 秒内未收到连接：BT-Auth-CTS；没有进入配对或服务使用阶段"
+        }
+      },
+      "human_observation": "手机上始终看不到。",
+      "restoration": "settings_restored=true、connections_needing_check=[]。",
+      "conclusion": "当前 CTS 单独征询配置未进入配对/服务阶段，未执行到 30 秒保持。",
+      "advertising_excerpt": {
+        "name": "BT-Auth-CTS",
+        "interval_ms": 20,
+        "name_location": "advertising",
+        "advertising_data_hex": "020106031405180c0942542d417574682d435453",
+        "scan_response_data_hex": "",
+        "packet_type": "legacy_connectable_scannable",
+        "controller_api": "extended"
+      }
+    },
+    {
+      "id": "EX-HID-04",
+      "title": "独占 HID 60 秒音乐与屏幕键盘检查",
+      "verdict": "passed",
+      "evidence_type": "chat_log_excerpt_and_user_statement",
+      "mode": "bumble/hid",
+      "parameters": {
+        "cycles": 0,
+        "hold_seconds": 60,
+        "initial_timeout": 45
+      },
+      "result_excerpt": {
+        "identity": "<HID_TEST_IDENTITY>",
+        "requested_reconnects": 0,
+        "cycles": [
+          {
+            "cycle": 1,
+            "kind": "initial",
+            "reconnect": 0,
+            "link": true,
+            "encryption": true,
+            "service_ready": true,
+            "hold": true,
+            "link_seconds": 0.256,
+            "report_subscribed": true,
+            "reports_sent": 0,
+            "service_ready_seconds": 0.571
+          }
+        ],
+        "success": true,
+        "passed": true
+      },
+      "human_observation": "音乐和屏幕键盘输入都正常。",
+      "restoration": "settings_restored=true、connections_needing_check=[]。",
+      "conclusion": "本轮使用影响检查通过；因需要操作手机，不计为另一轮锁屏重连测试。"
+    },
+    {
+      "id": "REC-02",
+      "title": "阶段性蓝牙状态恢复交接",
+      "verdict": "historical_record",
+      "evidence_type": "historical_handoff",
+      "observations": [
+        "历史核对称 hci0 名称/Alias 为 <COMPUTER_NAME>、Powered=on、Pairable=false、Discoverable=false、Connectable=false、广播计数为 0、bluetooth.service 运行",
+        "实验入口不会恢复用户曾手动暂停的外部认证自动连接服务；该服务的最终状态缺少独立后续审计"
+      ],
+      "conclusion": "状态信息只代表历史核对，不代表整理文档时的系统现场；本次没有重新访问适配器。"
+    },
+    {
+      "id": "BZ-HID-01",
+      "title": "复用已被手机忽略的原配对而超时",
+      "verdict": "precondition_not_met",
+      "evidence_type": "chat_log_excerpt_and_user_statement",
+      "mode": "bluez-hid-coexist/reuse",
+      "parameters": {
+        "wait_seconds": 45,
+        "hold_seconds": 45,
+        "repair_phone_pairing": false
+      },
+      "result_excerpt": {
+        "passed": false,
+        "original_links_lost": [],
+        "new_phone_audio_transports": 0,
+        "global_report_subscription_observed": false
+      },
+      "observations": [
+        "45 秒内 phone_le_connected=false，未见加密 HID 读取和报告订阅",
+        "原有 BR/EDR 连接保持，注册的广播/GATT 已撤销，settings_restored=true"
+      ],
+      "human_observation": "手机列表没有 <COMPUTER_NAME>；用户随后明确确认已经忽略原配对。",
+      "conclusion": "默认模式的两端保留配对前提不成立；不能据此认定 BlueZ HID 共存不支持，也不能唯一归因列表不可见。",
+      "original_error_excerpt": {
+        "phase": "wait_hid",
+        "type": "TimeoutError",
+        "reason": "未观察到目标手机 LE 连接；原配对可能缺少可用 LE 密钥，本轮没有重新配对"
+      },
+      "diagnostic_limit": "保留当时原始错误文字；缺少 LE 密钥只是旧提示中的推测。用户后续确认手机已忽略配对，仍不能据此唯一解释列表不可见。"
+    },
+    {
+      "id": "BZ-HID-02",
+      "title": "修复模式首次配对的用户确认",
+      "verdict": "reported_success",
+      "evidence_type": "user_statement",
+      "mode": "bluez-hid-coexist/repair",
+      "parameters": {
+        "repair_phone_pairing": true,
+        "trace_advertising": true,
+        "wait_seconds": 45,
+        "hold_seconds": 30
+      },
+      "human_observation": "用户确认首次出现配对确认并连接成功，结束后 <COMPUTER_NAME> 仍在 iPhone 我的设备中。",
+      "conclusion": "保留首次配对成功的用户确认；没有这一轮完整日志，不能补造该轮 passed、HID 读取或保持结果。"
+    },
+    {
+      "id": "BZ-HID-03",
+      "title": "已配对后第二次仍使用修复模式",
+      "verdict": "inconclusive",
+      "evidence_type": "attachment_log_and_user_statement",
+      "mode": "bluez-hid-coexist/repair",
+      "parameters": {
+        "repair_phone_pairing": true,
+        "trace_advertising": true,
+        "wait_seconds": 45,
+        "hold_seconds": 30
+      },
+      "evidence_file": "evidence/BZ-HID-03.log",
+      "result_excerpt": {
+        "event": "result",
+        "mode": "bluez-hid-coexist",
+        "passed": false,
+        "reports_sent": 0,
+        "scope": "encrypted_phone_hid_access_and_existing_connections",
+        "phone_hid_subscription_verified": false,
+        "phone_audio_isolation_verified": false,
+        "error": {
+          "phase": "wait_hid",
+          "type": "ObservationIncomplete",
+          "reason": "目标 LE 链路存在，但本轮没有完成数字核对；不能把电脑旧 Paired 状态当作重新配对成功"
+        },
+        "verdict": "inconclusive",
+        "pairing_confirmation_accepted": false,
+        "pairing_identity_verified": false,
+        "pairing_records": "retained",
+        "advertising_trace": {
+          "scope": "local_controller_commands",
+          "controller_index": 0,
+          "commands": [
+            {
+              "opcode": "0x2036",
+              "handle": 1,
+              "pdu": "legacy",
+              "connectable": true,
+              "scannable": true,
+              "interval_ms": {
+                "min": 20.0,
+                "max": 20.0
+              },
+              "channel_map": 7,
+              "filter_policy": 0,
+              "own_address_type": 0
+            },
+            {
+              "opcode": "0x2037",
+              "handle": 1,
+              "controller_api": "extended",
+              "operation": 3,
+              "data": {
+                "location": "primary",
+                "length": 11,
+                "hid_service": true,
+                "flags": [
+                  6
+                ],
+                "appearance": [
+                  960
+                ]
+              }
+            },
+            {
+              "opcode": "0x2038",
+              "handle": 1,
+              "controller_api": "extended",
+              "operation": 3,
+              "data": {
+                "location": "scan_response",
+                "length": 3,
+                "hid_service": false,
+                "local_name": [
+                  "<COMPUTER_NAME>"
+                ]
+              }
+            },
+            {
+              "opcode": "0x2039",
+              "controller_api": "extended",
+              "enable": true,
+              "sets": [
+                {
+                  "handle": 1,
+                  "duration_ms": 0,
+                  "max_events": 0
+                }
+              ]
+            }
+          ],
+          "statuses": [
+            {
+              "opcode": "0x2036",
+              "status": 0,
+              "event": "complete"
+            },
+            {
+              "opcode": "0x2037",
+              "status": 0,
+              "event": "complete"
+            },
+            {
+              "opcode": "0x2038",
+              "status": 0,
+              "event": "complete"
+            },
+            {
+              "opcode": "0x2039",
+              "status": 0,
+              "event": "complete"
+            }
+          ],
+          "closed": false
+        },
+        "original_links_lost": [],
+        "new_phone_audio_transports": 0,
+        "global_report_subscription_observed": false
+      },
+      "restore_excerpt": {
+        "event": "restore",
+        "mode": "bluez-hid-coexist",
+        "settings_restored": true,
+        "changed": true,
+        "adapter": "hci0",
+        "alias": "<COMPUTER_NAME>",
+        "test_bus_released": true,
+        "new_phone_le_disconnected": [
+          {
+            "address": "<PHONE_IDENTITY>",
+            "transport": "le",
+            "address_type": 1
+          }
+        ],
+        "test_hid_service_removed": true,
+        "advertising_instances": 0,
+        "original_connections_present": true,
+        "connections_restored": true,
+        "connections_needing_check": [],
+        "pairing_properties_unchanged": true,
+        "new_phone_classic_connections": [],
+        "original_links_interrupted": [],
+        "pairing_records": "retained",
+        "pairing_keys_restored": false,
+        "test_pairing_agent_removed": true,
+        "message": "广播、HID 和配对代理已撤销，适配器设置已恢复；本轮 BlueZ 配对记录保留"
+      },
+      "human_observation": "用户明确指出附件是第二次重复运行，不能把它当作首次配对日志。",
+      "conclusion": "已有 LE 连接和原连接共存；修复模式等待新的数字确认并阻止 GATT 访问，故该轮没有 HID 成功证据；未进入 30 秒保持。",
+      "limits": [
+        "控制器广播命令成功不等于手机收到/显示",
+        "phone_hid_subscription_verified 和 phone_audio_isolation_verified 均为 false"
+      ]
+    },
+    {
+      "id": "BZ-HID-04",
+      "title": "默认模式加密 HID 访问与原设备共存完整通过",
+      "verdict": "passed",
+      "evidence_type": "chat_log_excerpt_and_user_statement",
+      "mode": "bluez-hid-coexist/reuse",
+      "parameters": {
+        "wait_seconds": 20,
+        "hold_seconds": 15,
+        "repair_phone_pairing": false
+      },
+      "evidence_file": "evidence/BZ-HID-04.json",
+      "result_excerpt": {
+        "event": "result",
+        "mode": "bluez-hid-coexist",
+        "passed": true,
+        "reports_sent": 0,
+        "scope": "encrypted_phone_hid_access_and_existing_connections",
+        "phone_hid_subscription_verified": false,
+        "phone_audio_isolation_verified": false,
+        "encrypted_phone_hid_access": true,
+        "companion_count": 1,
+        "hold": true,
+        "original_links_preserved": true,
+        "hold_seconds": 15.0,
+        "new_phone_audio_transports": 0,
+        "original_links_lost": [],
+        "global_report_subscription_observed": true
+      },
+      "restore_excerpt": {
+        "event": "restore",
+        "mode": "bluez-hid-coexist",
+        "settings_restored": true,
+        "changed": true,
+        "adapter": "hci0",
+        "alias": "<COMPUTER_NAME>",
+        "test_bus_released": true,
+        "new_phone_le_disconnected": [
+          {
+            "address": "<PHONE_IDENTITY>",
+            "transport": "le",
+            "address_type": 1
+          }
+        ],
+        "test_hid_service_removed": true,
+        "advertising_instances": 0,
+        "original_connections_present": true,
+        "connections_restored": true,
+        "connections_needing_check": [],
+        "pairing_properties_unchanged": true,
+        "new_phone_classic_connections": [],
+        "original_links_interrupted": []
+      },
+      "human_observation": "一切正常，音频没有断。",
+      "requested_conditions": "手机锁屏、不操作，保持电脑原有蓝牙设备连接；日志本身不能独立确认锁屏状态。",
+      "conclusion": "已保存配对下新建目标 LE 连接、读取加密 HID Report Map、15 秒保持及原有 BR/EDR 连接保持全部通过；临时设置和连接恢复通过。",
+      "limits": [
+        "未证明长期稳定性、实际离开后返回、电脑睡眠/重启恢复",
+        "没有证明全部音频配置文件隔离，也没有证明目标专属 Report 订阅",
+        "本轮没有完成正式认证安全验证"
+      ]
+    }
+  ]
+}

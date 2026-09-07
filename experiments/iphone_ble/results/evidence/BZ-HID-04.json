@@ -1,0 +1,85 @@
+{
+  "source_type": "chat_log_excerpt",
+  "description": "从用户在对话中粘贴的默认模式完整输出摘取关键事件；不是原始 stdout 文件，未补造未提供事件。",
+  "command": "sudo experiments/iphone_ble/.venv/bin/python -B experiments/iphone_ble/bluez_hid_lab.py run --adapter hci0 --wait-seconds 20 --hold-seconds 15",
+  "events": [
+    {
+      "event": "waiting",
+      "phone_le_connected": false,
+      "encrypted_hid_read_seen": false,
+      "original_links_present": true
+    },
+    {
+      "event": "target_gatt_access",
+      "mode": "bluez-hid-coexist",
+      "device": "target_phone",
+      "link": "LE",
+      "attribute": "report_map"
+    },
+    {
+      "event": "service_ready",
+      "mode": "bluez-hid-coexist",
+      "encrypted_phone_hid_access": true,
+      "report_subscription_scope": "global",
+      "hold_seconds": 15.0
+    },
+    {
+      "event": "gatt_subscription",
+      "mode": "bluez-hid-coexist",
+      "attribute": "report",
+      "scope": "global"
+    },
+    {
+      "event": "hold_complete",
+      "mode": "bluez-hid-coexist",
+      "seconds": 15.0
+    },
+    {
+      "event": "restore",
+      "mode": "bluez-hid-coexist",
+      "settings_restored": true,
+      "changed": true,
+      "adapter": "hci0",
+      "alias": "<COMPUTER_NAME>",
+      "test_bus_released": true,
+      "new_phone_le_disconnected": [
+        {
+          "address": "<PHONE_IDENTITY>",
+          "transport": "le",
+          "address_type": 1
+        }
+      ],
+      "test_hid_service_removed": true,
+      "advertising_instances": 0,
+      "original_connections_present": true,
+      "connections_restored": true,
+      "connections_needing_check": [],
+      "pairing_properties_unchanged": true,
+      "new_phone_classic_connections": [],
+      "original_links_interrupted": []
+    },
+    {
+      "event": "result",
+      "mode": "bluez-hid-coexist",
+      "passed": true,
+      "reports_sent": 0,
+      "scope": "encrypted_phone_hid_access_and_existing_connections",
+      "phone_hid_subscription_verified": false,
+      "phone_audio_isolation_verified": false,
+      "encrypted_phone_hid_access": true,
+      "companion_count": 1,
+      "hold": true,
+      "original_links_preserved": true,
+      "hold_seconds": 15.0,
+      "new_phone_audio_transports": 0,
+      "original_links_lost": [],
+      "global_report_subscription_observed": true
+    }
+  ],
+  "human_observation": "一切正常，音频没有断",
+  "requested_conditions": "手机锁屏且不操作，电脑保持原有蓝牙设备连接；手机锁屏状态不能由脚本独立核验。",
+  "transformations": [
+    "蓝牙地址替换为角色占位符",
+    "选取关键事件；首个 waiting 仅保留与判断有关的字段"
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "kind": "offline_validation",
+  "compiled_on": "2026-09-07",
+  "command": "experiments/iphone_ble/.venv/bin/python -B experiments/iphone_ble/check_offline.py",
+  "returncode": 0,
+  "tests_run": 109,
+  "scope": "离线实验、配置读取、RSSI 参数传递、socket 防护与静态隐私检查；没有运行真实蓝牙实验。",
+  "initial_archive_validation": {
+    "tests_run": 94,
+    "returncode": 0
+  },
+  "output_excerpt": "Ran 109 tests in 4.642s\nOK",
+  "public_privacy_tests": {
+    "test_file": "tests/test_public_privacy.py",
+    "included_in_full_suite": true,
+    "tests_run": 7,
+    "returncode": 0,
+    "initial_validation": {
+      "tests_run": 6,
+      "returncode": 0,
+      "output_excerpt": "Ran 6 tests in 0.003s\nOK"
+    }
+  },
+  "diagnostics_relocation_validation": {
+    "validated_on": "2026-09-08",
+    "command": "experiments/iphone_ble/.venv/bin/python -B experiments/iphone_ble/check_offline.py",
+    "tests_run": 102,
+    "returncode": 0,
+    "output_excerpt": "Ran 102 tests in 4.639s\nOK"
+  },
+  "validated_on": "2026-09-08"
+}

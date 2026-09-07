@@ -5,6 +5,15 @@ build/
 dist/
 wheels/
 *.egg-info
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+
+# Local configuration and private device data
+.env
+.env.*
+!.env.example
+.private/
 
 # Virtual environments
 .venv

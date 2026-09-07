@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "sources": [
+    {
+      "observation_id": "EX-HID-03",
+      "source_type": "user_attachment",
+      "archived_path": "evidence/EX-HID-03.log",
+      "archived_sha256": "95cb2664685170e63c5ccbaa0155820ec504b2d93ee4dc10553d11dc27f1a0c7",
+      "transformations": [
+        "蓝牙地址和原电脑名称替换为稳定角色占位符；保留事件与协议参数",
+        "公开版本不含私人附件关联标识及未脱敏原文校验值"
+      ],
+      "completeness": "用户所提供附件的完整内容；不保证覆盖未提供的其他运行"
+    },
+    {
+      "observation_id": "BZ-HID-03",
+      "source_type": "user_attachment",
+      "archived_path": "evidence/BZ-HID-03.log",
+      "archived_sha256": "7499910033da511a3bdcf1ab29f7c298d33ef72e7110bc60426d205f82a265c3",
+      "transformations": [
+        "蓝牙地址和原电脑名称替换为稳定角色占位符；保留事件与协议参数",
+        "公开版本不含私人附件关联标识及未脱敏原文校验值"
+      ],
+      "completeness": "用户所提供附件的完整内容；不保证覆盖未提供的其他运行"
+    }
+  ]
+}
