@@ -9,7 +9,7 @@
   "lockFileMaintenance": {
     "enabled": true,
     "schedule": ["before 5am on monday"],
-    "automerge": true,
+    "automerge": false,
     "automergeType": "pr",
     "platformAutomerge": false
   }
