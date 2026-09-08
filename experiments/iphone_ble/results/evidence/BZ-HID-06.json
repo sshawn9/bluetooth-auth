@@ -1,0 +1,88 @@
+{
+  "source_type": "chat_log_transcription",
+  "description": "逐事件转录用户提供的这一轮完整输出；整理 JSON 格式，将命令中的本地地址文件路径替换为同用途的环境变量引用。未补造事件或时间戳，不是直接采集的原始 stdout 文件。",
+  "command": "sudo experiments/iphone_ble/.venv/bin/python -B experiments/iphone_ble/observe_le_link.py --phone-file \"$BLUETOOTH_AUTH_ADDRESS_FILE\" --adapter hci0 --wait-seconds 20 --observe-seconds 60",
+  "requested_conditions": "按电脑重启后不启动 HID 或其他主动连接程序的步骤运行，手机保持锁屏并在附近；日志不能独立核实此前的重启、手机锁屏或其他程序运行历史。",
+  "events": [
+    {
+      "event": "initial_resources",
+      "hid_uuid_present": false,
+      "advertising_instances": 0
+    },
+    {
+      "event": "waiting_for_connection",
+      "timeout_seconds": 20,
+      "message": "不启动 HID；手机保持锁屏，无需操作。"
+    },
+    {
+      "event": "connection_state",
+      "remaining_seconds": 20,
+      "paired": true,
+      "bonded": true,
+      "trusted": false,
+      "bluez_connected": false,
+      "phone_le_connected": false,
+      "hci_le_links": 0,
+      "encrypted": false,
+      "advertising_instances": 0
+    },
+    {
+      "event": "connection_state",
+      "remaining_seconds": 15,
+      "paired": true,
+      "bonded": true,
+      "trusted": false,
+      "bluez_connected": false,
+      "phone_le_connected": false,
+      "hci_le_links": 0,
+      "encrypted": false,
+      "advertising_instances": 0
+    },
+    {
+      "event": "connection_state",
+      "remaining_seconds": 9.9,
+      "paired": true,
+      "bonded": true,
+      "trusted": false,
+      "bluez_connected": false,
+      "phone_le_connected": false,
+      "hci_le_links": 0,
+      "encrypted": false,
+      "advertising_instances": 0
+    },
+    {
+      "event": "connection_state",
+      "remaining_seconds": 4.9,
+      "paired": true,
+      "bonded": true,
+      "trusted": false,
+      "bluez_connected": false,
+      "phone_le_connected": false,
+      "hci_le_links": 0,
+      "encrypted": false,
+      "advertising_instances": 0
+    },
+    {
+      "event": "result",
+      "verdict": "inconclusive",
+      "phase": "connect",
+      "reason": "等待期内未观察到唯一的目标加密 LE 连接",
+      "state": {
+        "paired": true,
+        "bonded": true,
+        "trusted": false,
+        "bluez_connected": false,
+        "phone_le_connected": false,
+        "hci_le_links": 0,
+        "encrypted": false,
+        "advertising_instances": 0
+      }
+    },
+    {
+      "event": "closed",
+      "active_disconnect_sent": false,
+      "cleanup_errors": [],
+      "message": "观察接口已关闭；未修改蓝牙状态，未主动断开任何连接。"
+    }
+  ]
+}

@@ -7,6 +7,9 @@
 | 要复现的内容 | 入口与场景 | 必须具备的前提 |
 | --- | --- | --- |
 | 已通过的系统蓝牙与 HID 共存 | `bluez_hid_lab.py`，BZ-HID-04 | 两端保留有效原配对，电脑有另一个已连接蓝牙设备 |
+| 已通过的 HID 注销后连接保持 | `hid_release_test.py`，BZ-HID-05；见 [专用步骤](HID_RELEASE.md) | 已有或可建立目标加密 LE；无需先断开已有连接 |
+| 重启后不启动 HID 的连接观察 | `observe_le_link.py`，BZ-HID-06，20 秒未观察到连接；见 [专用步骤](HID_RELEASE.md#电脑重启后不启动-hid只观察连接) | 重启电脑、保留配对，不运行 HID 或其他主动连接程序 |
+| 重启后临时 HID 恢复、退出后保持 | `hid_release_test.py`，BZ-HID-07；见 [复现命令](HID_RELEASE.md#重启后临时启动-hid连接后退出) | 沿用重启后的配对，记录目标属性；本次 Trusted=true，手机锁屏，保留完整建立与退出日志 |
 | 手机已忘记电脑、电脑仍留配对记录 | `bluez_hid_lab.py --repair-phone-pairing`，BZ-HID-02 | 电脑有目标手机的 Trusted、未 Blocked 记录；手机允许首次操作 |
 | 比较独立 ANCS/HID/CTS 身份 | `ble_lab.py`，EX 系列 | 接受临时独占适配器、原连接中断；使用实验自己的配对 |
 | 看结论或验证代码 | `plan`、`check_offline.py`、JSON 记录 | 无需开启或接触蓝牙 |
@@ -21,7 +24,7 @@
 
 换一台电脑时，把目录、控制器编号和手机地址换成该环境的实际值；`hci0` 是本次实测编号，不是设备名称。未记录的控制器型号、iOS 版本和内核版本无法据本归档还原，复现者应补填 [运行记录模板](RUN_RECORD_TEMPLATE.md)。
 
-两个入口的 `--state-dir` 都是全局参数，必须放在 `run`、`report` 或 `restore` 等子命令之前；建立状态后，后续始终使用同一路径，不移动已有身份或恢复记录。下文使用默认 `.runtime` 和 `.coexist`。
+`ble_lab.py` 与 `bluez_hid_lab.py` 的 `--state-dir` 都是全局参数，必须放在 `run`、`report` 或 `restore` 等子命令之前；建立状态后，后续始终使用同一路径，不移动已有身份或恢复记录。下文使用默认 `.runtime` 和 `.coexist`。`hid_release_test.py` 与 `observe_le_link.py` 没有这些子命令或状态目录参数，按 [HID_RELEASE.md](HID_RELEASE.md) 直接运行。
 
 ### 2.1 准备独立依赖环境
 
@@ -246,6 +249,8 @@ sudo experiments/iphone_ble/.venv/bin/python -B experiments/iphone_ble/ble_lab.p
 独占 HCI 必须先关闭，再由 BlueZ 接回；可能暂时出现 Busy/InProgress/NotReady。当前实现会重新读取状态、等待过渡并有界重试；失败保留 `.runtime/adapter-restore.json`。恢复依据按物理地址定位，不能把旧 `hci1` 编号机械套用到另一轮。
 
 ## 5. 结束、保留和清理的准确含义
+
+下表针对独占与共存入口。`hid_release_test.py` 与 `observe_le_link.py` 专门观察连接保持，结束时保留目标连接、不执行主动断开；退出和恢复边界见 [专用说明](HID_RELEASE.md)。
 
 | 项目 | 独占入口 | 共存入口 |
 | --- | --- | --- |

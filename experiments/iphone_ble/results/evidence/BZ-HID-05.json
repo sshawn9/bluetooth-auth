@@ -1,0 +1,165 @@
+{
+  "source_type": "chat_log_transcription",
+  "description": "逐事件转录用户提供的这一轮完整输出；命令去除聊天排版转义，JSON 调整缩进，未补造事件或时间戳。不是直接采集的原始 stdout 文件。",
+  "command": "sudo experiments/iphone_ble/.venv/bin/python -B experiments/iphone_ble/hid_release_test.py --phone-file \"$BLUETOOTH_AUTH_ADDRESS_FILE\" --adapter hci0 --wait-seconds 20 --observe-seconds 60",
+  "requested_conditions": "手机锁屏并保持现有连接；脚本没有独立检测手机锁屏状态。",
+  "events": [
+    {
+      "event": "initial_resources",
+      "hid_uuid_present": false,
+      "advertising_instances": 0
+    },
+    {
+      "event": "target_state",
+      "Paired": true,
+      "Bonded": true,
+      "Trusted": false,
+      "Blocked": false
+    },
+    {
+      "event": "existing_connection",
+      "connection_setup": "existing",
+      "hci_le_links": 1,
+      "encrypted": true,
+      "message": "复用已有目标 LE 连接，核对加密后进行注销测试；无需先断开。"
+    },
+    {
+      "event": "preparing_hid",
+      "timeout_seconds": 10
+    },
+    {
+      "event": "gatt_registered",
+      "hid_uuid": "1812"
+    },
+    {
+      "event": "advertising",
+      "hid_uuid": "1812",
+      "appearance": "0x03c0",
+      "interval_ms": 20,
+      "shared_bluez_identity": true,
+      "name_source": "adapter_alias",
+      "target": {
+        "Paired": true,
+        "Bonded": true,
+        "Trusted": false,
+        "Blocked": false
+      },
+      "gatt_registered": true,
+      "advertisement_registered": true,
+      "hid_uuid_present": true,
+      "advertising_instances": 1,
+      "bluez_connected": true,
+      "phone_le_connected": true,
+      "hci_le_links": 1,
+      "hci_encrypted": true,
+      "encrypted_hid_read_seen": false
+    },
+    {
+      "event": "checking_existing_connection",
+      "timeout_seconds": 20,
+      "connection_setup": "existing",
+      "message": "HID 服务和广播已注册；正在核对已有 LE 的加密状态，请保持手机锁屏。"
+    },
+    {
+      "event": "connected",
+      "baseline_seconds": 5,
+      "connection_setup": "existing",
+      "message": "请保持手机锁屏；5 秒后退出 HID 提供进程。",
+      "target": {
+        "Paired": true,
+        "Bonded": true,
+        "Trusted": false,
+        "Blocked": false
+      },
+      "gatt_registered": true,
+      "advertisement_registered": true,
+      "hid_uuid_present": true,
+      "advertising_instances": 1,
+      "bluez_connected": true,
+      "phone_le_connected": true,
+      "hci_le_links": 1,
+      "hci_encrypted": true,
+      "encrypted_hid_read_seen": false
+    },
+    {
+      "event": "target_hid_read",
+      "encrypted": true
+    },
+    {
+      "event": "releasing",
+      "message": "只退出 HID 提供进程；不调用任何蓝牙断开命令。"
+    },
+    {
+      "event": "provider_exit",
+      "provider_returncode": 0,
+      "provider_dbus_closed": true
+    },
+    {
+      "event": "provider_exited",
+      "hid_removed": true,
+      "advertising_instances": 0,
+      "observe_seconds": 60
+    },
+    {
+      "event": "observing",
+      "elapsed_seconds": 0,
+      "same_le_link": true,
+      "encrypted": true
+    },
+    {
+      "event": "observing",
+      "elapsed_seconds": 10.1,
+      "same_le_link": true,
+      "encrypted": true
+    },
+    {
+      "event": "observing",
+      "elapsed_seconds": 20.2,
+      "same_le_link": true,
+      "encrypted": true
+    },
+    {
+      "event": "observing",
+      "elapsed_seconds": 30.2,
+      "same_le_link": true,
+      "encrypted": true
+    },
+    {
+      "event": "observing",
+      "elapsed_seconds": 40.3,
+      "same_le_link": true,
+      "encrypted": true
+    },
+    {
+      "event": "observing",
+      "elapsed_seconds": 50.4,
+      "same_le_link": true,
+      "encrypted": true
+    },
+    {
+      "event": "result",
+      "verdict": "passed",
+      "same_le_link": true,
+      "encrypted": true,
+      "connection_setup": "existing",
+      "target_state": {
+        "Paired": true,
+        "Bonded": true,
+        "Trusted": false,
+        "Blocked": false
+      },
+      "observed_seconds": 60.1,
+      "message": "仅证明本轮短测中，提供进程退出后原加密 LE 连接保持。"
+    },
+    {
+      "event": "closed",
+      "active_disconnect_sent": false,
+      "message": "测试进程和观察接口已关闭；未修改配对，未主动断开任何蓝牙连接。"
+    }
+  ],
+  "limitations": [
+    "本轮复用已有 LE，不是一次受控的断线重连实验。",
+    "用户此前反馈快速自动连回；该现象与本轮 60.1 秒连续保持日志分开记录。",
+    "没有验证电脑或手机重启后的恢复，也不证明长期稳定性或正式认证安全。"
+  ]
+}

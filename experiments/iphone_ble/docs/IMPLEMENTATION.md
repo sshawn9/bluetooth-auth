@@ -4,7 +4,7 @@
 
 ## 结论范围与已有记录
 
-实验分为两条相互排斥的路径：Bumble 独占控制器实验，以及 BlueZ 共存 HID 短测。README 是索引；用户运行记录与失败经验见 [RESULTS.md](../RESULTS.md)，实际复现步骤见 [REPRODUCE.md](REPRODUCE.md)。本文只解释实现与证据边界，不重复运行历史。
+实验采用 Bumble 独占控制器或系统 BlueZ 两种方式。BlueZ 下分别提供共存验证、HID 退出后的链路保持，以及无 HID 时的只读观察入口，每次运行一个场景。README 是索引；用户运行记录与失败经验见 [RESULTS.md](../RESULTS.md)，实际复现步骤见 [REPRODUCE.md](REPRODUCE.md) 和 [HID_RELEASE.md](HID_RELEASE.md)。本文只解释实现与证据边界，不重复运行历史。
 
 正式结果应始终区分“用户实测”“代码行为”和“离线测试”。已有成功或失败都只适用于其记录的配置，不能推出所有 iOS、控制器、长期连接、音频配置文件或共存场景的结论；`inconclusive` 也不能解释为协议不支持。
 
@@ -32,7 +32,9 @@ HID 的 Report Map 或 Report 读取会产生 `target_gatt_access`，其中带 B
 
 ### 非音频与音频隔离的边界
 
-两个 HID 实现均不注册 A2DP、HFP 或 LE Audio，也不发送媒体控制输入。共存路径会检查目标手机是否出现新的 `MediaTransport1`，若出现即失败；它还要求至少有一个预先存在的其他蓝牙连接在测试期间保持。[bluez_hid_lab.py](../bluez_hid_lab.py)
+实验提供的 HID 均不注册 A2DP、HFP 或 LE Audio，也不发送媒体控制输入。`bluez_hid_lab.py` 会检查目标手机是否出现新的 `MediaTransport1`，若出现即失败；它还要求至少有一个预先存在的其他蓝牙连接在测试期间保持。[bluez_hid_lab.py](../bluez_hid_lab.py)
+
+新增的 `hid_release_test.py` 保护原有其他连接，但不要求一定存在陪测设备，也不进行上述音频传输专项判定；`observe_le_link.py` 只观察目标 LE。二者的 passed 不增加音频共存或路由隔离的成功次数。
 
 这些是有限的隔离检查，不能证明所有音频配置文件、路由选择、耳机体验或输入法行为均未受影响。实际音频输出与鼠标/耳机可用性必须由操作者在保持期观察并记录。
 
@@ -45,6 +47,9 @@ HID 的 Report Map 或 Report 读取会产生 `target_gatt_access`，其中带 B
 | [adapter.py](../adapter.py) | BlueZ D-Bus 后端、独占适配器交接与写前恢复记录；共存入口复用其 `BlueZBackend`。 | 仅运行/恢复调用时会。 |
 | [state.py](../state.py) | 私有状态、原子日志与路径/权限检查。 | 不直接操作无线。 |
 | [bluez_hid_lab.py](../bluez_hid_lab.py) | BlueZ 共存短测、D-Bus 注册、候选配对、清理和恢复。 | `run`/有记录的 `restore` 会。 |
+| [hid_release_test.py](../hid_release_test.py) | 临时 HID 提供子进程与独立观察父进程；确认服务退出后同一加密 LE 是否保持。 | 运行时注册服务和广播；`--help` 不访问蓝牙。 |
+| [observe_le_link.py](../observe_le_link.py) | 无 HID/广播时，只读等待并观察目标加密 LE。 | 读取系统 D-Bus、MGMT、HCI 状态，不扫描、广播或发起连接。 |
+| [link.py](../../../src/bluetooth_auth_hid/link.py) | 新增观察入口复用的内核 LE 句柄、连接状态和加密位读取；归档清单包含该依赖。 | 由观察入口调用时读取 HCI 连接信息。 |
 | [coexist_gatt.py](../coexist_gatt.py) | 纯 D-Bus HOGP、Battery、DIS 和广告对象；可导出/撤销导出。 | 不连接或注册 D-Bus。 |
 | [coexist_pairing.py](../coexist_pairing.py) | 纯 `Agent1` Numeric Comparison 对象；不注册 Agent。 | 不连接或配对。 |
 | [coexist_link.py](../coexist_link.py) | MGMT Get Connections 与受基线约束的目标 LE 断开。 | 由共存运行/恢复调用时会。 |
@@ -52,7 +57,7 @@ HID 的 Report Map 或 Report 读取会产生 `target_gatt_access`，其中带 B
 | [check_offline.py](../check_offline.py) | 在临时目录运行测试，拦截 Python 蓝牙 socket 与真实 socket 连接。 | 不运行真实实验；不替代操作系统沙箱。 |
 | [check_public_privacy.py](../check_public_privacy.py) | 静态检查仓库文件中的地址、个人路径与密钥特征。 | 否，只读取文件和 Git。 |
 | [diagnostics/monitor_rssi.py](../diagnostics/monitor_rssi.py) | 早期 BR/EDR RSSI 辅助诊断，不被正式认证或 HID 实验入口调用。 | 由操作者单独运行时会扫描并查询已有连接。 |
-| [tests/](../tests/) | 离线单元测试和 fake 后端测试。 | 不应连接系统 D-Bus 或真实控制器。 |
+| [tests/](../tests/) | 离线逻辑测试；另有独立临时 D-Bus 上的真实子进程退出回归。 | 不连接系统 D-Bus 或真实控制器。 |
 
 ## Bumble 独占实验
 
@@ -123,13 +128,30 @@ HID 的 Report Map 或 Report 读取会产生 `target_gatt_access`，其中带 B
 
 摘要中的 `closed` 是取得摘要时的状态；当前入口先取摘要，再在 `finally` 中关闭 monitor，因此历史最终输出中的 `closed=false` 不能单独作为资源泄漏证据。清理异常会另行记录；不要用摘要采集时刻代替退出流程判断。
 
+## HID 退出与只读观察
+
+两个新增入口均接受 `--phone-file`、`--adapter`、`--wait-seconds`、`--observe-seconds`，默认等待 20 秒、观察 60 秒；每个时限必须大于零且不超过 120 秒。地址文件显式传入，环境变量只是复现命令中的路径引用。具体命令见 [HID_RELEASE.md](HID_RELEASE.md)。
+
+| 入口 | 提供进程与观察流程 | 通过所需的证据 |
+| --- | --- | --- |
+| `hid_release_test.py` | 子进程注册 HID/广播；父进程等待目标加密 LE，保持 5 秒基线，再让子进程关闭 D-Bus 并退出，确认资源撤销后观察连接 | 子进程退出码 0、D-Bus 关闭确认、总线身份消失、HID UUID 移除且广播实例为 0；随后同一加密 LE 保持 |
+| `observe_le_link.py` | 不创建 HID 提供进程，仅在 HID UUID 缺失、广播实例为 0 的条件下等待和观察 | 同一加密 LE 保持，整个观察期间可核实无 HID/广播；无法读取资源状态时不能判通过 |
+
+两者按指定适配器和身份地址匹配目标，联合读取 MGMT 目标 LE 与唯一 HCI LE 链路，核对加密位，跟踪连接句柄和 MGMT 断线事件；断线后重连不能抵消连续性失败。身份不能对应或读取结果不足时，不猜测 RPA 归属，不以 BlueZ 的通用 Connected 属性代替目标加密 LE。
+
+`Paired/Bonded/Trusted` 用于记录并检查本轮是否发生变化，不作为本项链路保持的启动门槛；Blocked 则会拒绝。两个入口均不设置 Trusted，不调用 Connect、Pair 或 Disconnect。HID 的加密读取只是辅助事件，`encrypted_hid_read_seen=false` 不影响链路保持通过，也不能被写成读取或订阅已验证。
+
+`hid_release_test.py` 以 `connection_setup=existing/automatic/manual` 区分起点。已有连接直接复用；`--manual-connect` 只改变操作者的连接步骤与记录，不是超时后的自动回退。通过为退出码 0，链路丢失为 1，观测不足/配置错误为 2，中断为 130。父观察进程在提供进程退出后继续运行，系统 `bluetoothd` 始终管理链路；服务对象生命周期与底层连接生命周期不能混为一谈。
+
 ## 清理、恢复与配对记录
 
-两个入口各有独立锁与恢复记录：独占路径使用 `.runtime/adapter-restore.json`，共存路径使用 `.coexist/restore.json`。新运行会拒绝覆盖待恢复记录。恢复按照适配器物理地址重新定位，避免 `hciN` 改号时修改其他控制器。
+`ble_lab.py` 与 `bluez_hid_lab.py` 各有独立锁与恢复记录：独占路径使用 `.runtime/adapter-restore.json`，共存路径使用 `.coexist/restore.json`。新运行会拒绝覆盖待恢复记录。恢复按照适配器物理地址重新定位，避免 `hciN` 改号时修改其他控制器。
 
 共存清理的顺序是：注销广告和 GATT 应用、撤销导出对象；修复模式取消待确认、先关闭 Pairable 窗口、注销/撤销临时 Agent；关闭控制通道和 D-Bus；最后执行恢复核对。恢复只断开启动时不存在且属于记录目标/候选集合的 LE 链路；拒绝断开基线连接，绝不对所有设备执行通用连接或断开。[bluez_hid_lab.py](../bluez_hid_lab.py)；[coexist_link.py](../coexist_link.py)
 
 若恢复失败、出现新增 Classic 手机连接、原连接缺失或临时资源仍在，记录保留并报告原因。不要手动删除恢复文件来掩盖未验证的状态。独占 `clean`/`uninstall` 的删除范围只覆盖该实验受管理状态；手机上的测试记录、系统日志、缓存和外部服务状态不在可保证的清理范围内。
+
+`hid_release_test.py` 与 `observe_le_link.py` 不写恢复记录，也没有 `restore` 子命令。它们结束时只关闭本轮提供/观察资源，保留仍在的目标连接和配对；不应套用共存入口主动断开新增 LE 的恢复步骤。
 
 ## 离线验证与复现纪律
 
@@ -141,13 +163,15 @@ experiments/iphone_ble/.venv/bin/python -B experiments/iphone_ble/check_offline.
 
 离线测试覆盖对象导出、D-Bus 签名、offset、授权拒绝、广告属性、导出回滚、MGMT 报文解析、配对代理的批准/拒绝/取消/并发处理，以及恢复分支。它们使用 fake 后端、临时目录或内存控制器；不应被描述为手机发现、配对、RPA 解析、音频路由或无线兼容性的实测。
 
-真实复现前应明确指定 `hciN`，保留一台已连接的其他蓝牙设备作为共存基线，并在结束后核对 `result`、`restore`、`connections_restored` 与 `original_connections_present`。对失败仅记录可观察事实，例如“未发现名称”“未建立目标 LE 链路”“未出现归属 HID 读取”或“身份未收敛”；不要把单次失败扩展为协议或平台的普遍结论。
+HID 退出/只读观察的逻辑回归也包含在 `check_offline.py` 中。独立的 [check_hid_release_dbus.py](../tests/check_hid_release_dbus.py) 则在私有 Unix D-Bus 上运行三个真实提供子进程，读取 GATT 后通过 EOF 触发关闭，核对退出码、关闭确认及总线身份消失。它不连接系统 BlueZ，不能证明无线连接行为；运行条件和命令见 [HID_RELEASE.md](HID_RELEASE.md#离线验证)。
+
+真实复现前应明确指定 `hciN`。运行 `bluez_hid_lab.py` 时，保留一台已连接的其他蓝牙设备作为共存基线，并在结束后核对 `result`、`restore`、`connections_restored` 与 `original_connections_present`；HID 退出/只读观察按各自的资源与链路判据核对。对失败仅记录可观察事实，不把单次失败扩展为协议或平台的普遍结论。
 
 ## 已知限制与后续边界
 
 1. 广告被 BlueZ 接受、控制器下发数据或手机设置页没有名称，分别是不同证据层级；scan response 名称尤其依赖手机主动扫描。
 2. GATT `StartNotify` 缺少 Device 参数，不能从代码取得目标手机专属订阅证据。
-3. 手机可能复用缓存而不重新读取 Report Map/Report；当前严格成功规则会给出 `inconclusive`，避免假阳性。
+3. 手机可能复用缓存而不重新读取 Report Map/Report；`bluez_hid_lab.py` 的服务访问判据会给出 `inconclusive`，HID 退出/只读观察的链路判据不要求重新读取。不同入口的 passed 不能互换。
 4. RPA、身份地址与内核 MGMT 连接地址可能不同；修复模式必须保留会话候选地址并等待 BlueZ 身份收敛，不能只依赖 `Device1.Address`。
 5. 配对代理只限制本进程 Agent 的响应；它不是长期策略管理、设备准入系统或正式认证协议。
 6. 此目录没有实现正式认证接入、持久化授权策略、生产级密钥轮换、产品 UI、认证文档或跨设备兼容性保证。

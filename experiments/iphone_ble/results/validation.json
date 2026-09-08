@@ -28,5 +28,14 @@
     "returncode": 0,
     "output_excerpt": "Ran 102 tests in 4.639s\nOK"
   },
-  "validated_on": "2026-09-08"
+  "validated_on": "2026-09-08",
+  "hid_release_and_readonly_observation_validation": {
+    "validated_on": "2026-09-08",
+    "command": "experiments/iphone_ble/.venv/bin/python -B experiments/iphone_ble/check_offline.py",
+    "tests_run": 140,
+    "returncode": 0,
+    "output_excerpt": "Ran 140 tests in 4.852s\nOK",
+    "scope": "包含 HID 退出与重启后只读观察的假后端回归；拦截真实 socket 连接，没有访问蓝牙硬件或系统 BlueZ。这里只记录离线执行，实机结果单列于 observations.json。",
+    "readonly_observer_help_returncode": 0
+  }
 }

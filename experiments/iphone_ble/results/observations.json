@@ -589,6 +589,288 @@
         "没有证明全部音频配置文件隔离，也没有证明目标专属 Report 订阅",
         "本轮没有完成正式认证安全验证"
       ]
+    },
+    {
+      "id": "BZ-HID-05",
+      "title": "HID 提供进程退出、服务和广播撤销后，已有加密 LE 保持 60.1 秒",
+      "verdict": "passed",
+      "evidence_type": "chat_log_transcription",
+      "mode": "bluez-hid-release/existing",
+      "parameters": {
+        "adapter": "hci0",
+        "wait_seconds": 20,
+        "baseline_seconds": 5,
+        "observe_seconds": 60
+      },
+      "evidence_file": "evidence/BZ-HID-05.json",
+      "initial_resources": {
+        "event": "initial_resources",
+        "hid_uuid_present": false,
+        "advertising_instances": 0
+      },
+      "initial_connection": {
+        "event": "existing_connection",
+        "connection_setup": "existing",
+        "hci_le_links": 1,
+        "encrypted": true,
+        "message": "复用已有目标 LE 连接，核对加密后进行注销测试；无需先断开。"
+      },
+      "provider_exit": {
+        "event": "provider_exit",
+        "provider_returncode": 0,
+        "provider_dbus_closed": true
+      },
+      "resources_removed": {
+        "event": "provider_exited",
+        "hid_removed": true,
+        "advertising_instances": 0,
+        "observe_seconds": 60
+      },
+      "result_excerpt": {
+        "event": "result",
+        "verdict": "passed",
+        "same_le_link": true,
+        "encrypted": true,
+        "connection_setup": "existing",
+        "target_state": {
+          "Paired": true,
+          "Bonded": true,
+          "Trusted": false,
+          "Blocked": false
+        },
+        "observed_seconds": 60.1,
+        "message": "仅证明本轮短测中，提供进程退出后原加密 LE 连接保持。"
+      },
+      "cleanup_excerpt": {
+        "event": "closed",
+        "active_disconnect_sent": false,
+        "message": "测试进程和观察接口已关闭；未修改配对，未主动断开任何蓝牙连接。"
+      },
+      "requested_conditions": "手机锁屏并保持现有连接；脚本没有独立检测手机锁屏状态。",
+      "human_observation_separate": "用户此前反馈关开蓝牙或单独断开后会很快自动连回；该观察没有本轮同等的连续时序日志，未计入新的受控重连次数。",
+      "conclusion": "本轮确认，临时 HID 提供进程退出且服务/广播撤销后，同一条已有加密 LE 连接连续保留 60.1 秒；不能再把自写 HID 程序常驻当作本环境下已有连接保持的必要条件。",
+      "limits": [
+        "本轮复用已有 LE，不是一次受控的断线重连实验。",
+        "用户此前反馈快速自动连回；该现象与本轮 60.1 秒连续保持日志分开记录。",
+        "没有验证电脑或手机重启后的恢复，也不证明长期稳定性或正式认证安全。"
+      ],
+      "reproduction_document": "../docs/HID_RELEASE.md",
+      "setup_failures_documented": "此前未连接、前置条件拒绝及子进程退出故障均保留在复现文档的运行记录中；不计为本轮成功。"
+    },
+    {
+      "id": "BZ-HID-06",
+      "title": "重启后只读观察：无 HID/广播，20 秒内未观察到目标 LE 连接",
+      "verdict": "inconclusive",
+      "evidence_type": "chat_log_transcription",
+      "mode": "bluez-le-observe/no-hid",
+      "parameters": {
+        "adapter": "hci0",
+        "wait_seconds": 20,
+        "observe_seconds": 60
+      },
+      "evidence_file": "evidence/BZ-HID-06.json",
+      "requested_conditions": "按电脑重启后不启动 HID 或其他主动连接程序的步骤运行，手机保持锁屏并在附近；日志不能独立核实此前的重启、手机锁屏或其他程序运行历史。",
+      "initial_resources": {
+        "event": "initial_resources",
+        "hid_uuid_present": false,
+        "advertising_instances": 0
+      },
+      "connection_snapshots": [
+        {
+          "event": "connection_state",
+          "remaining_seconds": 20,
+          "paired": true,
+          "bonded": true,
+          "trusted": false,
+          "bluez_connected": false,
+          "phone_le_connected": false,
+          "hci_le_links": 0,
+          "encrypted": false,
+          "advertising_instances": 0
+        },
+        {
+          "event": "connection_state",
+          "remaining_seconds": 15,
+          "paired": true,
+          "bonded": true,
+          "trusted": false,
+          "bluez_connected": false,
+          "phone_le_connected": false,
+          "hci_le_links": 0,
+          "encrypted": false,
+          "advertising_instances": 0
+        },
+        {
+          "event": "connection_state",
+          "remaining_seconds": 9.9,
+          "paired": true,
+          "bonded": true,
+          "trusted": false,
+          "bluez_connected": false,
+          "phone_le_connected": false,
+          "hci_le_links": 0,
+          "encrypted": false,
+          "advertising_instances": 0
+        },
+        {
+          "event": "connection_state",
+          "remaining_seconds": 4.9,
+          "paired": true,
+          "bonded": true,
+          "trusted": false,
+          "bluez_connected": false,
+          "phone_le_connected": false,
+          "hci_le_links": 0,
+          "encrypted": false,
+          "advertising_instances": 0
+        }
+      ],
+      "result_excerpt": {
+        "event": "result",
+        "verdict": "inconclusive",
+        "phase": "connect",
+        "reason": "等待期内未观察到唯一的目标加密 LE 连接",
+        "state": {
+          "paired": true,
+          "bonded": true,
+          "trusted": false,
+          "bluez_connected": false,
+          "phone_le_connected": false,
+          "hci_le_links": 0,
+          "encrypted": false,
+          "advertising_instances": 0
+        }
+      },
+      "cleanup_excerpt": {
+        "event": "closed",
+        "active_disconnect_sent": false,
+        "cleanup_errors": [],
+        "message": "观察接口已关闭；未修改蓝牙状态，未主动断开任何连接。"
+      },
+      "hold_observation_started": false,
+      "conclusion": "本轮无本地 HID 服务和 BlueZ 广播，电脑保留 Paired/Bonded=true 的手机记录，但 20 秒等待期内未观察到目标 LE 连接；没有进入 60 秒保持阶段。",
+      "limits": [
+        "脚本 verdict=inconclusive 表示没有建立连续保持的观察起点，不抹去等待期内无连接这一结果。",
+        "没有证明无限等待也不会恢复、必须常驻 HID、Trusted=false 是未连接原因或配对已损坏。",
+        "与 BZ-HID-05 的已有连接在注销后保持 60.1 秒分别记录，不将其误解为相互矛盾。",
+        "本项没有运行临时 HID；后续建立连接并在退出后保持的独立结果见 BZ-HID-07。"
+      ],
+      "reproduction_document": "../docs/HID_RELEASE.md",
+      "followup_record": "BZ-HID-07"
+    },
+    {
+      "id": "BZ-HID-07",
+      "title": "重启后临时提供 HID 建立加密 LE，提供进程退出后同一连接保持 60 秒",
+      "verdict": "passed",
+      "evidence_type": "chat_log_transcription",
+      "mode": "bluez-hid-release/automatic",
+      "parameters": {
+        "adapter": "hci0",
+        "wait_seconds": 20,
+        "baseline_seconds": 5,
+        "observe_seconds": 60
+      },
+      "evidence_file": "evidence/BZ-HID-07.json",
+      "requested_conditions": "按电脑重启后临时启动 HID 的步骤运行，沿用配对，手机保持锁屏并在附近，不点击连接；日志不能独立核实此前的重启、手机锁屏或操作历史。",
+      "initial_resources": {
+        "event": "initial_resources",
+        "hid_uuid_present": false,
+        "advertising_instances": 0
+      },
+      "target_state": {
+        "event": "target_state",
+        "Paired": true,
+        "Bonded": true,
+        "Trusted": true,
+        "Blocked": false
+      },
+      "initial_connection_snapshot": {
+        "event": "connection_state",
+        "remaining_seconds": 20,
+        "target": {
+          "Paired": true,
+          "Bonded": true,
+          "Trusted": true,
+          "Blocked": false
+        },
+        "gatt_registered": true,
+        "advertisement_registered": true,
+        "hid_uuid_present": true,
+        "advertising_instances": 1,
+        "bluez_connected": false,
+        "phone_le_connected": false,
+        "hci_le_links": 0,
+        "hci_encrypted": false,
+        "encrypted_hid_read_seen": false
+      },
+      "connected_snapshot": {
+        "event": "connected",
+        "baseline_seconds": 5,
+        "connection_setup": "automatic",
+        "message": "请保持手机锁屏；5 秒后退出 HID 提供进程。",
+        "target": {
+          "Paired": true,
+          "Bonded": true,
+          "Trusted": true,
+          "Blocked": false
+        },
+        "gatt_registered": true,
+        "advertisement_registered": true,
+        "hid_uuid_present": true,
+        "advertising_instances": 1,
+        "bluez_connected": true,
+        "phone_le_connected": true,
+        "hci_le_links": 1,
+        "hci_encrypted": true,
+        "encrypted_hid_read_seen": false
+      },
+      "provider_exit": {
+        "event": "provider_exit",
+        "provider_returncode": 0,
+        "provider_dbus_closed": true
+      },
+      "resources_removed": {
+        "event": "provider_exited",
+        "hid_removed": true,
+        "advertising_instances": 0,
+        "observe_seconds": 60
+      },
+      "result_excerpt": {
+        "event": "result",
+        "verdict": "passed",
+        "same_le_link": true,
+        "encrypted": true,
+        "connection_setup": "automatic",
+        "target_state": {
+          "Paired": true,
+          "Bonded": true,
+          "Trusted": true,
+          "Blocked": false
+        },
+        "observed_seconds": 60,
+        "message": "仅证明本轮短测中，提供进程退出后原加密 LE 连接保持。"
+      },
+      "cleanup_excerpt": {
+        "event": "closed",
+        "active_disconnect_sent": false,
+        "message": "测试进程和观察接口已关闭；未修改配对，未主动断开任何蓝牙连接。"
+      },
+      "comparison_with_previous": {
+        "previous_id": "BZ-HID-06",
+        "trusted_before": false,
+        "trusted_this_run": true,
+        "change_source": "两轮日志未提供是谁、何时修改，不能归因于实验脚本。",
+        "limit": "这两轮不是只改变 HID/广播的单变量对照，不能认定 HID 是恢复的唯一原因，也不能认定 Trusted 为假是上一轮未连接的原因。"
+      },
+      "conclusion": "本轮从没有目标 LE 进入唯一加密 LE，HID 提供进程正常退出且确认服务/广播撤销后，同一连接继续保持 60 秒。支持按需临时提供 HID 建立连接、完成后退出的路径，不再以维持已建立连接为由要求自写 HID 程序常驻。",
+      "limits": [
+        "连接设置为 automatic，手机锁屏和未操作的条件仍来自操作步骤，脚本不能独立核实。",
+        "本轮没有观察到目标重新读取 HID；encrypted_hid_read_seen=false 不影响本项链路保持判据，但不能计作一次新的 HID 读取或订阅成功。",
+        "没有提供精确建连耗时，不根据进度输出间隔补造性能数据。",
+        "不证明无限保持、一次配对后永远无需重新提供 HID、所有断线场景或正式认证安全。"
+      ],
+      "reproduction_document": "../docs/HID_RELEASE.md"
     }
-  ]
+  ],
+  "updated_on": "2026-09-08"
 }

@@ -1,0 +1,168 @@
+{
+  "source_type": "chat_log_transcription",
+  "description": "逐事件转录用户提供的这一轮完整输出；整理 JSON 格式，将命令中的本地地址文件路径替换为同用途的环境变量引用。未补造事件或时间戳，不是直接采集的原始 stdout 文件。",
+  "command": "sudo experiments/iphone_ble/.venv/bin/python -B experiments/iphone_ble/hid_release_test.py --phone-file \"$BLUETOOTH_AUTH_ADDRESS_FILE\" --adapter hci0 --wait-seconds 20 --observe-seconds 60",
+  "requested_conditions": "按电脑重启后临时启动 HID 的步骤运行，沿用配对，手机保持锁屏并在附近，不点击连接；日志不能独立核实此前的重启、手机锁屏或操作历史。",
+  "events": [
+    {
+      "event": "initial_resources",
+      "hid_uuid_present": false,
+      "advertising_instances": 0
+    },
+    {
+      "event": "target_state",
+      "Paired": true,
+      "Bonded": true,
+      "Trusted": true,
+      "Blocked": false
+    },
+    {
+      "event": "preparing_hid",
+      "timeout_seconds": 10
+    },
+    {
+      "event": "gatt_registered",
+      "hid_uuid": "1812"
+    },
+    {
+      "event": "advertising",
+      "hid_uuid": "1812",
+      "appearance": "0x03c0",
+      "interval_ms": 20,
+      "shared_bluez_identity": true,
+      "name_source": "adapter_alias",
+      "target": {
+        "Paired": true,
+        "Bonded": true,
+        "Trusted": true,
+        "Blocked": false
+      },
+      "gatt_registered": true,
+      "advertisement_registered": true,
+      "hid_uuid_present": true,
+      "advertising_instances": 1,
+      "bluez_connected": false,
+      "phone_le_connected": false,
+      "hci_le_links": 0,
+      "hci_encrypted": false,
+      "encrypted_hid_read_seen": false
+    },
+    {
+      "event": "waiting_for_connection",
+      "timeout_seconds": 20,
+      "connection_setup": "automatic",
+      "message": "HID 服务和广播已注册；手机保持锁屏，等待目标加密 LE 连接。"
+    },
+    {
+      "event": "connection_state",
+      "remaining_seconds": 20,
+      "target": {
+        "Paired": true,
+        "Bonded": true,
+        "Trusted": true,
+        "Blocked": false
+      },
+      "gatt_registered": true,
+      "advertisement_registered": true,
+      "hid_uuid_present": true,
+      "advertising_instances": 1,
+      "bluez_connected": false,
+      "phone_le_connected": false,
+      "hci_le_links": 0,
+      "hci_encrypted": false,
+      "encrypted_hid_read_seen": false
+    },
+    {
+      "event": "connected",
+      "baseline_seconds": 5,
+      "connection_setup": "automatic",
+      "message": "请保持手机锁屏；5 秒后退出 HID 提供进程。",
+      "target": {
+        "Paired": true,
+        "Bonded": true,
+        "Trusted": true,
+        "Blocked": false
+      },
+      "gatt_registered": true,
+      "advertisement_registered": true,
+      "hid_uuid_present": true,
+      "advertising_instances": 1,
+      "bluez_connected": true,
+      "phone_le_connected": true,
+      "hci_le_links": 1,
+      "hci_encrypted": true,
+      "encrypted_hid_read_seen": false
+    },
+    {
+      "event": "releasing",
+      "message": "只退出 HID 提供进程；不调用任何蓝牙断开命令。"
+    },
+    {
+      "event": "provider_exit",
+      "provider_returncode": 0,
+      "provider_dbus_closed": true
+    },
+    {
+      "event": "provider_exited",
+      "hid_removed": true,
+      "advertising_instances": 0,
+      "observe_seconds": 60
+    },
+    {
+      "event": "observing",
+      "elapsed_seconds": 0,
+      "same_le_link": true,
+      "encrypted": true
+    },
+    {
+      "event": "observing",
+      "elapsed_seconds": 10.1,
+      "same_le_link": true,
+      "encrypted": true
+    },
+    {
+      "event": "observing",
+      "elapsed_seconds": 20.1,
+      "same_le_link": true,
+      "encrypted": true
+    },
+    {
+      "event": "observing",
+      "elapsed_seconds": 30.2,
+      "same_le_link": true,
+      "encrypted": true
+    },
+    {
+      "event": "observing",
+      "elapsed_seconds": 40.3,
+      "same_le_link": true,
+      "encrypted": true
+    },
+    {
+      "event": "observing",
+      "elapsed_seconds": 50.4,
+      "same_le_link": true,
+      "encrypted": true
+    },
+    {
+      "event": "result",
+      "verdict": "passed",
+      "same_le_link": true,
+      "encrypted": true,
+      "connection_setup": "automatic",
+      "target_state": {
+        "Paired": true,
+        "Bonded": true,
+        "Trusted": true,
+        "Blocked": false
+      },
+      "observed_seconds": 60,
+      "message": "仅证明本轮短测中，提供进程退出后原加密 LE 连接保持。"
+    },
+    {
+      "event": "closed",
+      "active_disconnect_sent": false,
+      "message": "测试进程和观察接口已关闭；未修改配对，未主动断开任何蓝牙连接。"
+    }
+  ]
+}
