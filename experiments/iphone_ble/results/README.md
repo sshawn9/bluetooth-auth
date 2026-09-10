@@ -12,8 +12,8 @@
 | [BZ-HID-05.json](evidence/BZ-HID-05.json) | HID 提供进程退出后，同一加密 LE 保持 60.1 秒；用户该轮完整输出的 20 个事件转录，**不是直接采集的原始 stdout 文件** |
 | [BZ-HID-06.json](evidence/BZ-HID-06.json) | 重启后无 HID/广播，20 秒内没有目标 LE，未进入保持观察；用户该轮完整输出的 8 个事件转录，**不是直接采集的原始 stdout 文件** |
 | [BZ-HID-07.json](evidence/BZ-HID-07.json) | 临时 HID 从未连接状态建立加密 LE，提供进程退出且资源撤销后，同一连接保持 60 秒；该轮 19 个事件转录，**不是直接采集的原始 stdout 文件** |
-| [validation.json](validation.json) | 各阶段离线验证命令、输出摘录和退出码，包括新增 HID 退出/只读观察的 140 项回归；不属于实机证据 |
-| [archive-manifest.json](archive-manifest.json) | 本目录实验、辅助诊断、材料及关联工具的 SHA-256；不包含清单自身、Git 或私有状态 |
+| [validation.json](validation.json) | 各阶段离线验证命令、输出摘录和退出码；Python 原型归档后分别运行 63 项原型测试与 140 项实验流程测试，不属于实机证据 |
+| [archive-manifest.json](archive-manifest.json) | 本目录实验、Python 原型、辅助诊断及材料的 SHA-256；不包含清单自身、Git 或私有状态 |
 
 ## 脱敏与真实性
 

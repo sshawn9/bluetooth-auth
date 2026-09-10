@@ -27,6 +27,7 @@
 | [复现手册](docs/REPRODUCE.md) | 环境准备、各场景前提、可直接执行的命令、手机操作、成功判据和恢复方法 |
 | [HID 注销与重启观察](docs/HID_RELEASE.md) | 服务撤销后保持、重启后只读观察及临时 HID 恢复的结果和复现命令 |
 | [实现说明](docs/IMPLEMENTATION.md) | 文件职责、控制器/身份/名称、BLE 与 GATT 角色、各入口的判据与恢复边界 |
+| [Python HID 原型](python/README.md) | Rust 迁移前的常驻方案、独立基础函数、注册示例及离线测试 |
 | [运行记录模板](docs/RUN_RECORD_TEMPLATE.md) | 后续复现时记录环境、条件、原始输出、人工观察和恢复结果 |
 | [证据目录说明](results/README.md) | 完整脱敏附件、对话摘录、机器可读记录与校验清单的来源说明 |
 
@@ -34,7 +35,7 @@
 
 ## 代码入口
 
-BLE 实验入口位于本目录，早期 RSSI 辅助诊断归入 `diagnostics/`。
+BLE 实验入口位于本目录，早期 RSSI 辅助诊断归入 `diagnostics/`，Python HID 原型及其测试归入 `python/`。
 
 ```text
 iphone_ble/
@@ -54,6 +55,9 @@ iphone_ble/
 ├── requirements.txt            # 固定实验环境依赖版本
 ├── diagnostics/
 │   └── monitor_rssi.py         # 早期 BR/EDR RSSI 辅助诊断
+├── python/
+│   ├── README.md               # Python 原型用途、依赖与测试命令
+│   └── bluetooth_auth_hid/     # 三种原型、共享模块及包内离线测试
 ├── tests/                     # fake 后端、内存控制器、恢复和私有 D-Bus 退出测试
 ├── docs/                      # 正式中文复现及实现说明
 └── results/                   # 结果、证据、来源与归档哈希
@@ -69,7 +73,10 @@ iphone_ble/
 python3 -B experiments/iphone_ble/ble_lab.py plan
 python3 -B experiments/iphone_ble/bluez_hid_lab.py plan
 experiments/iphone_ble/.venv/bin/python -B experiments/iphone_ble/check_offline.py
+experiments/iphone_ble/.venv/bin/python -B experiments/iphone_ble/python/bluetooth_auth_hid/tests/run_offline.py
 ```
+
+两个离线入口分别运行实验流程测试和 Python 原型测试。
 
 首次依赖安装见[环境准备](docs/REPRODUCE.md#2-环境和目录)。准备实机复现时，先按手册区分“首次/修复配对”和“复用配对”，不要仅复制历史命令中的参数。
 

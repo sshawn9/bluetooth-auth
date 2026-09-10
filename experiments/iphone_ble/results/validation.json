@@ -28,7 +28,7 @@
     "returncode": 0,
     "output_excerpt": "Ran 102 tests in 4.639s\nOK"
   },
-  "validated_on": "2026-09-08",
+  "validated_on": "2026-09-10",
   "hid_release_and_readonly_observation_validation": {
     "validated_on": "2026-09-08",
     "command": "experiments/iphone_ble/.venv/bin/python -B experiments/iphone_ble/check_offline.py",
@@ -37,5 +37,21 @@
     "output_excerpt": "Ran 140 tests in 4.852s\nOK",
     "scope": "包含 HID 退出与重启后只读观察的假后端回归；拦截真实 socket 连接，没有访问蓝牙硬件或系统 BlueZ。这里只记录离线执行，实机结果单列于 observations.json。",
     "readonly_observer_help_returncode": 0
+  },
+  "python_archive_relocation_validation": {
+    "validated_on": "2026-09-10",
+    "scope": "Python HID 原型与测试移入实验目录，修正 HID 注销和重启观察入口的导入路径。两套测试分别运行，均拦截真实 socket；未访问蓝牙硬件或系统 BlueZ，不增加实机测试记录。",
+    "prototype_tests": {
+      "command": "experiments/iphone_ble/.venv/bin/python -B experiments/iphone_ble/python/bluetooth_auth_hid/tests/run_offline.py",
+      "tests_run": 63,
+      "returncode": 0,
+      "output_excerpt": "Ran 63 tests in 0.192s\nOK"
+    },
+    "experiment_tests": {
+      "command": "experiments/iphone_ble/.venv/bin/python -B experiments/iphone_ble/check_offline.py",
+      "tests_run": 140,
+      "returncode": 0,
+      "output_excerpt": "Ran 140 tests in 4.850s\nOK"
+    }
   }
 }

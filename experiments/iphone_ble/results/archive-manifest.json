@@ -39,7 +39,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "44690f8d953ad2634673e145ff1a34130d09f7e704c4a8ce2a33592c22d270c8"
+      "sha256": "808e12f8e38d4246de40773f0a58cb6ba9ab04df02069eaaed5f12572a369a67"
     },
     {
       "path": "RESULTS.md",
@@ -87,15 +87,15 @@
     },
     {
       "path": "docs/HID_RELEASE.md",
-      "sha256": "7546289245cafbb05ad4d01a95eed85c9f92896d2e2439576c46f46a031e50ea"
+      "sha256": "832d5971539fa3592ee303217edf90cb617c3ad8404481a759fce6e652e35749"
     },
     {
       "path": "docs/IMPLEMENTATION.md",
-      "sha256": "2b81539ad5a76752db275ac0334628f5fdd7a994c96db81b7a6c5b8b20ca7aaf"
+      "sha256": "703b12ea0f44703b1b75f7759d3cd2f64dadee7228c3c5bcb933a535f2f31dee"
     },
     {
       "path": "docs/REPRODUCE.md",
-      "sha256": "c835dd4327e27808fd01b6cfc5240f467ade1437e7d833b3a23e652a2fb2f21f"
+      "sha256": "602e31c4a39214a39ffeaae39637941d232f86965008fae8015836db207f9250"
     },
     {
       "path": "docs/RUN_RECORD_TEMPLATE.md",
@@ -103,11 +103,75 @@
     },
     {
       "path": "hid_release_test.py",
-      "sha256": "0c547fdb3518151ca66544fde86194c68a138c7ee9168037c6ddd5f669d6975f"
+      "sha256": "65d71c74b198362ab48df046253e62cbbab355f8e4db7214e993dabab82eb561"
     },
     {
       "path": "observe_le_link.py",
-      "sha256": "7bb34b4974f631e98f778a874efc86291d04029f6e4965d79adb7e41032a179a"
+      "sha256": "0749f2b170b00f49cf6e2c43a95c2152c6c2c45b909ae36bd7dcc8d3b1006a1b"
+    },
+    {
+      "path": "python/README.md",
+      "sha256": "83d0019f5ff9ac7419856892d97295396d8ffb76a88f654f308521fc181dde62"
+    },
+    {
+      "path": "python/bluetooth_auth_hid/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "python/bluetooth_auth_hid/bluez.py",
+      "sha256": "f57a22bae8d3e3dcd75fc72fea9fbb6d8aea603d2da2f143ce6f11e97d9f77f7"
+    },
+    {
+      "path": "python/bluetooth_auth_hid/client.py",
+      "sha256": "70d52e8916b30ac06720966e0dda65ff04b751b4132c6edcf67410a631444e4e"
+    },
+    {
+      "path": "python/bluetooth_auth_hid/daemon.py",
+      "sha256": "50df2aca4cbecf10ecee12c6acbdcf69d2a869965889424c8ee52bcf10497cc3"
+    },
+    {
+      "path": "python/bluetooth_auth_hid/device.py",
+      "sha256": "e0571b56a3bf70bfd4542900f7d6afe511bc9bf4cb9c988bbde18f260455a285"
+    },
+    {
+      "path": "python/bluetooth_auth_hid/hid.py",
+      "sha256": "fdae1d6b3c67aa55eda75302c90b8cfdff62981d9d8855b4f1c1407ed7206c78"
+    },
+    {
+      "path": "python/bluetooth_auth_hid/link.py",
+      "sha256": "f5299303d70e6d5206dcf61398ab343c663b03fe915fa29ee0f68890801ec162"
+    },
+    {
+      "path": "python/bluetooth_auth_hid/register_hid.py",
+      "sha256": "c647faa1d675f9d5122e6b702aea7a76cbd7c6b474cca738536f64e4206f8841"
+    },
+    {
+      "path": "python/bluetooth_auth_hid/tests/run_offline.py",
+      "sha256": "5ecfaf61344a0d8b7a0f684cd47236cee465654e352dcd060600930bc825e7d2"
+    },
+    {
+      "path": "python/bluetooth_auth_hid/tests/test_bluez.py",
+      "sha256": "704234ad52b3d2e12b08da1e9eacc89e7a35f472552648a9f4e474655ddf8b09"
+    },
+    {
+      "path": "python/bluetooth_auth_hid/tests/test_client.py",
+      "sha256": "a5b63c8b2c81fcea4b3832b74c0be469bb43d029c9d3e4784cbd5bbbbbaa3651"
+    },
+    {
+      "path": "python/bluetooth_auth_hid/tests/test_device.py",
+      "sha256": "98d813d50d7b585be05b72f45a5626d7d96f53217a64d35f225cb3745db8bcd5"
+    },
+    {
+      "path": "python/bluetooth_auth_hid/tests/test_hid.py",
+      "sha256": "011a51caae671ffdae356447f89666077c0c4a7b397d806fe58841a19b685ea9"
+    },
+    {
+      "path": "python/bluetooth_auth_hid/tests/test_link.py",
+      "sha256": "d0cdd4041770c5cc2f51e9b29222a4660e89e486d07b6ea5667c11c8909085d6"
+    },
+    {
+      "path": "python/bluetooth_auth_hid/tests/test_service.py",
+      "sha256": "899ec9bb3e80339a2f851c82d7e80b86ddc699f3abaa2eae3d1736334776edf5"
     },
     {
       "path": "radio.py",
@@ -119,7 +183,7 @@
     },
     {
       "path": "results/README.md",
-      "sha256": "3d748a445fb50adbe156043a157a40ff3a450b97fb73207d872c91ef6a3c8898"
+      "sha256": "5abd82366a60328487d9200410fa133d772d3fe73a60efb5cfa3e4d9cda0d62c"
     },
     {
       "path": "results/evidence/BZ-HID-03.log",
@@ -155,7 +219,7 @@
     },
     {
       "path": "results/validation.json",
-      "sha256": "245bae38edd11c1e4480fda12c8902d3a1c1cd3f020c151ab1af1f09345f2cc5"
+      "sha256": "592934aaab8130bef64acafdfeac9b86d6d5ad6c5df48614b374531e9cd80478"
     },
     {
       "path": "state.py",
@@ -222,23 +286,6 @@
       "sha256": "93a7841cc3065411477c1259119efa5317558f4eed8bb455cfb009052c0b2a5d"
     }
   ],
-  "repository_files": [
-    {
-      "path": ".gitignore",
-      "sha256": "b91214e55e5727cb5e7a307b521f5789d411d36214fb8f7d6614685ea7d5de90"
-    },
-    {
-      "path": "README.md",
-      "sha256": "5ec522e845dd67cf428381dda7ee45491e25f4370a44886a09cd63a02b4de003"
-    },
-    {
-      "path": "README.zh-CN.md",
-      "sha256": "bce5047a727aee7c40eeeaaa5d72bb64b75c2619a97ad6e89b5ce6633447d7b4"
-    },
-    {
-      "path": "src/bluetooth_auth_hid/link.py",
-      "sha256": "f5299303d70e6d5206dcf61398ab343c663b03fe915fa29ee0f68890801ec162"
-    }
-  ],
-  "updated_on": "2026-09-08"
+  "repository_files": [],
+  "updated_on": "2026-09-10"
 }

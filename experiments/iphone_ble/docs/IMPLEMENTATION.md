@@ -49,7 +49,8 @@ HID 的 Report Map 或 Report 读取会产生 `target_gatt_access`，其中带 B
 | [bluez_hid_lab.py](../bluez_hid_lab.py) | BlueZ 共存短测、D-Bus 注册、候选配对、清理和恢复。 | `run`/有记录的 `restore` 会。 |
 | [hid_release_test.py](../hid_release_test.py) | 临时 HID 提供子进程与独立观察父进程；确认服务退出后同一加密 LE 是否保持。 | 运行时注册服务和广播；`--help` 不访问蓝牙。 |
 | [observe_le_link.py](../observe_le_link.py) | 无 HID/广播时，只读等待并观察目标加密 LE。 | 读取系统 D-Bus、MGMT、HCI 状态，不扫描、广播或发起连接。 |
-| [link.py](../../../src/bluetooth_auth_hid/link.py) | 新增观察入口复用的内核 LE 句柄、连接状态和加密位读取；归档清单包含该依赖。 | 由观察入口调用时读取 HCI 连接信息。 |
+| [link.py](../python/bluetooth_auth_hid/link.py) | 观察入口复用的内核 LE 句柄、连接状态和加密位读取；归档清单包含该依赖。 | 由观察入口调用时读取 HCI 连接信息。 |
+| [python/](../python/README.md) | Rust 迁移前的 Python HID 原型与包内离线测试，保留各阶段实现。 | 各原型注册或连接函数会访问蓝牙；包内 `tests/run_offline.py` 拦截真实 socket。 |
 | [coexist_gatt.py](../coexist_gatt.py) | 纯 D-Bus HOGP、Battery、DIS 和广告对象；可导出/撤销导出。 | 不连接或注册 D-Bus。 |
 | [coexist_pairing.py](../coexist_pairing.py) | 纯 `Agent1` Numeric Comparison 对象；不注册 Agent。 | 不连接或配对。 |
 | [coexist_link.py](../coexist_link.py) | MGMT Get Connections 与受基线约束的目标 LE 断开。 | 由共存运行/恢复调用时会。 |

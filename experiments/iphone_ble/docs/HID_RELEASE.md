@@ -168,7 +168,7 @@ sudo experiments/iphone_ble/.venv/bin/python -B \
 | `failed` | 注销后原连接消失、句柄变化、加密失效，或收到目标 LE 断线事件；重连不能抵消这个结果。 |
 | `inconclusive` | 初始连接未建立、前提不满足、身份无法对应、观察接口失败、资源撤销无法确认，或其他设置/原连接发生变化。本轮不能回答问题。 |
 
-此脚本不需要新 daemon 的 D-Bus 服务名权限，直接使用实验已有的 BlueZ 注册接口。它会读取 `src/bluetooth_auth_hid/link.py`，用于核对当前 LE 句柄及加密状态。
+此脚本不需要 Python 常驻原型的 D-Bus 服务名权限，直接使用实验已有的 BlueZ 注册接口。它复用 [Python 归档中的 link.py](../python/bluetooth_auth_hid/link.py)，用于核对当前 LE 句柄及加密状态。
 
 正常结束或 Ctrl+C 都只关闭本轮进程、D-Bus 和观察接口。**不调用蓝牙 Disconnect、不切换电源或 Pairable、不删除配对。** 如果目标连接仍在，会继续保留；不要执行旧共存脚本的 `restore` 来结束本轮，因为旧恢复流程包含主动断开新增 LE 的动作。
 

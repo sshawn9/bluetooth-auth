@@ -15,7 +15,7 @@ import time
 
 sys.dont_write_bytecode = True
 HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE.parents[1] / "src"))
+sys.path.insert(0, str(HERE / "python"))
 
 from bluetooth_auth_hid.link import BT_CONNECTED, HCI_LE_LINK, LinkReader
 from bluez_hid_lab import ADAPTER, AD_MANAGER, DEVICE, PHONE_PROPS, Backend, address
