@@ -18,4 +18,7 @@ wheels/
 # Virtual environments
 .venv
 
+# Rust build artifacts
+/target/
+
 /result
