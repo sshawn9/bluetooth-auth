@@ -34,6 +34,9 @@
             package = self'.packages.bluetooth-auth;
           };
           checks.connect = pkgs.callPackage ./tests/connect.nix { };
+          checks.keyring-unlock = pkgs.callPackage ./tests/keyring-unlock.nix {
+            package = self'.packages.bluetooth-auth;
+          };
 
           devShells.default = pkgs.mkShell {
             inputsFrom = [ self'.packages.bluetooth-auth ];

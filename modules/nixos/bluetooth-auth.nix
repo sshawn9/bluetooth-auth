@@ -10,6 +10,7 @@ in
 {
   imports = [
     ./sops.nix
+    ./keyring-unlock.nix
     ./connect.nix
     ./noctalia-auto-lock.nix
     ./sudo-auth.nix

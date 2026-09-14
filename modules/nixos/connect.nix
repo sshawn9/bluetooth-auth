@@ -27,6 +27,7 @@ in
           || cfg.polkitAuth.enable
           || cfg.greetdAuth.enable
           || cfg.noctaliaAutoLock.enable
+          || cfg.keyringUnlock.enable
         )
       )
       {

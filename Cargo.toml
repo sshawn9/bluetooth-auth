@@ -7,10 +7,10 @@ license = "MIT"
 [dependencies]
 bluer = { version = "0.17.4", features = ["bluetoothd"] }
 clap = { version = "4", features = ["derive"] }
+dbus = "0.9"
 libc = "0.2"
 serde_json = "1"
 tokio = { version = "1", features = ["rt", "sync", "time", "macros"] }
 
 [dev-dependencies]
-dbus = "0.9"
 dbus-crossroads = "0.5"
