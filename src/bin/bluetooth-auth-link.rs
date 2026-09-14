@@ -7,7 +7,7 @@ const SOCKET_PATH: &str = "/run/bluetooth-auth/connect.sock";
 
 #[derive(Parser)]
 #[command(
-    name = "ble-link",
+    name = "bluetooth-auth-link",
     about = "Check the target's encrypted LE connection and optionally connect once",
     after_help = "Requires an existing HID/LE pairing on hci0.\n\
                   Synchronous attempts require the pre-created lock /run/bluetooth-auth/hci0.lock.\n\

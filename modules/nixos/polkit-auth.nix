@@ -6,7 +6,7 @@
 
 let
   cfg = config.my.security.bluetoothAuth;
-  helper = "${cfg.package}/bin/ble-link";
+  helper = "${cfg.package}/bin/bluetooth-auth-link";
   allowedActions = builtins.toJSON cfg.polkitAuth.allowedActions;
   trustedUser = builtins.toJSON cfg.user;
   defaultAllowedActions = [

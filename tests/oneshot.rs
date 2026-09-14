@@ -300,7 +300,7 @@ fn link_command(
     fs::write(log, b"").unwrap();
     let runtime = &bus.directory;
     provision_lock(runtime);
-    let mut command = Command::new(env!("CARGO_BIN_EXE_ble-link"));
+    let mut command = Command::new(env!("CARGO_BIN_EXE_bluetooth-auth-link"));
     command
         .args([
             "--address-file",
@@ -447,7 +447,7 @@ esac
             fs::write(&noctalia_log, b"").unwrap();
             fs::write(&noctalia_state, format!("{state}\n")).unwrap();
             provision_lock(&bus.directory);
-            let mut command = Command::new(env!("CARGO_BIN_EXE_ble-noctalia-auto-lock"));
+            let mut command = Command::new(env!("CARGO_BIN_EXE_bluetooth-auth-noctalia-auto-lock"));
             command
                 .args([
                     "--address-file",
@@ -858,7 +858,7 @@ fn hid_server_waits_for_interrupt_and_releases_dbus_owners() {
     let shim = compile_shim(&bus.directory);
     let log = bus.directory.join("hci.log");
     let fake = FakeBluez::start(&bus.address);
-    let mut command = Command::new(env!("CARGO_BIN_EXE_ble-hid-server"));
+    let mut command = Command::new(env!("CARGO_BIN_EXE_bluetooth-auth-hid-server"));
     command
         .env("DBUS_SYSTEM_BUS_ADDRESS", &bus.address)
         .env("LD_PRELOAD", shim)

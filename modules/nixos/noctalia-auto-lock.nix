@@ -55,7 +55,7 @@ in
       serviceConfig = {
         Type = "exec";
         ExecStart = utils.escapeSystemdExecArgs [
-          "${cfg.package}/bin/ble-noctalia-auto-lock"
+          "${cfg.package}/bin/bluetooth-auth-noctalia-auto-lock"
           "--address-file"
           cfg.bluetoothAddressFile
           "--timeout-ms"

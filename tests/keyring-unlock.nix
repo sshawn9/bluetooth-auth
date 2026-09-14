@@ -125,7 +125,7 @@ let
     reset_calls
     LD_PRELOAD="$hci_preload" BT_AUTH_HCI_SCENARIO=error BT_AUTH_HCI_LOG="$hci_log" \
       PATH=${pkgs.lib.escapeShellArg unit.environment.PATH} \
-      ${package}/bin/gnome-keyring-unlock --sops-file password.yaml
+      ${package}/bin/bluetooth-auth-keyring-unlock --sops-file password.yaml
     test ! -s "$hci_log"
     test "$(cat "$TEST_CALLS")" = sops
     test "$(locked)" = "b false"
@@ -227,7 +227,7 @@ assert pkgs.lib.elem "f /run/bluetooth-auth/hci0.lock 0660 root bluetooth-auth-c
   system.config.systemd.tmpfiles.rules;
 assert
   unit.serviceConfig.ExecStart == utils.escapeSystemdExecArgs [
-    "${package}/bin/gnome-keyring-unlock"
+    "${package}/bin/bluetooth-auth-keyring-unlock"
     "--address-file"
     "/proc/self/cwd/address"
     "--timeout-ms"

@@ -55,7 +55,7 @@ in
       serviceConfig = {
         Type = "oneshot";
         ExecStart = utils.escapeSystemdExecArgs [
-          "${cfg.package}/bin/gnome-keyring-unlock"
+          "${cfg.package}/bin/bluetooth-auth-keyring-unlock"
           "--address-file"
           cfg.bluetoothAddressFile
           "--timeout-ms"

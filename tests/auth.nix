@@ -2,7 +2,7 @@
 
 let
   lib = pkgs.lib;
-  fakeBle = pkgs.writeShellScriptBin "ble-link" ''
+  fakeBle = pkgs.writeShellScriptBin "bluetooth-auth-link" ''
     set -eu
     test "$#" -eq 4
     test "$1" = --address-file
@@ -87,7 +87,7 @@ pkgs.runCommand "bluetooth-auth-integration-tests"
     ];
   }
   ''
-      test -x ${package}/bin/ble-link
+      test -x ${package}/bin/bluetooth-auth-link
       test "${lib.concatStringsSep " " system.config.systemd.services.polkit.serviceConfig.RestrictAddressFamilies}" = "AF_UNIX AF_BLUETOOTH"
       test "${
         if system.config.systemd.services.polkit.serviceConfig.PrivateNetwork then "0" else "1"

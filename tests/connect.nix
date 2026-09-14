@@ -14,7 +14,7 @@ let
   fakeBle = pkgs.symlinkJoin {
     name = "fake-bluetooth-auth";
     paths = [
-      (pkgs.writeShellScriptBin "ble-link" ''
+      (pkgs.writeShellScriptBin "bluetooth-auth-link" ''
         set -eu
         test "$#" -eq 4
         test "$1" = --address-file
@@ -25,7 +25,7 @@ let
         while test -e /run/bluetooth-auth-connect-hold; do ${pkgs.coreutils}/bin/sleep 0.05; done
         test ! -e /run/bluetooth-auth-connect-fail
       '')
-      (pkgs.writeShellScriptBin "ble-noctalia-auto-lock" ''
+      (pkgs.writeShellScriptBin "bluetooth-auth-noctalia-auto-lock" ''
         set -eu
         test "$(id -u)" -ne 0
         test "$(id -un)" = trusted
@@ -167,7 +167,7 @@ assert
   == "1s";
 assert !(builtins.hasAttr "bluetooth-auth-auto-lock" autoLockSystem.config.systemd.timers);
 assert autoLockSystem.config.systemd.user.services.bluetooth-auth-auto-lock.script == "";
-assert pkgs.lib.hasInfix "/bin/ble-noctalia-auto-lock"
+assert pkgs.lib.hasInfix "/bin/bluetooth-auth-noctalia-auto-lock"
   autoLockSystem.config.systemd.user.services.bluetooth-auth-auto-lock.serviceConfig.ExecStart;
 assert pkgs.lib.hasInfix "\"--address-file\" \"/run/noctalia-test/address\""
   autoLockSystem.config.systemd.user.services.bluetooth-auth-auto-lock.serviceConfig.ExecStart;

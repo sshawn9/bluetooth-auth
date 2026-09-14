@@ -65,7 +65,7 @@ in
           serviceConfig = {
             Type = "oneshot";
             ExecStart = utils.escapeSystemdExecArgs [
-              "${cfg.package}/bin/ble-link"
+              "${cfg.package}/bin/bluetooth-auth-link"
               "--address-file"
               cfg.bluetoothAddressFile
               "--connect"
