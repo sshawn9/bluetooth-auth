@@ -24,9 +24,21 @@ class StateTests(unittest.TestCase):
         configs = [read_json(self.state.config(mode)) for mode in MODES]
         self.assertEqual(len({item["irk"] for item in configs}), 3)
         self.assertEqual(len({item["keystore"] for item in configs}), 3)
-        self.assertTrue(all(item["identity_address_type"] == 1 and not item["classic_enabled"] and not item["classic_smp_enabled"] for item in configs))
+        self.assertTrue(
+            all(
+                item["identity_address_type"] == 1
+                and not item["classic_enabled"]
+                and not item["classic_smp_enabled"]
+                for item in configs
+            )
+        )
         self.assertEqual(os.stat(self.state.root).st_mode & 0o777, 0o700)
-        self.assertTrue(all(os.stat(self.state.config(mode)).st_mode & 0o777 == 0o600 for mode in MODES))
+        self.assertTrue(
+            all(
+                os.stat(self.state.config(mode)).st_mode & 0o777 == 0o600
+                for mode in MODES
+            )
+        )
 
     def test_changed_config_is_not_overwritten(self):
         path = self.state.config("hid")
@@ -74,7 +86,9 @@ class StateTests(unittest.TestCase):
 
     def test_bond_detection_and_redacted_manifest(self):
         self.assertFalse(self.state.has_bond("ancs"))
-        (self.state.root / "ancs" / "keys.json").write_text(json.dumps({"controller": {"phone": {"ltk": {"value": "12" * 16}}}}))
+        (self.state.root / "ancs" / "keys.json").write_text(
+            json.dumps({"controller": {"phone": {"ltk": {"value": "12" * 16}}}})
+        )
         self.assertTrue(self.state.has_bond("ancs"))
         self.assertNotIn("irk", json.dumps(self.state.public_manifest()))
 

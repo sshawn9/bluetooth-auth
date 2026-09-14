@@ -13,9 +13,16 @@ from state import read_json
 class FakeBlueZ:
     def __init__(self, powered=True):
         self.path = "/org/bluez/hci0"
-        self.properties = {"Address": "00:11:22:33:44:55", "Alias": "x", "Powered": powered,
-                           "Discoverable": powered, "DiscoverableTimeout": 180,
-                           "Pairable": True, "PairableTimeout": 60, "Connectable": powered}
+        self.properties = {
+            "Address": "00:11:22:33:44:55",
+            "Alias": "x",
+            "Powered": powered,
+            "Discoverable": powered,
+            "DiscoverableTimeout": 180,
+            "Pairable": True,
+            "PairableTimeout": 60,
+            "Connectable": powered,
+        }
         self.sets = []
         self.reads = 0
         self.fail_after_set = None
@@ -23,7 +30,11 @@ class FakeBlueZ:
 
     async def objects(self):
         self.reads += 1
-        return {} if self.missing else {self.path: {ADAPTER: copy.deepcopy(self.properties)}}
+        return (
+            {}
+            if self.missing
+            else {self.path: {ADAPTER: copy.deepcopy(self.properties)}}
+        )
 
     async def set(self, path, name, value):
         assert path == self.path
@@ -151,12 +162,21 @@ class AdapterTests(unittest.IsolatedAsyncioTestCase):
         backend = TemporarilyBusy()
         await acquire("hci0", self.journal, backend=backend)
         events = []
-        result = await restore(self.journal, backend=backend, timeout=3,
-                               emit=lambda event, data: events.append((event, data)))
+        result = await restore(
+            self.journal,
+            backend=backend,
+            timeout=3,
+            emit=lambda event, data: events.append((event, data)),
+        )
         self.assertTrue(result["settings_restored"])
         self.assertEqual(backend.attempts, 3)
-        self.assertTrue(any(data.get("property") == "Powered" and data.get("reason") == "org.bluez.Error.Busy"
-                            for _, data in events))
+        self.assertTrue(
+            any(
+                data.get("property") == "Powered"
+                and data.get("reason") == "org.bluez.Error.Busy"
+                for _, data in events
+            )
+        )
         self.assertFalse(self.journal.exists())
 
     async def test_busy_after_applied_write_is_not_written_twice(self):
@@ -191,7 +211,9 @@ class AdapterTests(unittest.IsolatedAsyncioTestCase):
                         self.properties["PowerState"] = "off-enabling"
                         self.transition_reads -= 1
                     else:
-                        self.properties.update(Powered=True, Connectable=True, PowerState="on")
+                        self.properties.update(
+                            Powered=True, Connectable=True, PowerState="on"
+                        )
                 return await super().objects()
 
         backend = PoweringOn()

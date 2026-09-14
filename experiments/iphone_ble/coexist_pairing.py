@@ -55,10 +55,18 @@ class PairingAgent(ServiceInterface):
         if not await self._target(device):
             self._emit_rejected("RequestConfirmation", device)
             raise _rejected("only the selected phone may repair pairing")
-        if not isinstance(passkey, int) or isinstance(passkey, bool) or not 0 <= passkey <= 999999:
+        if (
+            not isinstance(passkey, int)
+            or isinstance(passkey, bool)
+            or not 0 <= passkey <= 999999
+        ):
             self._emit_rejected("RequestConfirmation", device)
             raise _rejected("invalid Numeric Comparison value")
-        if self._confirmation_requested or self.confirmed_device is not None or self.accepted:
+        if (
+            self._confirmation_requested
+            or self.confirmed_device is not None
+            or self.accepted
+        ):
             self._emit_rejected("RequestConfirmation", device)
             raise _rejected("a pairing confirmation was already decided")
         if self._pending_task is not None and not self._pending_task.done():
@@ -70,12 +78,16 @@ class PairingAgent(ServiceInterface):
             raise RuntimeError("RequestConfirmation requires an asyncio task")
         self._confirmation_requested = True
         self._pending_task = task
-        self._emit("pairing_confirmation_requested", {"device": device, "number": passkey})
+        self._emit(
+            "pairing_confirmation_requested", {"device": device, "number": passkey}
+        )
         try:
             approved = await self._confirm(passkey)
         except asyncio.CancelledError:
             self._emit("pairing_confirmation_cancelled", {"device": device})
-            raise DBusError("org.bluez.Error.Canceled", "pairing confirmation cancelled")
+            raise DBusError(
+                "org.bluez.Error.Canceled", "pairing confirmation cancelled"
+            )
         except Exception:
             self._emit_rejected("RequestConfirmation", device)
             raise _rejected("pairing confirmation failed") from None
@@ -88,13 +100,21 @@ class PairingAgent(ServiceInterface):
             raise _rejected("Numeric Comparison was not approved")
         self.accepted = True
         self.confirmed_device = device
-        self._emit("pairing_confirmation_accepted", {"device": device, "number": passkey})
+        self._emit(
+            "pairing_confirmation_accepted", {"device": device, "number": passkey}
+        )
 
     async def authorize_service(self, device: str, uuid: str) -> None:
-        if not await self._target(device) or not isinstance(uuid, str) or uuid.lower() not in HID_UUIDS:
+        if (
+            not await self._target(device)
+            or not isinstance(uuid, str)
+            or uuid.lower() not in HID_UUIDS
+        ):
             self._emit_rejected("AuthorizeService", device)
             raise _rejected("only the selected phone HID service is allowed")
-        self._emit("pairing_hid_service_authorized", {"device": device, "uuid": uuid.lower()})
+        self._emit(
+            "pairing_hid_service_authorized", {"device": device, "uuid": uuid.lower()}
+        )
 
     def cancel_pending(self, source: str) -> None:
         task = self._pending_task

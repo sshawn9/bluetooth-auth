@@ -22,6 +22,7 @@ def inquiry_packet(address, rssi=-42):
     data = bytes((4, 0x0D, 0, 0, 0))
     packet = bytearray(20 + len(data))
     import struct
+
     struct.pack_into("<HHH", packet, 0, 0x0012, 0, len(packet) - 6)
     packet[6:12] = bytes.fromhex(address.replace(":", ""))[::-1]
     packet[12] = 0
@@ -35,11 +36,15 @@ def inquiry_packet(address, rssi=-42):
 class RssiConfigurationTests(unittest.IsolatedAsyncioTestCase):
     def test_explicit_path_has_priority_over_environment(self):
         self.assertEqual(
-            monitor_rssi.resolve_address_file("/tmp/explicit", {monitor_rssi.ADDRESS_FILE_ENV: "/tmp/environment"}),
+            monitor_rssi.resolve_address_file(
+                "/tmp/explicit", {monitor_rssi.ADDRESS_FILE_ENV: "/tmp/environment"}
+            ),
             "/tmp/explicit",
         )
         self.assertEqual(
-            monitor_rssi.resolve_address_file(None, {monitor_rssi.ADDRESS_FILE_ENV: "/tmp/environment"}),
+            monitor_rssi.resolve_address_file(
+                None, {monitor_rssi.ADDRESS_FILE_ENV: "/tmp/environment"}
+            ),
             "/tmp/environment",
         )
 
@@ -56,8 +61,12 @@ class RssiConfigurationTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_invalid_configuration_prevents_wireless_main(self):
         args = argparse.Namespace(address_file=None)
-        with mock.patch.dict("os.environ", {}, clear=True), \
-             mock.patch.object(monitor_rssi, "main", new_callable=mock.AsyncMock) as main:
+        with (
+            mock.patch.dict("os.environ", {}, clear=True),
+            mock.patch.object(
+                monitor_rssi, "main", new_callable=mock.AsyncMock
+            ) as main,
+        ):
             with self.assertRaises(ValueError):
                 await monitor_rssi.run(args)
         main.assert_not_awaited()
@@ -67,13 +76,26 @@ class RssiConfigurationTests(unittest.IsolatedAsyncioTestCase):
             missing = Path(directory) / "private-address"
             result = subprocess.run(
                 [sys.executable, "-B", str(SCRIPT), "--address-file", str(missing)],
-                capture_output=True, text=True,
+                capture_output=True,
+                text=True,
             )
         self.assertNotEqual(result.returncode, 0)
         self.assertNotIn("Traceback", result.stderr)
         self.assertNotIn(directory, result.stderr)
 
     def test_target_address_filters_inquiry_reports(self):
-        self.assertEqual(monitor_rssi.scan_rssi(inquiry_packet(SYNTHETIC_ADDRESS), 0, SYNTHETIC_ADDRESS), -42)
-        self.assertIsNone(monitor_rssi.scan_rssi(inquiry_packet("12:34:56:78:9A:BD"), 0, SYNTHETIC_ADDRESS))
-        self.assertEqual(monitor_rssi.redact_addresses("failure " + SYNTHETIC_ADDRESS), "failure <蓝牙地址>")
+        self.assertEqual(
+            monitor_rssi.scan_rssi(
+                inquiry_packet(SYNTHETIC_ADDRESS), 0, SYNTHETIC_ADDRESS
+            ),
+            -42,
+        )
+        self.assertIsNone(
+            monitor_rssi.scan_rssi(
+                inquiry_packet("12:34:56:78:9A:BD"), 0, SYNTHETIC_ADDRESS
+            )
+        )
+        self.assertEqual(
+            monitor_rssi.redact_addresses("failure " + SYNTHETIC_ADDRESS),
+            "failure <蓝牙地址>",
+        )

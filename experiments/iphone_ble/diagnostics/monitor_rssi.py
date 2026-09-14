@@ -43,7 +43,9 @@ def redact_addresses(value):
 
 
 def open_reports():
-    caps = re.search(r"^CapEff:\s*([0-9a-fA-F]+)", Path("/proc/self/status").read_text(), re.M)
+    caps = re.search(
+        r"^CapEff:\s*([0-9a-fA-F]+)", Path("/proc/self/status").read_text(), re.M
+    )
     if not caps or not int(caps[1], 16) & (1 << 12):  # CAP_NET_ADMIN
         raise PermissionError("权限不足：管理通道不会发送设备发现报告")
     # 本机 Python 没编入蓝牙地址支持，使用 Linux sockaddr_hci 直接绑定。
@@ -93,8 +95,11 @@ def scan_rssi(packet, index, address):
 async def link_rssi(address):
     # hcitool rssi 只查询已有连接，不会建立连接；经典蓝牙返回相对值，0 有效。
     process = await asyncio.create_subprocess_exec(
-        "hcitool", "rssi", address,
-        stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
+        "hcitool",
+        "rssi",
+        address,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
     )
     try:
         stdout, stderr = await asyncio.wait_for(process.communicate(), 2)
@@ -103,7 +108,11 @@ async def link_rssi(address):
             value = int(match[1])
             return f"RSSI {value}（链路原始值）" if value != 127 else "链路 RSSI 不可用"
         error = redact_addresses((stderr or stdout).decode(errors="replace").strip())
-        return "收不到（本秒无新扫描报告，未连接）" if error == "Not connected." else f"链路读取失败：{error}"
+        return (
+            "收不到（本秒无新扫描报告，未连接）"
+            if error == "Not connected."
+            else f"链路读取失败：{error}"
+        )
     except TimeoutError:
         return "链路读取超时"
     finally:
@@ -128,19 +137,33 @@ async def main(address):
     loop = asyncio.get_running_loop()
 
     async def call(path, interface, member, signature="", body=None):
-        reply = await asyncio.wait_for(bus.call(Message(
-            destination="org.bluez", path=path, interface=interface,
-            member=member, signature=signature, body=body or [],
-        )), timeout=5)
+        reply = await asyncio.wait_for(
+            bus.call(
+                Message(
+                    destination="org.bluez",
+                    path=path,
+                    interface=interface,
+                    member=member,
+                    signature=signature,
+                    body=body or [],
+                )
+            ),
+            timeout=5,
+        )
         if reply.message_type == MessageType.ERROR:
             raise RuntimeError(f"{reply.error_name}: {reply.body}")
         return reply.body
 
     try:
-        objects = (await call("/", "org.freedesktop.DBus.ObjectManager", "GetManagedObjects"))[0]
-        adapters = [path for path, interfaces in objects.items()
-                    if "org.bluez.Adapter1" in interfaces
-                    and interfaces["org.bluez.Adapter1"]["Powered"].value]
+        objects = (
+            await call("/", "org.freedesktop.DBus.ObjectManager", "GetManagedObjects")
+        )[0]
+        adapters = [
+            path
+            for path, interfaces in objects.items()
+            if "org.bluez.Adapter1" in interfaces
+            and interfaces["org.bluez.Adapter1"]["Powered"].value
+        ]
         if len(adapters) != 1:
             raise RuntimeError("需要恰好一个已开启的蓝牙适配器")
         adapter = adapters[0]
@@ -171,18 +194,38 @@ async def main(address):
                 round_done.set()
 
         loop.add_reader(reports.fileno(), on_report)
-        await call(adapter, "org.bluez.Adapter1", "SetDiscoveryFilter", "a{sv}", [{
-            "Transport": Variant("s", "bredr"),
-            "RSSI": Variant("n", -127),
-            "AutoConnect": Variant("b", False),
-        }])
-        print(f"监测目标设备（{adapter.rsplit('/', 1)[-1]}），每轮最多 {ROUND_SECONDS} 秒，Ctrl+C 退出", flush=True)
+        await call(
+            adapter,
+            "org.bluez.Adapter1",
+            "SetDiscoveryFilter",
+            "a{sv}",
+            [
+                {
+                    "Transport": Variant("s", "bredr"),
+                    "RSSI": Variant("n", -127),
+                    "AutoConnect": Variant("b", False),
+                }
+            ],
+        )
+        print(
+            f"监测目标设备（{adapter.rsplit('/', 1)[-1]}），每轮最多 {ROUND_SECONDS} 秒，Ctrl+C 退出",
+            flush=True,
+        )
         scan_round = 0
         while True:
-            discovering = (await call(adapter, "org.freedesktop.DBus.Properties", "Get", "ss",
-                                      ["org.bluez.Adapter1", "Discovering"]))[0].value
+            discovering = (
+                await call(
+                    adapter,
+                    "org.freedesktop.DBus.Properties",
+                    "Get",
+                    "ss",
+                    ["org.bluez.Adapter1", "Discovering"],
+                )
+            )[0].value
             if discovering:
-                raise RuntimeError("其他程序仍在扫描，无法开启独立的新一轮；请先关闭其他扫描程序")
+                raise RuntimeError(
+                    "其他程序仍在扫描，无法开启独立的新一轮；请先关闭其他扫描程序"
+                )
             if adapter_lost:
                 raise RuntimeError("蓝牙适配器已移除")
             # 丢弃上一轮排队的报告；暂停期间的结果不能给下一轮续期。
@@ -206,19 +249,39 @@ async def main(address):
                         except TimeoutError:
                             connected_reading = await link_rssi(address)
                             if not round_done.is_set():
-                                print(time.strftime("%H:%M:%S"), f"第 {scan_round} 轮", connected_reading, flush=True)
+                                print(
+                                    time.strftime("%H:%M:%S"),
+                                    f"第 {scan_round} 轮",
+                                    connected_reading,
+                                    flush=True,
+                                )
                     if adapter_lost:
                         raise RuntimeError("蓝牙适配器已移除")
-                    reading = f"RSSI {latest} dBm（本轮新查询结果）" if latest is not None else "本轮结束，没有目标新读数"
-                    print(time.strftime("%H:%M:%S"), f"第 {scan_round} 轮", reading, flush=True)
+                    reading = (
+                        f"RSSI {latest} dBm（本轮新查询结果）"
+                        if latest is not None
+                        else "本轮结束，没有目标新读数"
+                    )
+                    print(
+                        time.strftime("%H:%M:%S"),
+                        f"第 {scan_round} 轮",
+                        reading,
+                        flush=True,
+                    )
             except TimeoutError:
-                print(time.strftime("%H:%M:%S"), f"第 {scan_round} 轮超时，没有目标新扫描读数", flush=True)
+                print(
+                    time.strftime("%H:%M:%S"),
+                    f"第 {scan_round} 轮超时，没有目标新扫描读数",
+                    flush=True,
+                )
             finally:
                 accepting = False
                 latest = None
                 started = False
                 await call(adapter, "org.bluez.Adapter1", "StopDiscovery")
-            print(time.strftime("%H:%M:%S"), f"第 {scan_round} 轮会话已释放", flush=True)
+            print(
+                time.strftime("%H:%M:%S"), f"第 {scan_round} 轮会话已释放", flush=True
+            )
             await asyncio.sleep(0.2)
     finally:
         accepting = False

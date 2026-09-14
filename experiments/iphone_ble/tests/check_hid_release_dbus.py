@@ -35,7 +35,9 @@ def local_socket_guard(endpoint):
     class LocalOnlySocket(original):
         def __init__(self, family=socket.AF_INET, *args, **kwargs):
             if family != socket.AF_UNIX:
-                raise RuntimeError("D-Bus regression forbids Bluetooth and network sockets")
+                raise RuntimeError(
+                    "D-Bus regression forbids Bluetooth and network sockets"
+                )
             super().__init__(family, *args, **kwargs)
 
         def connect(self, address):
@@ -59,9 +61,19 @@ def run_child(endpoint, phone_file):
     class FixtureBackend(release.Backend):
         async def objects(self):
             return {
-                "/org/bluez/hci0": {release.ADAPTER: {"Alias": "Test Computer", "UUIDs": []}},
-                "/target": {release.DEVICE: {"Address": PHONE, "Adapter": "/org/bluez/hci0",
-                    "Paired": True, "Bonded": True, "Trusted": False, "Blocked": False}},
+                "/org/bluez/hci0": {
+                    release.ADAPTER: {"Alias": "Test Computer", "UUIDs": []}
+                },
+                "/target": {
+                    release.DEVICE: {
+                        "Address": PHONE,
+                        "Adapter": "/org/bluez/hci0",
+                        "Paired": True,
+                        "Bonded": True,
+                        "Trusted": False,
+                        "Blocked": False,
+                    }
+                },
             }
 
         async def register(self, *_):
@@ -69,13 +81,22 @@ def run_child(endpoint, phone_file):
             await self.dbus("GetId")
 
     release.Backend = FixtureBackend
-    sys.argv = [release.__file__, "--provider", "--phone-file", phone_file, "--adapter", "hci0"]
+    sys.argv = [
+        release.__file__,
+        "--provider",
+        "--phone-file",
+        phone_file,
+        "--adapter",
+        "hci0",
+    ]
     return release.main()
 
 
 class PrivateBusTests(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
-        self.temporary = tempfile.TemporaryDirectory(prefix="hid-release-dbus-", dir="/tmp")
+        self.temporary = tempfile.TemporaryDirectory(
+            prefix="hid-release-dbus-", dir="/tmp"
+        )
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
         self.endpoint = str(self.root / "bus")
@@ -83,18 +104,30 @@ class PrivateBusTests(unittest.IsolatedAsyncioTestCase):
         self.addCleanup(setattr, socket, "socket", original)
         config = self.root / "bus.conf"
         config.write_text(
-            '<busconfig><type>session</type><listen>unix:path=' + self.endpoint + '</listen>'
+            "<busconfig><type>session</type><listen>unix:path="
+            + self.endpoint
+            + "</listen>"
             '<auth>EXTERNAL</auth><policy context="default"><allow own="*"/>'
             '<allow send_destination="*"/><allow receive_sender="*"/></policy></busconfig>'
         )
         self.daemon = await asyncio.create_subprocess_exec(
-            "dbus-daemon", "--nofork", "--config-file=" + str(config), "--print-address=1",
-            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
+            "dbus-daemon",
+            "--nofork",
+            "--config-file=" + str(config),
+            "--print-address=1",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
         )
         self.addAsyncCleanup(self.stop_process, self.daemon)
-        address = (await asyncio.wait_for(self.daemon.stdout.readline(), 3)).decode().strip()
+        address = (
+            (await asyncio.wait_for(self.daemon.stdout.readline(), 3)).decode().strip()
+        )
         if not address.startswith("unix:path=" + self.endpoint):
-            error = (await self.daemon.stderr.read()).decode().replace(str(self.root), "<test-directory>")
+            error = (
+                (await self.daemon.stderr.read())
+                .decode()
+                .replace(str(self.root), "<test-directory>")
+            )
             self.fail("private D-Bus startup failed: " + error)
         self.bus = await asyncio.wait_for(MessageBus(bus_address=address).connect(), 3)
         self.addAsyncCleanup(self.close_bus, self.bus)
@@ -114,13 +147,32 @@ class PrivateBusTests(unittest.IsolatedAsyncioTestCase):
         bus.disconnect()
         await asyncio.wait_for(bus.wait_for_disconnect(), 2)
 
-    async def call(self, member, signature="", body=None, *, destination="org.freedesktop.DBus",
-                   path="/org/freedesktop/DBus", interface="org.freedesktop.DBus"):
-        reply = await asyncio.wait_for(self.bus.call(Message(
-            destination=destination, path=path, interface=interface, member=member,
-            signature=signature, body=body or [],
-        )), 3)
-        self.assertEqual(reply.message_type, MessageType.METHOD_RETURN, reply.error_name)
+    async def call(
+        self,
+        member,
+        signature="",
+        body=None,
+        *,
+        destination="org.freedesktop.DBus",
+        path="/org/freedesktop/DBus",
+        interface="org.freedesktop.DBus",
+    ):
+        reply = await asyncio.wait_for(
+            self.bus.call(
+                Message(
+                    destination=destination,
+                    path=path,
+                    interface=interface,
+                    member=member,
+                    signature=signature,
+                    body=body or [],
+                )
+            ),
+            3,
+        )
+        self.assertEqual(
+            reply.message_type, MessageType.METHOD_RETURN, reply.error_name
+        )
         return reply.body
 
     async def test_provider_exits_cleanly_after_real_gatt_read_and_pipe_eof(self):
@@ -129,9 +181,15 @@ class PrivateBusTests(unittest.IsolatedAsyncioTestCase):
         for iteration in range(3):
             with self.subTest(iteration=iteration):
                 child = await asyncio.create_subprocess_exec(
-                    sys.executable, "-B", str(Path(__file__).resolve()), "--provider-child",
-                    self.endpoint, str(phone_file), stdin=asyncio.subprocess.PIPE,
-                    stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
+                    sys.executable,
+                    "-B",
+                    str(Path(__file__).resolve()),
+                    "--provider-child",
+                    self.endpoint,
+                    str(phone_file),
+                    stdin=asyncio.subprocess.PIPE,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
                 )
                 self.addAsyncCleanup(self.stop_process, child)
                 events = []
@@ -145,38 +203,71 @@ class PrivateBusTests(unittest.IsolatedAsyncioTestCase):
                             owner = event["owner"]
                             break
                 self.assertEqual(await self.call("NameHasOwner", "s", [owner]), [True])
-                objects = (await self.call("GetManagedObjects", destination=owner,
-                    path=release.APP_PATH, interface="org.freedesktop.DBus.ObjectManager"))[0]
-                self.assertTrue(any("org.bluez.GattService1" in item for item in objects.values()))
-                await self.call("ReadValue", "a{sv}", [{"device": Variant("o", "/target"),
-                    "link": Variant("s", "LE")}], destination=owner,
-                    path=release.APP_PATH + "/service0/char1", interface="org.bluez.GattCharacteristic1")
+                objects = (
+                    await self.call(
+                        "GetManagedObjects",
+                        destination=owner,
+                        path=release.APP_PATH,
+                        interface="org.freedesktop.DBus.ObjectManager",
+                    )
+                )[0]
+                self.assertTrue(
+                    any("org.bluez.GattService1" in item for item in objects.values())
+                )
+                await self.call(
+                    "ReadValue",
+                    "a{sv}",
+                    [{"device": Variant("o", "/target"), "link": Variant("s", "LE")}],
+                    destination=owner,
+                    path=release.APP_PATH + "/service0/char1",
+                    interface="org.bluez.GattCharacteristic1",
+                )
                 child.stdin.close()
                 tail, error_output = await asyncio.wait_for(child.communicate(), 5)
                 events.extend(json.loads(line) for line in tail.splitlines())
                 self.assertEqual(child.returncode, 0, events)
                 self.assertEqual(error_output, b"")
                 self.assertIn("hid_read", [event["event"] for event in events])
-                closed = next(event for event in events if event["event"] == "provider_closed")
+                closed = next(
+                    event for event in events if event["event"] == "provider_closed"
+                )
                 self.assertIs(closed["dbus_closed"], True)
                 self.assertEqual(await self.call("NameHasOwner", "s", [owner]), [False])
 
     async def reproduce_old_cleanup(self):
         bus = await MessageBus(bus_address="unix:path=" + self.endpoint).connect()
         self.addAsyncCleanup(self.close_bus, bus)
-        app = release.HidApplication(bus, release.APP_PATH, lambda *_: None, lambda _: True)
+        app = release.HidApplication(
+            bus, release.APP_PATH, lambda *_: None, lambda _: True
+        )
         ad = release.Advertising("Test Computer", lambda *_: None)
         app.export()
         ad.export(bus, release.AD_PATH)
         # 先清空写队列，走与正常就绪后退出相同的即时发送路径。
-        await asyncio.wait_for(bus.call(Message(destination="org.freedesktop.DBus",
-            path="/org/freedesktop/DBus", interface="org.freedesktop.DBus", member="GetId")), 3)
+        await asyncio.wait_for(
+            bus.call(
+                Message(
+                    destination="org.freedesktop.DBus",
+                    path="/org/freedesktop/DBus",
+                    interface="org.freedesktop.DBus",
+                    member="GetId",
+                )
+            ),
+            3,
+        )
         try:
             bus.disconnect()
             ad.unexport()
             app.unexport()
         except Exception as error:
-            print(json.dumps({"old_cleanup_error": type(error).__name__, "errno": getattr(error, "errno", None)}))
+            print(
+                json.dumps(
+                    {
+                        "old_cleanup_error": type(error).__name__,
+                        "errno": getattr(error, "errno", None),
+                    }
+                )
+            )
             self.assertIsInstance(error, OSError)
             self.assertEqual(error.errno, errno.EBADF)
         else:

@@ -38,12 +38,27 @@ class Bus:
 class Hub:
     def __init__(self, state):
         self.state = state
-        self.properties = {"Address": ADAPTER_ADDRESS, "Alias": "x", "Powered": True,
-                           "PowerState": "on", "Pairable": True, "PairableTimeout": 0,
-                           "Discoverable": False, "DiscoverableTimeout": 180, "Connectable": False,
-                           "UUIDs": ["0000180a-0000-1000-8000-00805f9b34fb"]}
-        self.phone = {"Address": PHONE, "Adapter": PATH, "Paired": True, "Bonded": True,
-                      "Trusted": True, "Blocked": False, "Connected": True}
+        self.properties = {
+            "Address": ADAPTER_ADDRESS,
+            "Alias": "x",
+            "Powered": True,
+            "PowerState": "on",
+            "Pairable": True,
+            "PairableTimeout": 0,
+            "Discoverable": False,
+            "DiscoverableTimeout": 180,
+            "Connectable": False,
+            "UUIDs": ["0000180a-0000-1000-8000-00805f9b34fb"],
+        }
+        self.phone = {
+            "Address": PHONE,
+            "Adapter": PATH,
+            "Paired": True,
+            "Bonded": True,
+            "Trusted": True,
+            "Blocked": False,
+            "Connected": True,
+        }
         self.links = {(PHONE, 0), (MOUSE, 2)}
         self.original = set(self.links)
         self.original_props = copy.deepcopy(self.properties)
@@ -104,19 +119,41 @@ class FakeBackend:
     async def objects(self):
         if self.hub.advertising_started:
             self.hub.post_register_snapshots += 1
-            if self.hub.interrupt_phone_during_hold and self.hub.post_register_snapshots == 2:
+            if (
+                self.hub.interrupt_phone_during_hold
+                and self.hub.post_register_snapshots == 2
+            ):
                 self.hub.managers[0].disconnect_events.append(
-                    {"address": PHONE, "address_type": 1, "reason": 2})
+                    {"address": PHONE, "address_type": 1, "reason": 2}
+                )
         result = {
-            PATH: {lab.ADAPTER: copy.deepcopy(self.hub.properties), lab.GATT_MANAGER: {},
-                   lab.AD_MANAGER: {"ActiveInstances": 0}},
-            PHONE_PATH: {lab.DEVICE: {**self.hub.phone, "Connected": any(peer == PHONE for peer, _ in self.hub.links)}},
-            MOUSE_PATH: {lab.DEVICE: {"Address": MOUSE, "Adapter": PATH, "Connected": (MOUSE, 2) in self.hub.links}},
+            PATH: {
+                lab.ADAPTER: copy.deepcopy(self.hub.properties),
+                lab.GATT_MANAGER: {},
+                lab.AD_MANAGER: {"ActiveInstances": 0},
+            },
+            PHONE_PATH: {
+                lab.DEVICE: {
+                    **self.hub.phone,
+                    "Connected": any(peer == PHONE for peer, _ in self.hub.links),
+                }
+            },
+            MOUSE_PATH: {
+                lab.DEVICE: {
+                    "Address": MOUSE,
+                    "Adapter": PATH,
+                    "Connected": (MOUSE, 2) in self.hub.links,
+                }
+            },
         }
         if self.hub.add_phone_audio and (PHONE, 1) in self.hub.links:
-            result[PHONE_PATH + "/fd0"] = {lab.MEDIA_TRANSPORT: {"Device": PHONE_PATH, "State": "active"}}
+            result[PHONE_PATH + "/fd0"] = {
+                lab.MEDIA_TRANSPORT: {"Device": PHONE_PATH, "State": "active"}
+            }
         if self.hub.pairing_device_path:
-            result[self.hub.pairing_device_path] = {lab.DEVICE: copy.deepcopy(self.hub.pairing_device)}
+            result[self.hub.pairing_device_path] = {
+                lab.DEVICE: copy.deepcopy(self.hub.pairing_device)
+            }
         return result
 
     async def register_agent(self):
@@ -154,7 +191,8 @@ class FakeBackend:
             # The link has already reappeared in the snapshot. Only the event
             # history proves this was not uninterrupted coexistence.
             self.hub.managers[0].disconnect_events.append(
-                {"address": MOUSE, "address_type": 2, "reason": 2})
+                {"address": MOUSE, "address_type": 2, "reason": 2}
+            )
         if self.hub.cancel_after_register:
             raise asyncio.CancelledError()
         device_path = PHONE_PATH
@@ -162,8 +200,15 @@ class FakeBackend:
             if pairing_rpa:
                 device_path = PATH + "/dev_" + pairing_rpa.replace(":", "_")
                 self.hub.pairing_device_path = device_path
-                self.hub.pairing_device = {"Adapter": PATH, "Address": pairing_rpa, "AddressType": "random",
-                                           "Paired": False, "Bonded": False, "Trusted": False, "Blocked": False}
+                self.hub.pairing_device = {
+                    "Adapter": PATH,
+                    "Address": pairing_rpa,
+                    "AddressType": "random",
+                    "Paired": False,
+                    "Bonded": False,
+                    "Trusted": False,
+                    "Blocked": False,
+                }
             await self.hub.pairing_agent.request_confirmation(device_path, 240584)
             if pairing_rpa:
                 if self.hub.resolve_pairing_identity:
@@ -177,8 +222,12 @@ class FakeBackend:
                 self.hub.phone.update(Paired=True, Bonded=True)
             await self.hub.pairing_agent.authorize_service(device_path, lab.HID_UUID)
         if not self.hub.skip_hid_read:
-            self.hub.app.report_map.read_value({"device": Variant("o", device_path), "link": Variant("s", "LE")})
-        self.hub.app.report.StartNotify.__dict__["__DBUS_METHOD"].fn(self.hub.app.report)
+            self.hub.app.report_map.read_value(
+                {"device": Variant("o", device_path), "link": Variant("s", "LE")}
+            )
+        self.hub.app.report.StartNotify.__dict__["__DBUS_METHOD"].fn(
+            self.hub.app.report
+        )
 
     async def unregister(self, path, interface, root):
         self.hub.calls.append(("unregister", interface))
@@ -224,20 +273,37 @@ class CoexistTests(unittest.IsolatedAsyncioTestCase):
         self.addCleanup(here.stop)
         self.state = lab.State(Path(self.directory.name) / "state")
         self.hub = Hub(self.state)
-        self.args = SimpleNamespace(adapter="hci0", phone=PHONE, phone_file=None,
-                                    wait_seconds=0.025, hold_seconds=0.005)
+        self.args = SimpleNamespace(
+            adapter="hci0",
+            phone=PHONE,
+            phone_file=None,
+            wait_seconds=0.025,
+            hold_seconds=0.005,
+        )
         self.confirm = mock.AsyncMock(return_value=True)
         self.trace_factory = None
 
     async def run_probe(self):
-        with self.state.lock(), contextlib.redirect_stdout(io.StringIO()), \
-             mock.patch.object(lab, "POLL_SECONDS", 0.001), \
-             mock.patch.object(lab, "PROGRESS_SECONDS", 0.003):
-            code = await lab.run(self.args, self.state, backend_factory=self.hub.backend,
-                                 link_factory=self.hub.open_link, app_factory=self.hub.app_factory,
-                                 ad_factory=gatt.Advertising, confirm_pairing=self.confirm,
-                                 trace_factory=self.trace_factory)
-        events = [json.loads(line) for line in (self.state.root / "events.jsonl").read_text().splitlines()]
+        with (
+            self.state.lock(),
+            contextlib.redirect_stdout(io.StringIO()),
+            mock.patch.object(lab, "POLL_SECONDS", 0.001),
+            mock.patch.object(lab, "PROGRESS_SECONDS", 0.003),
+        ):
+            code = await lab.run(
+                self.args,
+                self.state,
+                backend_factory=self.hub.backend,
+                link_factory=self.hub.open_link,
+                app_factory=self.hub.app_factory,
+                ad_factory=gatt.Advertising,
+                confirm_pairing=self.confirm,
+                trace_factory=self.trace_factory,
+            )
+        events = [
+            json.loads(line)
+            for line in (self.state.root / "events.jsonl").read_text().splitlines()
+        ]
         return code, events
 
     def assert_restored(self):
@@ -255,9 +321,15 @@ class CoexistTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(result["encrypted_phone_hid_access"])
         self.assertFalse(result["phone_hid_subscription_verified"])
         self.assertFalse(result["phone_audio_isolation_verified"])
-        self.assertTrue(next(item for item in events if item["event"] == "restore")["settings_restored"])
+        self.assertTrue(
+            next(item for item in events if item["event"] == "restore")[
+                "settings_restored"
+            ]
+        )
         self.assertIn(("disconnect_le", PHONE, 1), self.hub.calls)
-        self.assertNotIn(self.hub.app.dis, self.hub.app.objects)  # Existing DIS is reused.
+        self.assertNotIn(
+            self.hub.app.dis, self.hub.app.objects
+        )  # Existing DIS is reused.
         self.assert_restored()
 
     async def test_no_companion_fails_before_any_mutation(self):
@@ -265,14 +337,24 @@ class CoexistTests(unittest.IsolatedAsyncioTestCase):
         code, events = await self.run_probe()
         self.assertEqual(code, 1)
         self.assertIn("需先", events[-1]["error"]["reason"])
-        self.assertFalse(any(call[0] in {"set_pairable", "register", "disconnect_le"} for call in self.hub.calls))
+        self.assertFalse(
+            any(
+                call[0] in {"set_pairable", "register", "disconnect_le"}
+                for call in self.hub.calls
+            )
+        )
         self.assertFalse(self.state.pending())
 
     async def test_unpaired_phone_refused_before_advertisement(self):
         self.hub.phone["Paired"] = False
         code, _ = await self.run_probe()
         self.assertEqual(code, 1)
-        self.assertFalse(any(call[0] in {"set_pairable", "register", "disconnect_le", "open_mgmt"} for call in self.hub.calls))
+        self.assertFalse(
+            any(
+                call[0] in {"set_pairable", "register", "disconnect_le", "open_mgmt"}
+                for call in self.hub.calls
+            )
+        )
 
     async def test_registration_reply_loss_still_cleans_and_restores(self):
         self.hub.register_error = True
@@ -420,13 +502,21 @@ class CoexistTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(self.state.pending())
         restoration = next(item for item in events if item["event"] == "restore")
         self.assertFalse(restoration["connections_restored"])
-        self.assertEqual(restoration["new_phone_classic_connections"][0]["address"], PHONE)
+        self.assertEqual(
+            restoration["new_phone_classic_connections"][0]["address"], PHONE
+        )
         self.assertFalse(events[-1]["passed"])
 
     async def test_trace_is_closed_without_claiming_packets_from_open_alone(self):
         self.args.trace_advertising = True
-        trace = SimpleNamespace(summary=lambda: {"scope": "local_controller_commands", "commands": [], "statuses": []},
-                                close=mock.AsyncMock())
+        trace = SimpleNamespace(
+            summary=lambda: {
+                "scope": "local_controller_commands",
+                "commands": [],
+                "statuses": [],
+            },
+            close=mock.AsyncMock(),
+        )
         self.trace_factory = mock.AsyncMock(return_value=trace)
         code, events = await self.run_probe()
         self.assertEqual(code, 0, events)
@@ -438,7 +528,9 @@ class CoexistTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_trace_open_failure_restores_without_registering_advertisement(self):
         self.args.trace_advertising = True
-        self.trace_factory = mock.AsyncMock(side_effect=RuntimeError("monitor unavailable"))
+        self.trace_factory = mock.AsyncMock(
+            side_effect=RuntimeError("monitor unavailable")
+        )
         code, events = await self.run_probe()
         self.assertEqual(code, 1, events)
         self.assertFalse(any(item[0] == "register" for item in self.hub.calls))
@@ -448,13 +540,20 @@ class CoexistTests(unittest.IsolatedAsyncioTestCase):
         with self.state.lock():
             self.state.journal.write_text("{}")
             with self.assertRaisesRegex(RuntimeError, "待恢复"):
-                await lab.run(self.args, self.state, backend_factory=self.hub.backend,
-                              link_factory=self.hub.open_link)
+                await lab.run(
+                    self.args,
+                    self.state,
+                    backend_factory=self.hub.backend,
+                    link_factory=self.hub.open_link,
+                )
         self.assertFalse(self.hub.calls)
 
     async def test_restore_without_journal_never_opens_anything(self):
-        result = await lab.restore(self.state, backend_factory=mock.Mock(side_effect=AssertionError("bus")),
-                                   link_factory=mock.Mock(side_effect=AssertionError("mgmt")))
+        result = await lab.restore(
+            self.state,
+            backend_factory=mock.Mock(side_effect=AssertionError("bus")),
+            link_factory=mock.Mock(side_effect=AssertionError("mgmt")),
+        )
         self.assertFalse(result["changed"])
         self.assertFalse(self.state.root.exists())
 
@@ -468,18 +567,26 @@ class CoexistTests(unittest.IsolatedAsyncioTestCase):
         explicit_path = Path(self.directory.name) / "override-address"
         default_path.write_text(PHONE.lower() + "\n")
         explicit_path.write_text(MOUSE + "\n")
-        with mock.patch.dict("os.environ", {"BLUETOOTH_AUTH_ADDRESS_FILE": str(default_path)}):
+        with mock.patch.dict(
+            "os.environ", {"BLUETOOTH_AUTH_ADDRESS_FILE": str(default_path)}
+        ):
             args = lab.parser().parse_args(["run", "--adapter", "hci0"])
             self.assertEqual(lab.configured_phone(args), PHONE)
-            args = lab.parser().parse_args(["run", "--adapter", "hci0", "--phone-file", str(explicit_path)])
+            args = lab.parser().parse_args(
+                ["run", "--adapter", "hci0", "--phone-file", str(explicit_path)]
+            )
             self.assertEqual(lab.configured_phone(args), MOUSE)
 
     async def test_missing_private_configuration_never_opens_backend(self):
         self.args.phone = None
         self.args.phone_file = None
         with self.assertRaisesRegex(ValueError, "BLUETOOTH_AUTH_ADDRESS_FILE"):
-            await lab.run(self.args, self.state, backend_factory=self.hub.backend,
-                          link_factory=self.hub.open_link)
+            await lab.run(
+                self.args,
+                self.state,
+                backend_factory=self.hub.backend,
+                link_factory=self.hub.open_link,
+            )
         self.assertEqual(self.hub.calls, [])
 
     def test_phone_file_error_does_not_echo_private_path_or_contents(self):

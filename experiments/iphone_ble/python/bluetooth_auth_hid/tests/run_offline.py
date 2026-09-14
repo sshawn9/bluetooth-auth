@@ -7,7 +7,9 @@ import unittest
 
 
 class OfflineSocket(socket.socket):
-    def __init__(self, family=socket.AF_INET, type=socket.SOCK_STREAM, proto=0, fileno=None):
+    def __init__(
+        self, family=socket.AF_INET, type=socket.SOCK_STREAM, proto=0, fileno=None
+    ):
         if family == 31:
             raise RuntimeError("离线测试禁止创建真实蓝牙 socket")
         super().__init__(family, type, proto, fileno)

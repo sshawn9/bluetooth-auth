@@ -22,8 +22,7 @@ ROOT = "/org/bluetooth_auth/hid_device"
 APP = ROOT + "/app"
 ADVERTISEMENT = ROOT + "/advertisement"
 REPORT_MAP = bytes.fromhex(
-    "050C0901A10185011500250175019508"
-    "09CD09B509B609B709E909EA09E209408102C0"
+    "050C0901A1018501150025017501950809CD09B509B609B709E909EA09E209408102C0"
 )
 
 
@@ -48,8 +47,17 @@ async def register_hid(ctx: BluetoothContext) -> bool:
     try:
         acquired = await ctx._lock.acquire()
         if ctx._bus is not None and not (
-            ctx._bus.connected and ctx._registered and ctx._owner == await _call(
-                ctx, "/org/freedesktop/DBus", DBUS, "GetNameOwner", "s", [BLUEZ], destination=DBUS
+            ctx._bus.connected
+            and ctx._registered
+            and ctx._owner
+            == await _call(
+                ctx,
+                "/org/freedesktop/DBus",
+                DBUS,
+                "GetNameOwner",
+                "s",
+                [BLUEZ],
+                destination=DBUS,
             )
         ):
             await _close(ctx)
@@ -58,29 +66,47 @@ async def register_hid(ctx: BluetoothContext) -> bool:
             created = True
             async with asyncio.timeout(5):
                 await ctx._bus.connect()
-            ctx._owner = await _call(ctx, "/org/freedesktop/DBus", DBUS,
-                                    "GetNameOwner", "s", [BLUEZ], destination=DBUS)
+            ctx._owner = await _call(
+                ctx,
+                "/org/freedesktop/DBus",
+                DBUS,
+                "GetNameOwner",
+                "s",
+                [BLUEZ],
+                destination=DBUS,
+            )
             raw = await _call(ctx, "/", DBUS + ".ObjectManager", "GetManagedObjects")
-            objects = {path: {name: {key: value.value for key, value in props.items()}
-                             for name, props in interfaces.items()}
-                       for path, interfaces in raw.items()}
+            objects = {
+                path: {
+                    name: {key: value.value for key, value in props.items()}
+                    for name, props in interfaces.items()
+                }
+                for path, interfaces in raw.items()
+            }
             adapter_path = "/org/bluez/" + ctx.adapter
             interfaces = objects.get(adapter_path, {})
             adapter = interfaces.get(BLUEZ + ".Adapter1", {})
             if adapter.get("Powered") is not True or any(
-                BLUEZ + name not in interfaces for name in (".GattManager1", ".LEAdvertisingManager1")
+                BLUEZ + name not in interfaces
+                for name in (".GattManager1", ".LEAdvertisingManager1")
             ):
                 raise RuntimeError("适配器未开启或缺少 HID/广播注册接口")
-            phones = [path for path, items in objects.items()
-                      if (phone := items.get(BLUEZ + ".Device1"))
-                      and phone.get("Address", "").upper() == ctx.address.upper()
-                      and phone.get("Adapter") == adapter_path and not phone.get("Blocked")]
+            phones = [
+                path
+                for path, items in objects.items()
+                if (phone := items.get(BLUEZ + ".Device1"))
+                and phone.get("Address", "").upper() == ctx.address.upper()
+                and phone.get("Adapter") == adapter_path
+                and not phone.get("Blocked")
+            ]
             if len(phones) != 1:
                 raise RuntimeError("没有找到唯一、未被阻止的目标手机记录")
             ctx._device_path = phones[0]
             if not isinstance(adapter.get("UUIDs"), list):
                 raise RuntimeError("无法读取适配器服务列表")
-            uuids = {value.lower().split("-", 1)[0].lstrip("0") for value in adapter["UUIDs"]}
+            uuids = {
+                value.lower().split("-", 1)[0].lstrip("0") for value in adapter["UUIDs"]
+            }
             if "1812" in uuids:
                 raise RuntimeError("适配器已有其他 HID 服务")
 
@@ -90,8 +116,14 @@ async def register_hid(ctx: BluetoothContext) -> bool:
             for path, interface in exports.items():
                 ctx._bus.export(path, interface)
             ctx._alias = adapter["Alias"]
-            await _call(ctx, adapter_path, BLUEZ + ".GattManager1",
-                        "RegisterApplication", "oa{sv}", [APP, {}])
+            await _call(
+                ctx,
+                adapter_path,
+                BLUEZ + ".GattManager1",
+                "RegisterApplication",
+                "oa{sv}",
+                [APP, {}],
+            )
             ctx._registered = True
     except BaseException as error:
         failure = error
@@ -115,8 +147,13 @@ async def register_hid(ctx: BluetoothContext) -> bool:
         return True
     if not isinstance(failure, Exception):
         raise failure
-    print(f"错误：register_hid：{str(failure) or type(failure).__name__}",
-          *getattr(failure, "__notes__", ()), sep="；", file=sys.stderr, flush=True)
+    print(
+        f"错误：register_hid：{str(failure) or type(failure).__name__}",
+        *getattr(failure, "__notes__", ()),
+        sep="；",
+        file=sys.stderr,
+        flush=True,
+    )
     return False
 
 
@@ -127,7 +164,11 @@ async def unregister_hid(ctx: BluetoothContext) -> bool:
             await _close(ctx)
         return True
     except Exception as error:
-        print(f"错误：unregister_hid：{str(error) or type(error).__name__}", file=sys.stderr, flush=True)
+        print(
+            f"错误：unregister_hid：{str(error) or type(error).__name__}",
+            file=sys.stderr,
+            flush=True,
+        )
         return False
 
 
@@ -136,7 +177,11 @@ async def query(ctx: BluetoothContext) -> bool:
     try:
         return _query(ctx)
     except Exception as error:
-        print(f"错误：query：{str(error) or type(error).__name__}", file=sys.stderr, flush=True)
+        print(
+            f"错误：query：{str(error) or type(error).__name__}",
+            file=sys.stderr,
+            flush=True,
+        )
         return False
 
 
@@ -154,8 +199,14 @@ async def connect(ctx: BluetoothContext, timeout: float = 20) -> bool:
             advertisement = _Advertisement(ctx._alias)
             ctx._bus.export(ADVERTISEMENT, advertisement)
             async with asyncio.timeout(timeout):
-                await _call(ctx, "/org/bluez/" + ctx.adapter, BLUEZ + ".LEAdvertisingManager1",
-                            "RegisterAdvertisement", "oa{sv}", [ADVERTISEMENT, {}])
+                await _call(
+                    ctx,
+                    "/org/bluez/" + ctx.adapter,
+                    BLUEZ + ".LEAdvertisingManager1",
+                    "RegisterAdvertisement",
+                    "oa{sv}",
+                    [ADVERTISEMENT, {}],
+                )
                 while not advertisement.released:
                     if _query(ctx):
                         break
@@ -167,10 +218,19 @@ async def connect(ctx: BluetoothContext, timeout: float = 20) -> bool:
     if advertisement is not None:
         try:
             if not advertisement.released:
-                await _call(ctx, "/org/bluez/" + ctx.adapter, BLUEZ + ".LEAdvertisingManager1",
-                            "UnregisterAdvertisement", "o", [ADVERTISEMENT])
+                await _call(
+                    ctx,
+                    "/org/bluez/" + ctx.adapter,
+                    BLUEZ + ".LEAdvertisingManager1",
+                    "UnregisterAdvertisement",
+                    "o",
+                    [ADVERTISEMENT],
+                )
         except BaseException as error:
-            if isinstance(error, DBusError) and error.type == BLUEZ + ".Error.DoesNotExist":
+            if (
+                isinstance(error, DBusError)
+                and error.type == BLUEZ + ".Error.DoesNotExist"
+            ):
                 pass
             elif failure is not None and isinstance(error, Exception):
                 failure.add_note(f"停止广播失败：{error}")
@@ -195,8 +255,13 @@ async def connect(ctx: BluetoothContext, timeout: float = 20) -> bool:
     if failure is not None:
         if not isinstance(failure, Exception):
             raise failure
-        print(f"错误：connect：{str(failure) or type(failure).__name__}",
-              *getattr(failure, "__notes__", ()), sep="；", file=sys.stderr, flush=True)
+        print(
+            f"错误：connect：{str(failure) or type(failure).__name__}",
+            *getattr(failure, "__notes__", ()),
+            sep="；",
+            file=sys.stderr,
+            flush=True,
+        )
         return False
     return True
 
@@ -207,31 +272,53 @@ def _query(ctx):
     index = int(ctx.adapter[3:])
     buffer = bytearray(header.size + capacity * entry.size)
     header.pack_into(buffer, 0, index, capacity)
-    with socket.socket(31, socket.SOCK_RAW | getattr(socket, "SOCK_CLOEXEC", 0), 1) as sock:
+    with socket.socket(
+        31, socket.SOCK_RAW | getattr(socket, "SOCK_CLOEXEC", 0), 1
+    ) as sock:
         fcntl.ioctl(sock.fileno(), 0x800448D4, buffer, True)  # HCIGETCONNLIST
     returned_index, count = header.unpack_from(buffer)
-    if returned_index != index or count >= capacity or header.size + count * entry.size > len(buffer):
+    if (
+        returned_index != index
+        or count >= capacity
+        or header.size + count * entry.size > len(buffer)
+    ):
         raise RuntimeError("内核蓝牙连接快照不完整")
     address = bytes.fromhex(ctx.address.replace(":", ""))[::-1]
-    matches = [entry.unpack_from(buffer, offset)
-               for offset in range(header.size, header.size + count * entry.size, entry.size)]
-    matches = [link for link in matches
-               if link[1] == address and link[2] == 0x80 and link[4] == 1]
+    matches = [
+        entry.unpack_from(buffer, offset)
+        for offset in range(header.size, header.size + count * entry.size, entry.size)
+    ]
+    matches = [
+        link
+        for link in matches
+        if link[1] == address and link[2] == 0x80 and link[4] == 1
+    ]
     if len(matches) > 1:
         raise RuntimeError("无法确认唯一的目标 LE 连接")
     return bool(matches) and bool(matches[0][5] & 0x0004)
 
 
-async def _call(ctx, path, interface, member, signature="", body=None, *, destination=None):
+async def _call(
+    ctx, path, interface, member, signature="", body=None, *, destination=None
+):
     destination = destination or ctx._owner
     async with asyncio.timeout(5):
-        reply = await ctx._bus.call(Message(
-            destination=destination, path=path, interface=interface, member=member,
-            signature=signature, body=body or [], flags=MessageFlag.NO_AUTOSTART,
-        ))
+        reply = await ctx._bus.call(
+            Message(
+                destination=destination,
+                path=path,
+                interface=interface,
+                member=member,
+                signature=signature,
+                body=body or [],
+                flags=MessageFlag.NO_AUTOSTART,
+            )
+        )
     if reply is not None and reply.sender == destination:
         if reply.message_type == MessageType.ERROR:
-            raise DBusError(reply.error_name, f"BlueZ {member} 失败：{reply.error_name}")
+            raise DBusError(
+                reply.error_name, f"BlueZ {member} 失败：{reply.error_name}"
+            )
         if reply.message_type == MessageType.METHOD_RETURN:
             return reply.body[0] if reply.body else None
     raise RuntimeError(f"BlueZ {member} 未获得有效回复")
@@ -249,18 +336,30 @@ async def _close(ctx):
 
 
 def _message(ctx, message):
-    if (message.message_type == MessageType.METHOD_CALL
-            and (message.path == ROOT or (message.path or "").startswith(ROOT + "/"))
-            and message.sender != ctx._owner):
-        return Message.new_error(message, DBUS + ".Error.AccessDenied", "Only BlueZ is allowed")
+    if (
+        message.message_type == MessageType.METHOD_CALL
+        and (message.path == ROOT or (message.path or "").startswith(ROOT + "/"))
+        and message.sender != ctx._owner
+    ):
+        return Message.new_error(
+            message, DBUS + ".Error.AccessDenied", "Only BlueZ is allowed"
+        )
 
 
 def _read(ctx, value, options):
-    if (options.get("device", Variant("o", "/")).value != ctx._device_path
-            or options.get("link", Variant("s", "")).value.lower() != "le"):
-        raise DBusError(BLUEZ + ".Error.NotAuthorized", "Only the target LE device is allowed")
+    if (
+        options.get("device", Variant("o", "/")).value != ctx._device_path
+        or options.get("link", Variant("s", "")).value.lower() != "le"
+    ):
+        raise DBusError(
+            BLUEZ + ".Error.NotAuthorized", "Only the target LE device is allowed"
+        )
     offset = options.get("offset", Variant("q", 0)).value
-    if not isinstance(offset, int) or isinstance(offset, bool) or not 0 <= offset <= len(value):
+    if (
+        not isinstance(offset, int)
+        or isinstance(offset, bool)
+        or not 0 <= offset <= len(value)
+    ):
         raise DBusError(BLUEZ + ".Error.InvalidOffset", "Invalid offset")
     return value[offset:]
 
@@ -268,18 +367,24 @@ def _read(ctx, value, options):
 def _gatt_objects(ctx, existing_uuids):
     read = ["read", "encrypt-read"]
     specs = [
-        ("1812", [
-            ("2a4a", b"\x11\x01\x00\x02", read),
-            ("2a4b", REPORT_MAP, read),
-            ("2a4c", b"\x00", ["write-without-response", "encrypt-write"]),
-            ("2a4d", b"\x00", [*read, "notify"]),
-        ]),
+        (
+            "1812",
+            [
+                ("2a4a", b"\x11\x01\x00\x02", read),
+                ("2a4b", REPORT_MAP, read),
+                ("2a4c", b"\x00", ["write-without-response", "encrypt-write"]),
+                ("2a4d", b"\x00", [*read, "notify"]),
+            ],
+        ),
         ("180f", [("2a19", b"\x64", [*read, "notify"])]),
-        ("180a", [
-            ("2a29", b"Bluetooth Auth", ["read"]),
-            ("2a24", b"Passive Consumer Control", ["read"]),
-            ("2a50", b"\x02\x00\x00\x01\x00\x01\x00", ["read"]),
-        ]),
+        (
+            "180a",
+            [
+                ("2a29", b"Bluetooth Auth", ["read"]),
+                ("2a24", b"Passive Consumer Control", ["read"]),
+                ("2a50", b"\x02\x00\x00\x01\x00\x01\x00", ["read"]),
+            ],
+        ),
     ]
     objects = {}
     for number, (uuid, characteristics) in enumerate(specs):
@@ -310,9 +415,15 @@ class _ObjectManager(ServiceInterface):
 
     @dbus_method()
     def GetManagedObjects(self) -> "a{oa{sa{sv}}}":
-        return {path: {item.name: {prop.name: Variant(prop.signature, prop.prop_getter(item))
-                                  for prop in ServiceInterface._get_properties(item)}}
-                for path, item in self.objects.items()}
+        return {
+            path: {
+                item.name: {
+                    prop.name: Variant(prop.signature, prop.prop_getter(item))
+                    for prop in ServiceInterface._get_properties(item)
+                }
+            }
+            for path, item in self.objects.items()
+        }
 
 
 class _Service(ServiceInterface):
@@ -348,7 +459,9 @@ class _Characteristic(ServiceInterface):
         if self.uuid != "2a4c":
             raise DBusError(BLUEZ + ".Error.NotPermitted", "Not writable")
         if value not in (b"\x00", b"\x01"):
-            raise DBusError(BLUEZ + ".Error.InvalidValueLength", "Invalid control point")
+            raise DBusError(
+                BLUEZ + ".Error.InvalidValueLength", "Invalid control point"
+            )
 
     @dbus_method()
     def StartNotify(self):

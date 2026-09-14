@@ -104,7 +104,7 @@ let
     ];
   };
   common =
-    { config, lib, ... }:
+    { ... }:
     {
       imports = [
         (

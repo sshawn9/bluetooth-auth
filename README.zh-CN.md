@@ -115,11 +115,11 @@ sudo ./result/bin/bluetooth-auth-hid-server
 
 sudo、locker 和 greetd 接入 PAM；polkit 使用自己的授权规则。它们都调用 `bluetooth-auth-link --connect -1`：
 
-| 检查结果 | 本次认证 | 后续动作 |
-| --- | --- | --- |
-| 目标加密 LE 已连接 | 符合用户及入口条件时通过 | 无需连接 |
-| 目标未连接 | 继续正常密码认证 | 通知后台尝试连接一次，为后续认证准备 |
-| 检查或通知出错 | 继续正常密码认证 | 输出运行错误 |
+| 检查结果           | 本次认证                 | 后续动作                             |
+| ------------------ | ------------------------ | ------------------------------------ |
+| 目标加密 LE 已连接 | 符合用户及入口条件时通过 | 无需连接                             |
+| 目标未连接         | 继续正常密码认证         | 通知后台尝试连接一次，为后续认证准备 |
+| 检查或通知出错     | 继续正常密码认证         | 输出运行错误                         |
 
 认证入口不等待后台连接完成。后台后来连上，也不会把已经返回失败的那次蓝牙检查改成成功。
 
@@ -129,11 +129,11 @@ PAM 规则限制为配置用户；sudo 也处理该用户作为请求方的情�
 
 启用 `autoConnect` 后，还会在这些时机提前尝试连接：
 
-| 时机 | 执行方式 |
-| --- | --- |
-| BlueZ 开机启动或重新启动 | systemd 启动已有的单次连接服务 |
-| 挂起、休眠、混合睡眠、先挂起再休眠成功恢复 | 睡眠服务的 `OnSuccess` 启动单次连接服务 |
-| `hci0` 的 `Powered` 变为 `true` | `bluetooth-auth-power-monitor` 直接调用 Rust 连接函数 |
+| 时机                                       | 执行方式                                              |
+| ------------------------------------------ | ----------------------------------------------------- |
+| BlueZ 开机启动或重新启动                   | systemd 启动已有的单次连接服务                        |
+| 挂起、休眠、混合睡眠、先挂起再休眠成功恢复 | 睡眠服务的 `OnSuccess` 启动单次连接服务               |
+| `hci0` 的 `Powered` 变为 `true`            | `bluetooth-auth-power-monitor` 直接调用 Rust 连接函数 |
 
 电源状态监听器空闲时阻塞等待 D-Bus 消息。连接尝试期间串行等待本次结果，随后继续监听；失败或超时不会自行重试。仅启用 `autoConnect` 不会添加周期重连，也不会添加 Noctalia 的空闲恢复钩子。
 
@@ -143,12 +143,12 @@ PAM 规则限制为配置用户；sudo 也处理该用户作为请求方的情�
 
 每轮读取 Noctalia 锁屏状态，并调用 `query_or_connect`。如果会话未锁定且本次仍无法连接手机，就调用 `noctalia msg session lock`，300 毫秒后再次查询锁屏状态。随后按动作后的状态选择休眠时间：
 
-| 动作后状态 | 默认休眠 |
-| --- | --- |
-| 未锁定、已连接 | 30 秒 |
-| 未锁定、未连接（尚未确认锁定） | 30 秒 |
-| 已锁定、已连接 | 120 秒 |
-| 已锁定、未连接 | 60 秒 |
+| 动作后状态                     | 默认休眠 |
+| ------------------------------ | -------- |
+| 未锁定、已连接                 | 30 秒    |
+| 未锁定、未连接（尚未确认锁定） | 30 秒    |
+| 已锁定、已连接                 | 120 秒   |
+| 已锁定、未连接                 | 60 秒    |
 
 已锁定时仍会检查并按需连接手机，连接恢复后不会自动解锁。这里使用常驻进程和动态休眠，不使用 systemd timer。
 
@@ -181,44 +181,44 @@ SOPS 文件中的指定顶层字符串保存**现有 login 钥匙串的密码**�
 
 路径均相对于 `my.security.bluetoothAuth`。
 
-| 选项 | 默认值 | 说明 |
-| --- | --- | --- |
-| `enable` | `false` | 安装工具并启用模块配置；具体集成单独开启。 |
-| `package` | flake 包 | 提供五个 Rust 程序的包。 |
-| `trustedUser` | `""` | 允许免密认证及运行用户服务的用户。 |
-| `accessGroup` | `"bluetooth-auth-connect"` | 连接 socket、锁文件和可选地址文件的访问组。 |
-| `device.address.file` | `""` | 包含手机身份地址的运行时文件。 |
-| `device.address.sopsSecretName` | `null` | 引用的 sops-nix secret 名称；设置后覆盖地址路径并配置组读取权限。 |
-| `connection.timeoutMs` | `7000` | 后台连接、状态监听器及用户服务每次连接尝试的时间预算。 |
-| `autoConnect.enable` | `false` | 开机、BlueZ 重启、睡眠恢复及蓝牙开启时提前连接。 |
-| `auth.sudo.enable` | `false` | sudo PAM 集成。 |
-| `auth.polkit.enable` | `false` | polkit 授权集成。 |
-| `auth.polkit.allowedActions` | 模块中的桌面 action 列表 | 允许通过蓝牙放行的 polkit action。 |
-| `auth.locker.enable` | `false` | 锁屏器 PAM 集成。 |
-| `auth.locker.pamService` | `"login"` | 锁屏器使用的 PAM 服务。 |
-| `auth.greetd.enable` | `false` | greetd PAM 集成。 |
-| `auth.greetd.pamService` | `"greetd"` | greetd 使用的 PAM 服务。 |
-| `noctaliaAutoLock.enable` | `false` | 启用 Noctalia 自动锁屏用户服务。 |
-| `noctaliaAutoLock.sleepIntervalsMs.unlockedConnected` | `30000` | 未锁定、已连接后的休眠。 |
-| `noctaliaAutoLock.sleepIntervalsMs.unlockedDisconnected` | `30000` | 未锁定、未连接后的休眠。 |
-| `noctaliaAutoLock.sleepIntervalsMs.lockedConnected` | `120000` | 已锁定、已连接后的休眠。 |
-| `noctaliaAutoLock.sleepIntervalsMs.lockedDisconnected` | `60000` | 已锁定、未连接后的休眠。 |
-| `gnomeKeyringUnlock.enable` | `false` | 启用 GNOME login 钥匙串自动解锁。 |
-| `gnomeKeyringUnlock.password.sopsFile` | 启用时必填 | 含现有钥匙串密码的 SOPS 加密文件。 |
-| `gnomeKeyringUnlock.password.sopsField` | `"login_keyring_password"` | SOPS 文件中的顶层字符串字段名。 |
-| `gnomeKeyringUnlock.password.ageKeyFile` | `null` | 用户 age 密钥路径；不设置时使用 SOPS 自身的密钥查找机制。 |
+| 选项                                                     | 默认值                     | 说明                                                              |
+| -------------------------------------------------------- | -------------------------- | ----------------------------------------------------------------- |
+| `enable`                                                 | `false`                    | 安装工具并启用模块配置；具体集成单独开启。                        |
+| `package`                                                | flake 包                   | 提供五个 Rust 程序的包。                                          |
+| `trustedUser`                                            | `""`                       | 允许免密认证及运行用户服务的用户。                                |
+| `accessGroup`                                            | `"bluetooth-auth-connect"` | 连接 socket、锁文件和可选地址文件的访问组。                       |
+| `device.address.file`                                    | `""`                       | 包含手机身份地址的运行时文件。                                    |
+| `device.address.sopsSecretName`                          | `null`                     | 引用的 sops-nix secret 名称；设置后覆盖地址路径并配置组读取权限。 |
+| `connection.timeoutMs`                                   | `7000`                     | 后台连接、状态监听器及用户服务每次连接尝试的时间预算。            |
+| `autoConnect.enable`                                     | `false`                    | 开机、BlueZ 重启、睡眠恢复及蓝牙开启时提前连接。                  |
+| `auth.sudo.enable`                                       | `false`                    | sudo PAM 集成。                                                   |
+| `auth.polkit.enable`                                     | `false`                    | polkit 授权集成。                                                 |
+| `auth.polkit.allowedActions`                             | 模块中的桌面 action 列表   | 允许通过蓝牙放行的 polkit action。                                |
+| `auth.locker.enable`                                     | `false`                    | 锁屏器 PAM 集成。                                                 |
+| `auth.locker.pamService`                                 | `"login"`                  | 锁屏器使用的 PAM 服务。                                           |
+| `auth.greetd.enable`                                     | `false`                    | greetd PAM 集成。                                                 |
+| `auth.greetd.pamService`                                 | `"greetd"`                 | greetd 使用的 PAM 服务。                                          |
+| `noctaliaAutoLock.enable`                                | `false`                    | 启用 Noctalia 自动锁屏用户服务。                                  |
+| `noctaliaAutoLock.sleepIntervalsMs.unlockedConnected`    | `30000`                    | 未锁定、已连接后的休眠。                                          |
+| `noctaliaAutoLock.sleepIntervalsMs.unlockedDisconnected` | `30000`                    | 未锁定、未连接后的休眠。                                          |
+| `noctaliaAutoLock.sleepIntervalsMs.lockedConnected`      | `120000`                   | 已锁定、已连接后的休眠。                                          |
+| `noctaliaAutoLock.sleepIntervalsMs.lockedDisconnected`   | `60000`                    | 已锁定、未连接后的休眠。                                          |
+| `gnomeKeyringUnlock.enable`                              | `false`                    | 启用 GNOME login 钥匙串自动解锁。                                 |
+| `gnomeKeyringUnlock.password.sopsFile`                   | 启用时必填                 | 含现有钥匙串密码的 SOPS 加密文件。                                |
+| `gnomeKeyringUnlock.password.sopsField`                  | `"login_keyring_password"` | SOPS 文件中的顶层字符串字段名。                                   |
+| `gnomeKeyringUnlock.password.ageKeyFile`                 | `null`                     | 用户 age 密钥路径；不设置时使用 SOPS 自身的密钥查找机制。         |
 
 ## 命令行工具
 
 启用模块后，以下五个命令均可直接使用。构建目录中的对应程序位于 `./result/bin/`，Cargo 输出位于 `./target/release/`。
 
-| 命令 | 用途 |
-| --- | --- |
-| `bluetooth-auth-link` | 查询目标加密 LE 连接，可选择等待连接或通知后台。 |
-| `bluetooth-auth-hid-server` | 无参数手动配对辅助程序；持有共享锁，临时隐藏经典蓝牙发现入口，提供 HID LE 广播直到退出。 |
-| `bluetooth-auth-noctalia-auto-lock` | 在 Noctalia 用户会话中持续检查、按需连接和锁屏。 |
-| `bluetooth-auth-keyring-unlock` | 按需通过 SOPS 解锁 GNOME login 钥匙串。 |
-| `bluetooth-auth-power-monitor` | 监听 `hci0` 蓝牙开启事件并直接尝试连接。 |
+| 命令                                | 用途                                                                                     |
+| ----------------------------------- | ---------------------------------------------------------------------------------------- |
+| `bluetooth-auth-link`               | 查询目标加密 LE 连接，可选择等待连接或通知后台。                                         |
+| `bluetooth-auth-hid-server`         | 无参数手动配对辅助程序；持有共享锁，临时隐藏经典蓝牙发现入口，提供 HID LE 广播直到退出。 |
+| `bluetooth-auth-noctalia-auto-lock` | 在 Noctalia 用户会话中持续检查、按需连接和锁屏。                                         |
+| `bluetooth-auth-keyring-unlock`     | 按需通过 SOPS 解锁 GNOME login 钥匙串。                                                  |
+| `bluetooth-auth-power-monitor`      | 监听 `hci0` 蓝牙开启事件并直接尝试连接。                                                 |
 
 除无参数的 HID 配对工具外，其余命令均提供 `--help`。
 
@@ -230,11 +230,11 @@ bluetooth-auth-link --address-file /run/secrets/bluetooth_address --connect 7000
 bluetooth-auth-link --address-file /run/secrets/bluetooth_address --connect -1
 ```
 
-| `--connect` | 已连接 | 未连接 |
-| --- | --- | --- |
-| `0` | 退出 `0` | 退出 `1`，只查询 |
-| 正数，例如 `7000` | 退出 `0` | 尝试一次并等待，正数为毫秒预算 |
-| 负数，规范写法为 `-1` | 退出 `0` | 通知后台连接，本次仍退出 `1` |
+| `--connect`           | 已连接   | 未连接                         |
+| --------------------- | -------- | ------------------------------ |
+| `0`                   | 退出 `0` | 退出 `1`，只查询               |
+| 正数，例如 `7000`     | 退出 `0` | 尝试一次并等待，正数为毫秒预算 |
+| 负数，规范写法为 `-1` | 退出 `0` | 通知后台连接，本次仍退出 `1`   |
 
 不指定 `--connect` 时默认 `15000`。负数的绝对值不控制超时，后台使用 Nix 的 `connection.timeoutMs`。无连接和普通超时保持安静，运行错误写入 stderr；参数格式错误退出 `2`。
 
@@ -280,13 +280,13 @@ bluetooth-auth-keyring-unlock --sops-file /path/to/keyring.enc.yaml --sops-key l
 
 ## systemd 服务与排障
 
-| Unit | 作用域 | 用途 |
-| --- | --- | --- |
-| `bluetooth-auth-connect.service` | 系统 | 带时间预算的单次连接任务。 |
-| `bluetooth-auth-connect.socket` | 系统 | 接收异步连接通知并激活单次任务。 |
-| `bluetooth-auth-power-monitor.service` | 系统 | 蓝牙开启事件监听器。 |
-| `bluetooth-auth-auto-lock.service` | 用户 | Noctalia 自动锁屏循环。 |
-| `bluetooth-auth-keyring-unlock.service` | 用户 | 图形会话启动后的单次 Keyring 解锁。 |
+| Unit                                    | 作用域 | 用途                                |
+| --------------------------------------- | ------ | ----------------------------------- |
+| `bluetooth-auth-connect.service`        | 系统   | 带时间预算的单次连接任务。          |
+| `bluetooth-auth-connect.socket`         | 系统   | 接收异步连接通知并激活单次任务。    |
+| `bluetooth-auth-power-monitor.service`  | 系统   | 蓝牙开启事件监听器。                |
+| `bluetooth-auth-auto-lock.service`      | 用户   | Noctalia 自动锁屏循环。             |
+| `bluetooth-auth-keyring-unlock.service` | 用户   | 图形会话启动后的单次 Keyring 解锁。 |
 
 按已启用的集成查看日志：
 

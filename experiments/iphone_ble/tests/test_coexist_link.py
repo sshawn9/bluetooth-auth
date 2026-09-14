@@ -51,27 +51,41 @@ class CoexistLinkTests(unittest.IsolatedAsyncioTestCase):
         operation = asyncio.create_task(backend.connections())
         await asyncio.sleep(0)
         self.assertEqual(backend._socket.sent, [struct.pack("<HHH", 0x0015, 2, 0)])
-        data = struct.pack("<H", 2) + bytes.fromhex("FFEEDDCCBBAA01") + bytes.fromhex("66554433221102")
+        data = (
+            struct.pack("<H", 2)
+            + bytes.fromhex("FFEEDDCCBBAA01")
+            + bytes.fromhex("66554433221102")
+        )
         backend._receive(event(link.MGMT_EV_CMD_COMPLETE, 2, 0x0015, data=data))
-        self.assertEqual(await operation, {("AA:BB:CC:DD:EE:FF", 1), ("11:22:33:44:55:66", 2)})
+        self.assertEqual(
+            await operation, {("AA:BB:CC:DD:EE:FF", 1), ("11:22:33:44:55:66", 2)}
+        )
 
     async def test_unrelated_events_do_not_complete_concurrent_requests(self):
         backend = self.backend()
         first = asyncio.create_task(backend.connections())
         second = asyncio.create_task(backend.connections())
         await asyncio.sleep(0)
-        backend._receive(event(link.MGMT_EV_CMD_COMPLETE, 9, 0x0015, data=struct.pack("<H", 0)))
+        backend._receive(
+            event(link.MGMT_EV_CMD_COMPLETE, 9, 0x0015, data=struct.pack("<H", 0))
+        )
         backend._receive(event(link.MGMT_EV_CMD_COMPLETE, 2, 0x0014, data=b"x" * 7))
         self.assertFalse(first.done())
         self.assertFalse(second.done())
-        backend._receive(event(link.MGMT_EV_CMD_COMPLETE, 2, 0x0015, data=struct.pack("<H", 0)))
+        backend._receive(
+            event(link.MGMT_EV_CMD_COMPLETE, 2, 0x0015, data=struct.pack("<H", 0))
+        )
         self.assertEqual(await first, set())
         await asyncio.sleep(0)
         self.assertEqual(len(backend._socket.sent), 2)
-        backend._receive(event(link.MGMT_EV_CMD_COMPLETE, 2, 0x0015, data=struct.pack("<H", 0)))
+        backend._receive(
+            event(link.MGMT_EV_CMD_COMPLETE, 2, 0x0015, data=struct.pack("<H", 0))
+        )
         self.assertEqual(await second, set())
 
-    async def test_disconnect_rejects_classic_and_preexisting_link_without_sending(self):
+    async def test_disconnect_rejects_classic_and_preexisting_link_without_sending(
+        self,
+    ):
         backend = self.backend(baseline={("AA:BB:CC:DD:EE:FF", 1)})
         with self.assertRaises(ValueError):
             await backend.disconnect_le("AA:BB:CC:DD:EE:FF", 0)
@@ -83,11 +97,28 @@ class CoexistLinkTests(unittest.IsolatedAsyncioTestCase):
         backend = self.backend(baseline=set())
         operation = asyncio.create_task(backend.disconnect_le("AA:BB:CC:DD:EE:FF", 2))
         await asyncio.sleep(0)
-        backend._receive(event(link.MGMT_EV_CMD_COMPLETE, 2, 0x0015, data=struct.pack("<H", 1) + bytes.fromhex("FFEEDDCCBBAA02")))
+        backend._receive(
+            event(
+                link.MGMT_EV_CMD_COMPLETE,
+                2,
+                0x0015,
+                data=struct.pack("<H", 1) + bytes.fromhex("FFEEDDCCBBAA02"),
+            )
+        )
         await asyncio.sleep(0)
         await asyncio.sleep(0)
-        self.assertEqual(backend._socket.sent[-1], struct.pack("<HHH", 0x0014, 2, 7) + bytes.fromhex("FFEEDDCCBBAA02"))
-        backend._receive(event(link.MGMT_EV_CMD_COMPLETE, 2, 0x0014, data=bytes.fromhex("FFEEDDCCBBAA02")))
+        self.assertEqual(
+            backend._socket.sent[-1],
+            struct.pack("<HHH", 0x0014, 2, 7) + bytes.fromhex("FFEEDDCCBBAA02"),
+        )
+        backend._receive(
+            event(
+                link.MGMT_EV_CMD_COMPLETE,
+                2,
+                0x0014,
+                data=bytes.fromhex("FFEEDDCCBBAA02"),
+            )
+        )
         await operation
 
     async def test_records_device_disconnected_event_without_completing_command(self):
@@ -95,8 +126,13 @@ class CoexistLinkTests(unittest.IsolatedAsyncioTestCase):
         operation = asyncio.create_task(backend.connections())
         await asyncio.sleep(0)
         body = bytes.fromhex("FFEEDDCCBBAA02") + b"\x16"
-        backend._receive(struct.pack("<HHH", link.MGMT_EV_DEVICE_DISCONNECTED, 2, len(body)) + body)
-        self.assertEqual(backend.disconnect_events, [{"address": "AA:BB:CC:DD:EE:FF", "address_type": 2, "reason": 0x16}])
+        backend._receive(
+            struct.pack("<HHH", link.MGMT_EV_DEVICE_DISCONNECTED, 2, len(body)) + body
+        )
+        self.assertEqual(
+            backend.disconnect_events,
+            [{"address": "AA:BB:CC:DD:EE:FF", "address_type": 2, "reason": 0x16}],
+        )
         self.assertFalse(operation.done())
         operation.cancel()
         with self.assertRaises(asyncio.CancelledError):

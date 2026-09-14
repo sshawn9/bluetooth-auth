@@ -24,7 +24,7 @@ class OfflineCheckTests(unittest.TestCase):
         self.assertIn("offline", result.stdout.lower())
 
     def test_startup_guard_blocks_real_socket_operations_but_keeps_socketpair(self):
-        program = '''
+        program = """
 import socket
 
 def blocked(operation):
@@ -43,13 +43,20 @@ blocked(lambda: left.connect_ex("/tmp/no-network"))
 blocked(lambda: socket.create_connection(("127.0.0.1", 9)))
 left.close()
 right.close()
-'''
+"""
         with tempfile.TemporaryDirectory() as temporary:
             guard = Path(temporary) / "guard"
             guard.mkdir()
-            (guard / "sitecustomize.py").write_text(check_offline._guard_source(), encoding="utf-8")
+            (guard / "sitecustomize.py").write_text(
+                check_offline._guard_source(), encoding="utf-8"
+            )
             environment = dict(os.environ, PYTHONPATH=str(guard), PYTHONNOUSERSITE="1")
-            result = subprocess.run([sys.executable, "-B", "-c", program], env=environment, capture_output=True, text=True)
+            result = subprocess.run(
+                [sys.executable, "-B", "-c", program],
+                env=environment,
+                capture_output=True,
+                text=True,
+            )
         self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_child_failure_exit_code_is_returned(self):

@@ -17,7 +17,7 @@ HERE = Path(__file__).resolve().parent
 
 def _guard_source() -> str:
     """Startup hook installed in a temporary directory for the test child."""
-    return r'''
+    return r"""
 import socket as _socket
 
 _real_socket = _socket.socket
@@ -44,7 +44,7 @@ def _blocked_create_connection(*args, **kwargs):
 _socket.socket = _OfflineSocket
 _socket.SocketType = _OfflineSocket
 _socket.create_connection = _blocked_create_connection
-'''
+"""
 
 
 def run_tests() -> int:
@@ -74,7 +74,17 @@ def run_tests() -> int:
         child_environment = dict(os.environ)
         child_environment.update(environment)
         completed = subprocess.run(
-            [str(python), "-B", "-m", "unittest", "discover", "-s", str(tests), "-p", "test*.py"],
+            [
+                str(python),
+                "-B",
+                "-m",
+                "unittest",
+                "discover",
+                "-s",
+                str(tests),
+                "-p",
+                "test*.py",
+            ],
             cwd=root,
             env=child_environment,
         )

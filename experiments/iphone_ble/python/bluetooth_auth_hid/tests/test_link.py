@@ -53,9 +53,7 @@ class LinkReaderTests(unittest.TestCase):
             self.assertEqual(link._REQUEST.unpack_from(buffer), (2, 512))
             write_connection(buffer, count=1, adapter_index=2)
             # This extra record must not be returned because kernel count is one.
-            link._CONNECTION.pack_into(
-                buffer, 20, 0x0043, b"\x01" * 6, 1, 0, 2, 0
-            )
+            link._CONNECTION.pack_into(buffer, 20, 0x0043, b"\x01" * 6, 1, 0, 2, 0)
             return 0
 
         with (
@@ -65,7 +63,9 @@ class LinkReaderTests(unittest.TestCase):
             entries = link.LinkReader().read(2)
 
         self.assertTrue(fake_socket.closed)
-        self.assertEqual(entries, [link.LinkInfo("AA:BB:CC:DD:EE:FF", 0x42, 0x80, 1, True)])
+        self.assertEqual(
+            entries, [link.LinkInfo("AA:BB:CC:DD:EE:FF", 0x42, 0x80, 1, True)]
+        )
         self.assertNotIn("AA:BB:CC:DD:EE:FF", repr(entries[0]))
 
     def test_non_encrypted_or_non_le_fields_are_preserved(self) -> None:
@@ -141,7 +141,7 @@ class LinkReaderTests(unittest.TestCase):
         fake_socket = FakeSocket()
 
         def ioctl(_fd: int, _command: int, buffer: bytearray, _mutate: bool) -> int:
-            del buffer[link._REQUEST.size:]
+            del buffer[link._REQUEST.size :]
             link._REQUEST.pack_into(buffer, 0, 0, 1)
             return 0
 

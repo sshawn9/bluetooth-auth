@@ -18,7 +18,6 @@ in
       example = "login";
       description = "PAM service name used by the locker.";
     };
-
   };
 
   config = lib.mkIf (cfg.enable && cfg.auth.locker.enable) {

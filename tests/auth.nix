@@ -1,7 +1,7 @@
 { pkgs, package }:
 
 let
-  lib = pkgs.lib;
+  inherit (pkgs) lib;
   fakeBle = pkgs.writeShellScriptBin "bluetooth-auth-link" ''
     set -eu
     test "$#" -eq 4

@@ -270,6 +270,7 @@ class RadioTests(unittest.IsolatedAsyncioTestCase):
         )
         device = Device.from_config_with_hci(config, _Source(), _Sink())
         allowed = True
+
         async def confirm(_number, _digits):
             return allowed
 
@@ -293,9 +294,7 @@ class RadioTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(delegate.local_responder_key_distribution & link_key)
         self.assertEqual(str(device.static_address), "F0:F1:F2:F3:F4:F5")
 
-        rejected = radio._EnrollmentPairingDelegate(
-            connection, lambda: None, confirm
-        )
+        rejected = radio._EnrollmentPairingDelegate(connection, lambda: None, confirm)
         self.assertFalse(await rejected.accept())
         self.assertFalse(await rejected.compare_numbers(123456, 6))
 
@@ -332,10 +331,17 @@ class RadioTests(unittest.IsolatedAsyncioTestCase):
             payload, scan_response = radio._advertising_payloads(mode, name)
             name_structure = (AdvertisingData.COMPLETE_LOCAL_NAME, name.encode())
             if mode == "ancs":
-                self.assertNotIn(name_structure, AdvertisingData.from_bytes(payload).ad_structures)
-                self.assertIn(name_structure, AdvertisingData.from_bytes(scan_response).ad_structures)
+                self.assertNotIn(
+                    name_structure, AdvertisingData.from_bytes(payload).ad_structures
+                )
+                self.assertIn(
+                    name_structure,
+                    AdvertisingData.from_bytes(scan_response).ad_structures,
+                )
             else:
-                self.assertIn(name_structure, AdvertisingData.from_bytes(payload).ad_structures)
+                self.assertIn(
+                    name_structure, AdvertisingData.from_bytes(payload).ad_structures
+                )
                 self.assertEqual(scan_response, b"")
             # A long configured name must remain complete in the scan response,
             # not silently become an ambiguous/truncated test name.
@@ -400,10 +406,14 @@ class RadioTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaisesRegex(RuntimeError, "transport"):
             await hold
 
-    async def test_hci_user_transport_uses_numeric_linux_constants_and_closes_on_error(self):
+    async def test_hci_user_transport_uses_numeric_linux_constants_and_closes_on_error(
+        self,
+    ):
         fake_socket = _FakeSocket()
         with (
-            mock.patch.object(radio.socket, "socket", return_value=fake_socket) as constructor,
+            mock.patch.object(
+                radio.socket, "socket", return_value=fake_socket
+            ) as constructor,
             mock.patch.object(radio.ctypes, "CDLL", return_value=_FakeLibc()),
             mock.patch.object(radio.ctypes, "get_errno", return_value=16),
         ):
@@ -441,7 +451,9 @@ class RadioTests(unittest.IsolatedAsyncioTestCase):
                     "from_config_with_hci",
                     side_effect=device_factory,
                 ),
-                mock.patch.object(radio, "Peer", side_effect=lambda connection: connection),
+                mock.patch.object(
+                    radio, "Peer", side_effect=lambda connection: connection
+                ),
                 mock.patch.object(
                     radio,
                     "_prepare_cts",
@@ -484,26 +496,43 @@ class RadioTests(unittest.IsolatedAsyncioTestCase):
             transport = _Transport()
             fake_device = SilentDevice(DeviceConfiguration())
             events = []
-            with mock.patch.object(radio.Device, "from_config_with_hci", return_value=fake_device), \
-                 mock.patch.object(radio, "_CONNECTION_PROGRESS_INTERVAL", 0.01):
-                result = await asyncio.wait_for(radio._run_probe(
-                    config_path, "ancs", 0,
-                    radio.ProbeOptions(initial_timeout=0.05, cycles=0, hold_seconds=0, enroll=True),
-                    lambda event, data: events.append((event, data)),
-                    lambda _index: asyncio.sleep(0, result=transport),
-                    lambda _number, _digits: asyncio.sleep(0, result=True),
-                ), 1)
+            with (
+                mock.patch.object(
+                    radio.Device, "from_config_with_hci", return_value=fake_device
+                ),
+                mock.patch.object(radio, "_CONNECTION_PROGRESS_INTERVAL", 0.01),
+            ):
+                result = await asyncio.wait_for(
+                    radio._run_probe(
+                        config_path,
+                        "ancs",
+                        0,
+                        radio.ProbeOptions(
+                            initial_timeout=0.05, cycles=0, hold_seconds=0, enroll=True
+                        ),
+                        lambda event, data: events.append((event, data)),
+                        lambda _index: asyncio.sleep(0, result=transport),
+                        lambda _number, _digits: asyncio.sleep(0, result=True),
+                    ),
+                    1,
+                )
             self.assertFalse(result["passed"])
             self.assertEqual(result["error"]["phase"], "link")
             self.assertEqual(result["error"]["type"], "TimeoutError")
             self.assertIn("未收到连接", result["error"]["reason"])
-            waits = [data for event, data in events if event == "waiting_for_connection"]
+            waits = [
+                data for event, data in events if event == "waiting_for_connection"
+            ]
             self.assertGreaterEqual(len(waits), 2)
             self.assertIn("iPhone", waits[0]["message"])
             self.assertTrue(transport.closed)
             self.assertTrue(fake_device.powered_off)
-            self.assertEqual(fake_device.last_advertising_options["advertising_interval_min"], 20)
-            self.assertEqual(fake_device.last_advertising_options["advertising_interval_max"], 20)
+            self.assertEqual(
+                fake_device.last_advertising_options["advertising_interval_min"], 20
+            )
+            self.assertEqual(
+                fake_device.last_advertising_options["advertising_interval_max"], 20
+            )
 
     async def test_local_link_pair_store_encrypt_cts_and_reconnect(self):
         previous_logging_disable = logging.root.manager.disable
@@ -586,14 +615,16 @@ class RadioTests(unittest.IsolatedAsyncioTestCase):
             async def confirm(_number, _digits):
                 return True
 
-            peripheral.pairing_config_factory = lambda connection: pairing.PairingConfig(
-                sc=True,
-                mitm=True,
-                bonding=True,
-                identity_address_type=pairing.PairingConfig.AddressType.RANDOM,
-                delegate=radio._EnrollmentPairingDelegate(
-                    connection, lambda: selected[0], confirm
-                ),
+            peripheral.pairing_config_factory = lambda connection: (
+                pairing.PairingConfig(
+                    sc=True,
+                    mitm=True,
+                    bonding=True,
+                    identity_address_type=pairing.PairingConfig.AddressType.RANDOM,
+                    delegate=radio._EnrollmentPairingDelegate(
+                        connection, lambda: selected[0], confirm
+                    ),
+                )
             )
             central.pairing_config_factory = lambda _connection: pairing.PairingConfig(
                 sc=True,
@@ -759,59 +790,104 @@ class RadioTests(unittest.IsolatedAsyncioTestCase):
                         path.write_text(json.dumps(config), encoding="utf-8")
                         link = LocalLink()
                         transmitter = Controller(
-                            "transmitter", link=link,
+                            "transmitter",
+                            link=link,
                             public_address="01:02:03:04:05:06",
                         )
                         if extended_commands:
-                            transmitter.le_features |= hci.LeFeatureMask.LE_EXTENDED_ADVERTISING
+                            transmitter.le_features |= (
+                                hci.LeFeatureMask.LE_EXTENDED_ADVERTISING
+                            )
                         else:
-                            transmitter.le_features &= ~hci.LeFeatureMask.LE_EXTENDED_ADVERTISING
+                            transmitter.le_features &= (
+                                ~hci.LeFeatureMask.LE_EXTENDED_ADVERTISING
+                            )
                         receiver = Controller(
-                            "scanner", link=link,
+                            "scanner",
+                            link=link,
                             public_address="11:12:13:14:15:16",
                         )
                         scanner = Device.from_config_with_hci(
-                            DeviceConfiguration.from_dict({
-                                "name": "offline-scanner", "address": "E0:E1:E2:E3:E4:E5",
-                                "classic_enabled": False,
-                            }), receiver, receiver,
+                            DeviceConfiguration.from_dict(
+                                {
+                                    "name": "offline-scanner",
+                                    "address": "E0:E1:E2:E3:E4:E5",
+                                    "classic_enabled": False,
+                                }
+                            ),
+                            receiver,
+                            receiver,
                         )
                         received = asyncio.Queue()
                         scanner.on(Device.EVENT_ADVERTISEMENT, received.put_nowait)
                         await scanner.power_on()
                         await scanner.start_scanning(active=False)
                         transport = _ControllerTransport(transmitter)
-                        probe = asyncio.create_task(radio._run_probe(
-                            path, mode, 0,
-                            radio.ProbeOptions(initial_timeout=3, cycles=0),
-                            lambda *_: None,
-                            lambda _: asyncio.sleep(0, result=transport),
-                            lambda *_: asyncio.sleep(0, result=False),
-                        ))
+                        probe = asyncio.create_task(
+                            radio._run_probe(
+                                path,
+                                mode,
+                                0,
+                                radio.ProbeOptions(initial_timeout=3, cycles=0),
+                                lambda *_: None,
+                                lambda _: asyncio.sleep(0, result=transport),
+                                lambda *_: asyncio.sleep(0, result=False),
+                            )
+                        )
                         try:
                             advertisement = await asyncio.wait_for(received.get(), 2)
-                            self.assertEqual(bytes(advertisement.data), expected_payload)
-                            self.assertEqual(advertisement.address, hci.Address("F0:F1:F2:F3:F4:F5"))
+                            self.assertEqual(
+                                bytes(advertisement.data), expected_payload
+                            )
+                            self.assertEqual(
+                                advertisement.address, hci.Address("F0:F1:F2:F3:F4:F5")
+                            )
                             self.assertTrue(advertisement.is_connectable)
                             if extended_commands:
-                                advertiser = next(iter(transmitter.advertising_sets.values()))
+                                advertiser = next(
+                                    iter(transmitter.advertising_sets.values())
+                                )
                                 parameters = advertiser.parameters
-                                self.assertEqual(parameters.advertising_event_properties, 0x13)
-                                self.assertEqual(parameters.primary_advertising_interval_min, 32)
-                                self.assertEqual(parameters.primary_advertising_interval_max, 32)
-                                self.assertEqual(parameters.primary_advertising_channel_map, 7)
-                                self.assertEqual(parameters.primary_advertising_phy, hci.Phy.LE_1M)
-                                self.assertEqual(parameters.own_address_type, hci.OwnAddressType.RANDOM)
-                                self.assertEqual(parameters.advertising_filter_policy, 0)
+                                self.assertEqual(
+                                    parameters.advertising_event_properties, 0x13
+                                )
+                                self.assertEqual(
+                                    parameters.primary_advertising_interval_min, 32
+                                )
+                                self.assertEqual(
+                                    parameters.primary_advertising_interval_max, 32
+                                )
+                                self.assertEqual(
+                                    parameters.primary_advertising_channel_map, 7
+                                )
+                                self.assertEqual(
+                                    parameters.primary_advertising_phy, hci.Phy.LE_1M
+                                )
+                                self.assertEqual(
+                                    parameters.own_address_type,
+                                    hci.OwnAddressType.RANDOM,
+                                )
+                                self.assertEqual(
+                                    parameters.advertising_filter_policy, 0
+                                )
                                 scan_response = bytes(advertiser.scan_response_data)
                             else:
                                 advertiser = transmitter.le_legacy_advertiser
                                 self.assertEqual(advertiser.advertising_type, 0)
-                                self.assertEqual(advertiser.advertising_interval_min, 32)
-                                self.assertEqual(advertiser.advertising_interval_max, 32)
+                                self.assertEqual(
+                                    advertiser.advertising_interval_min, 32
+                                )
+                                self.assertEqual(
+                                    advertiser.advertising_interval_max, 32
+                                )
                                 self.assertEqual(advertiser.advertising_channel_map, 7)
-                                self.assertEqual(advertiser.own_address_type, hci.OwnAddressType.RANDOM)
-                                self.assertEqual(advertiser.advertising_filter_policy, 0)
+                                self.assertEqual(
+                                    advertiser.own_address_type,
+                                    hci.OwnAddressType.RANDOM,
+                                )
+                                self.assertEqual(
+                                    advertiser.advertising_filter_policy, 0
+                                )
                                 scan_response = advertiser.scan_response_data
                             # Bumble's simulated controller repeats advertising
                             # data as SCAN_RSP instead of modeling ScanReq/ScanRsp.
@@ -819,7 +895,9 @@ class RadioTests(unittest.IsolatedAsyncioTestCase):
                             # misrepresent LocalLink as verifying active scanning.
                             self.assertEqual(
                                 scan_response,
-                                bytes((len(name) + 1, 9)) + name.encode() if mode == "ancs" else b"",
+                                bytes((len(name) + 1, 9)) + name.encode()
+                                if mode == "ancs"
+                                else b"",
                             )
                         finally:
                             probe.cancel()
@@ -896,7 +974,10 @@ class RadioTests(unittest.IsolatedAsyncioTestCase):
             async def phone_connect_and_pair():
                 advertisement = await asyncio.wait_for(discovered.get(), 2)
                 self.assertIn(
-                    (AdvertisingData.LIST_OF_16_BIT_SERVICE_SOLICITATION_UUIDS, b"\x05\x18"),
+                    (
+                        AdvertisingData.LIST_OF_16_BIT_SERVICE_SOLICITATION_UUIDS,
+                        b"\x05\x18",
+                    ),
                     advertisement.data.ad_structures,
                 )
                 await central.stop_scanning()

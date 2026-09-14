@@ -33,9 +33,7 @@ ADVERTISING_INTERVAL_MS = 20
 # exposes the corresponding input report as zero and deliberately never emits
 # a report Value change or notification.
 CONSUMER_CONTROL_REPORT_MAP = bytes.fromhex(
-    "050C0901A10185011500250175019508"
-    "09CD09B509B609B709E909EA09E20940"
-    "8102C0"
+    "050C0901A1018501150025017501950809CD09B509B609B709E909EA09E209408102C0"
 )
 
 
@@ -64,7 +62,13 @@ class _ObjectManager(ServiceInterface):
 
 
 class _GattObject(ServiceInterface):
-    def __init__(self, name: str, path: str, on_event: Callable[[str, dict], None], allow_device: Callable[[str], bool]):
+    def __init__(
+        self,
+        name: str,
+        path: str,
+        on_event: Callable[[str, dict], None],
+        allow_device: Callable[[str], bool],
+    ):
         super().__init__(name)
         self.path = path
         self._on_event = on_event
@@ -83,37 +87,66 @@ class _GattObject(ServiceInterface):
 
 
 class _Service(_GattObject):
-    def __init__(self, path: str, uuid: str, on_event: Callable[[str, dict], None], allow_device: Callable[[str], bool]):
+    def __init__(
+        self,
+        path: str,
+        uuid: str,
+        on_event: Callable[[str, dict], None],
+        allow_device: Callable[[str], bool],
+    ):
         super().__init__(GATT_SERVICE, path, on_event, allow_device)
         self.uuid = uuid
 
     @dbus_property(access=PropertyAccess.READ)
-    def UUID(self) -> "s": return self.uuid
+    def UUID(self) -> "s":
+        return self.uuid
 
     @dbus_property(access=PropertyAccess.READ)
-    def Primary(self) -> "b": return True
+    def Primary(self) -> "b":
+        return True
 
     @dbus_property(access=PropertyAccess.READ)
-    def Includes(self) -> "ao": return []
+    def Includes(self) -> "ao":
+        return []
 
 
 class _Characteristic(_GattObject):
-    def __init__(self, path: str, service: _Service, uuid: str, value: bytes, flags: list[str], attribute: str, on_event: Callable[[str, dict], None], allow_device: Callable[[str], bool], writable: bool = False):
+    def __init__(
+        self,
+        path: str,
+        service: _Service,
+        uuid: str,
+        value: bytes,
+        flags: list[str],
+        attribute: str,
+        on_event: Callable[[str, dict], None],
+        allow_device: Callable[[str], bool],
+        writable: bool = False,
+    ):
         super().__init__(GATT_CHARACTERISTIC, path, on_event, allow_device)
         self.service, self.uuid, self.value = service, uuid, value
-        self.flags, self.attribute, self.writable, self.notifying = flags, attribute, writable, False
+        self.flags, self.attribute, self.writable, self.notifying = (
+            flags,
+            attribute,
+            writable,
+            False,
+        )
 
     @dbus_property(access=PropertyAccess.READ)
-    def UUID(self) -> "s": return self.uuid
+    def UUID(self) -> "s":
+        return self.uuid
 
     @dbus_property(access=PropertyAccess.READ)
-    def Service(self) -> "o": return self.service.path
+    def Service(self) -> "o":
+        return self.service.path
 
     @dbus_property(access=PropertyAccess.READ)
-    def Notifying(self) -> "b": return self.notifying
+    def Notifying(self) -> "b":
+        return self.notifying
 
     @dbus_property(access=PropertyAccess.READ)
-    def Flags(self) -> "as": return self.flags
+    def Flags(self) -> "as":
+        return self.flags
 
     def read_value(self, options: dict[str, Variant]) -> bytes:
         event = self._access(options, self.attribute)
@@ -125,7 +158,8 @@ class _Characteristic(_GattObject):
         return self.value[offset:]
 
     @dbus_method()
-    def ReadValue(self, options: "a{sv}") -> "ay": return self.read_value(options)
+    def ReadValue(self, options: "a{sv}") -> "ay":
+        return self.read_value(options)
 
     def write_value(self, value: bytes, options: dict[str, Variant]) -> None:
         if not self.writable:
@@ -148,7 +182,9 @@ class _Characteristic(_GattObject):
             raise _error("NotSupported", "notifications are unsupported")
         self.notifying = True
         self.emit_properties_changed({"Notifying": True})
-        self._on_event("gatt_subscription", {"attribute": self.attribute, "scope": "global"})
+        self._on_event(
+            "gatt_subscription", {"attribute": self.attribute, "scope": "global"}
+        )
 
     @dbus_method()
     def StopNotify(self):
@@ -159,18 +195,35 @@ class _Characteristic(_GattObject):
 
 
 class _Descriptor(_GattObject):
-    def __init__(self, path: str, characteristic: _Characteristic, uuid: str, value: bytes, flags: list[str], on_event: Callable[[str, dict], None], allow_device: Callable[[str], bool]):
+    def __init__(
+        self,
+        path: str,
+        characteristic: _Characteristic,
+        uuid: str,
+        value: bytes,
+        flags: list[str],
+        on_event: Callable[[str, dict], None],
+        allow_device: Callable[[str], bool],
+    ):
         super().__init__(GATT_DESCRIPTOR, path, on_event, allow_device)
-        self.characteristic, self.uuid, self.value, self.flags = characteristic, uuid, value, flags
+        self.characteristic, self.uuid, self.value, self.flags = (
+            characteristic,
+            uuid,
+            value,
+            flags,
+        )
 
     @dbus_property(access=PropertyAccess.READ)
-    def UUID(self) -> "s": return self.uuid
+    def UUID(self) -> "s":
+        return self.uuid
 
     @dbus_property(access=PropertyAccess.READ)
-    def Characteristic(self) -> "o": return self.characteristic.path
+    def Characteristic(self) -> "o":
+        return self.characteristic.path
 
     @dbus_property(access=PropertyAccess.READ)
-    def Flags(self) -> "as": return self.flags
+    def Flags(self) -> "as":
+        return self.flags
 
     def read_value(self, options: dict[str, Variant]) -> bytes:
         self._access(options, "report_reference")
@@ -180,11 +233,13 @@ class _Descriptor(_GattObject):
         return self.value[offset:]
 
     @dbus_method()
-    def ReadValue(self, options: "a{sv}") -> "ay": return self.read_value(options)
+    def ReadValue(self, options: "a{sv}") -> "ay":
+        return self.read_value(options)
 
 
 class HidApplication:
     """Exportable HOGP, Battery, and Device Information object hierarchy."""
+
     def __init__(
         self,
         bus: Any,
@@ -200,26 +255,117 @@ class HidApplication:
         if type(include_dis) is not bool or type(include_battery) is not bool:
             raise TypeError("include_dis and include_battery must be bool")
         self.bus, self.root_path = bus, root_path.rstrip("/") or "/"
-        self._on_event, self._allow_device, self._exported = on_event, allow_device, False
+        self._on_event, self._allow_device, self._exported = (
+            on_event,
+            allow_device,
+            False,
+        )
         self._exported_items: list[tuple[str, ServiceInterface]] = []
         root = self.root_path
         self.hid = _Service(f"{root}/service0", HID_UUID, on_event, allow_device)
-        self.battery = _Service(f"{root}/service1", BATTERY_UUID, on_event, allow_device)
+        self.battery = _Service(
+            f"{root}/service1", BATTERY_UUID, on_event, allow_device
+        )
         self.dis = _Service(f"{root}/service2", DIS_UUID, on_event, allow_device)
         encrypted_read = ["read", "encrypt-read"]
         encrypted_write = ["write-without-response", "encrypt-write"]
-        self.hid_info = _Characteristic(f"{root}/service0/char0", self.hid, "2a4a", b"\x11\x01\x00\x02", encrypted_read, "hid_information", on_event, allow_device)
-        self.report_map = _Characteristic(f"{root}/service0/char1", self.hid, "2a4b", CONSUMER_CONTROL_REPORT_MAP, encrypted_read, "report_map", on_event, allow_device)
-        self.control_point = _Characteristic(f"{root}/service0/char2", self.hid, "2a4c", b"\x00", encrypted_write, "hid_control_point", on_event, allow_device, writable=True)
-        self.report = _Characteristic(f"{root}/service0/char3", self.hid, "2a4d", b"\x00", [*encrypted_read, "notify"], "report", on_event, allow_device)
-        self.report_reference = _Descriptor(f"{root}/service0/char3/desc0", self.report, "2908", bytes((1, REPORT_TYPE_INPUT)), encrypted_read, on_event, allow_device)
-        self.battery_level = _Characteristic(f"{root}/service1/char0", self.battery, "2a19", b"\x64", [*encrypted_read, "notify"], "battery_level", on_event, allow_device)
-        self.manufacturer = _Characteristic(f"{root}/service2/char0", self.dis, "2a29", b"Bluetooth Auth", ["read"], "manufacturer", on_event, allow_device)
-        self.model = _Characteristic(f"{root}/service2/char1", self.dis, "2a24", b"Passive Consumer Control", ["read"], "model", on_event, allow_device)
-        self.pnp_id = _Characteristic(f"{root}/service2/char2", self.dis, "2a50", b"\x02\x00\x00\x01\x00\x01\x00", ["read"], "pnp_id", on_event, allow_device)
+        self.hid_info = _Characteristic(
+            f"{root}/service0/char0",
+            self.hid,
+            "2a4a",
+            b"\x11\x01\x00\x02",
+            encrypted_read,
+            "hid_information",
+            on_event,
+            allow_device,
+        )
+        self.report_map = _Characteristic(
+            f"{root}/service0/char1",
+            self.hid,
+            "2a4b",
+            CONSUMER_CONTROL_REPORT_MAP,
+            encrypted_read,
+            "report_map",
+            on_event,
+            allow_device,
+        )
+        self.control_point = _Characteristic(
+            f"{root}/service0/char2",
+            self.hid,
+            "2a4c",
+            b"\x00",
+            encrypted_write,
+            "hid_control_point",
+            on_event,
+            allow_device,
+            writable=True,
+        )
+        self.report = _Characteristic(
+            f"{root}/service0/char3",
+            self.hid,
+            "2a4d",
+            b"\x00",
+            [*encrypted_read, "notify"],
+            "report",
+            on_event,
+            allow_device,
+        )
+        self.report_reference = _Descriptor(
+            f"{root}/service0/char3/desc0",
+            self.report,
+            "2908",
+            bytes((1, REPORT_TYPE_INPUT)),
+            encrypted_read,
+            on_event,
+            allow_device,
+        )
+        self.battery_level = _Characteristic(
+            f"{root}/service1/char0",
+            self.battery,
+            "2a19",
+            b"\x64",
+            [*encrypted_read, "notify"],
+            "battery_level",
+            on_event,
+            allow_device,
+        )
+        self.manufacturer = _Characteristic(
+            f"{root}/service2/char0",
+            self.dis,
+            "2a29",
+            b"Bluetooth Auth",
+            ["read"],
+            "manufacturer",
+            on_event,
+            allow_device,
+        )
+        self.model = _Characteristic(
+            f"{root}/service2/char1",
+            self.dis,
+            "2a24",
+            b"Passive Consumer Control",
+            ["read"],
+            "model",
+            on_event,
+            allow_device,
+        )
+        self.pnp_id = _Characteristic(
+            f"{root}/service2/char2",
+            self.dis,
+            "2a50",
+            b"\x02\x00\x00\x01\x00\x01\x00",
+            ["read"],
+            "pnp_id",
+            on_event,
+            allow_device,
+        )
         self.objects: list[ServiceInterface] = [
-            self.hid, self.hid_info, self.report_map, self.control_point,
-            self.report, self.report_reference,
+            self.hid,
+            self.hid_info,
+            self.report_map,
+            self.control_point,
+            self.report,
+            self.report_reference,
         ]
         if include_battery:
             self.objects.extend((self.battery, self.battery_level))
@@ -235,7 +381,10 @@ class HidApplication:
 
     @staticmethod
     def _properties(interface: ServiceInterface) -> dict[str, Variant]:
-        return {prop.name: Variant(prop.signature, prop.prop_getter(interface)) for prop in ServiceInterface._get_properties(interface)}
+        return {
+            prop.name: Variant(prop.signature, prop.prop_getter(interface))
+            for prop in ServiceInterface._get_properties(interface)
+        }
 
     def export(self) -> None:
         if self._exported:
@@ -266,6 +415,7 @@ class HidApplication:
 
 class Advertising(ServiceInterface):
     """Exportable legacy peripheral advertisement; registration is caller-owned."""
+
     def __init__(self, alias: str, on_event: Callable[[str, dict], None]):
         super().__init__(ADVERTISEMENT)
         if not alias or len(alias.encode("utf-8")) > 248:
@@ -273,25 +423,32 @@ class Advertising(ServiceInterface):
         self.alias, self._on_event, self._bus, self._path = alias, on_event, None, None
 
     @dbus_property(access=PropertyAccess.READ)
-    def Type(self) -> "s": return "peripheral"
+    def Type(self) -> "s":
+        return "peripheral"
 
     @dbus_property(access=PropertyAccess.READ)
-    def ServiceUUIDs(self) -> "as": return [HID_UUID]
+    def ServiceUUIDs(self) -> "as":
+        return [HID_UUID]
 
     @dbus_property(access=PropertyAccess.READ)
-    def Appearance(self) -> "q": return HID_APPEARANCE
+    def Appearance(self) -> "q":
+        return HID_APPEARANCE
 
     @dbus_property(access=PropertyAccess.READ)
-    def LocalName(self) -> "s": return self.alias
+    def LocalName(self) -> "s":
+        return self.alias
 
     @dbus_property(access=PropertyAccess.READ)
-    def Discoverable(self) -> "b": return True
+    def Discoverable(self) -> "b":
+        return True
 
     @dbus_property(access=PropertyAccess.READ)
-    def MinInterval(self) -> "u": return ADVERTISING_INTERVAL_MS
+    def MinInterval(self) -> "u":
+        return ADVERTISING_INTERVAL_MS
 
     @dbus_property(access=PropertyAccess.READ)
-    def MaxInterval(self) -> "u": return ADVERTISING_INTERVAL_MS
+    def MaxInterval(self) -> "u":
+        return ADVERTISING_INTERVAL_MS
 
     @dbus_method()
     def Release(self):

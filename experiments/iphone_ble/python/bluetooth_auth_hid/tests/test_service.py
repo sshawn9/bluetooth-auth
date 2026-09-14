@@ -63,8 +63,10 @@ class ServiceTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_initial_query_is_bounded(self):
         backend = Backend([False])
+
         async def slow():
             await asyncio.sleep(10)
+
         backend.connected = slow
         self.assertFalse(await self.api(backend).ask_or_connect())
 
@@ -72,16 +74,19 @@ class ServiceTests(unittest.IsolatedAsyncioTestCase):
         async def disconnect(backend):
             backend.disconnect_count += 1
             backend.results = [True]
+
         backend = Backend([False], disconnect)
         self.assertFalse(await self.api(backend).ask_or_connect())
         self.assertEqual(backend.queries, 3)
 
     async def test_concurrent_requests_share_only_in_progress_operation(self):
         entered, release = asyncio.Event(), asyncio.Event()
+
         async def wait(backend):
             entered.set()
             await release.wait()
             backend.results = [True]
+
         backend = Backend([False], wait)
         api = self.api(backend, 1)
         first = asyncio.create_task(api.ask_or_connect())
@@ -97,10 +102,12 @@ class ServiceTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_cancelled_client_does_not_cancel_shared_operation(self):
         entered, release = asyncio.Event(), asyncio.Event()
+
         async def wait(backend):
             entered.set()
             await release.wait()
             backend.results = [True]
+
         backend = Backend([False], wait)
         api = self.api(backend, 1)
         first = asyncio.create_task(api.ask_or_connect())
@@ -114,9 +121,11 @@ class ServiceTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_stop_cancels_pending_work(self):
         entered = asyncio.Event()
+
         async def wait(_backend):
             entered.set()
             await asyncio.sleep(10)
+
         backend = Backend([False], wait)
         api = self.api(backend, 1)
         pending = asyncio.create_task(api.ask_or_connect())
@@ -148,7 +157,10 @@ class AddressTests(unittest.TestCase):
                 daemon.load_address(link)
 
     def test_missing_address_does_not_open_backend_or_reveal_private_values(self):
-        with patch.dict(os.environ, {}, clear=True), patch.object(daemon, "BlueZBackend") as backend:
+        with (
+            patch.dict(os.environ, {}, clear=True),
+            patch.object(daemon, "BlueZBackend") as backend,
+        ):
             with contextlib.redirect_stdout(io.StringIO()) as output:
                 self.assertEqual(daemon.main([]), 78)
             backend.assert_not_called()

@@ -20,7 +20,14 @@ sys.path.insert(0, str(HERE / "python"))
 from bluetooth_auth_hid.link import BT_CONNECTED, HCI_LE_LINK, LinkReader
 from bluez_hid_lab import ADAPTER, AD_MANAGER, DEVICE, PHONE_PROPS, Backend, address
 from coexist_link import open as open_link
-from hid_release_test import Inconclusive, LinkLost, check_continuity, connected_links, target, uuids
+from hid_release_test import (
+    Inconclusive,
+    LinkLost,
+    check_continuity,
+    connected_links,
+    target,
+    uuids,
+)
 
 
 def show(event, **values):
@@ -29,10 +36,18 @@ def show(event, **values):
 
 def clean_resources(objects, adapter_path):
     interfaces = objects.get(adapter_path)
-    if not isinstance(interfaces, dict) or ADAPTER not in interfaces or AD_MANAGER not in interfaces:
+    if (
+        not isinstance(interfaces, dict)
+        or ADAPTER not in interfaces
+        or AD_MANAGER not in interfaces
+    ):
         raise Inconclusive("无法读取适配器、HID UUID 或 LE 广播管理接口")
     adapter, manager = interfaces[ADAPTER], interfaces[AD_MANAGER]
-    if not isinstance(adapter, dict) or not isinstance(manager, dict) or not isinstance(adapter.get("UUIDs"), list):
+    if (
+        not isinstance(adapter, dict)
+        or not isinstance(manager, dict)
+        or not isinstance(adapter.get("UUIDs"), list)
+    ):
         raise Inconclusive("无法完整读取 HID UUID 或 LE 广播状态")
     advertisements = manager.get("ActiveInstances")
     if type(advertisements) is not int or advertisements < 0:
@@ -54,10 +69,15 @@ async def observe(args, phone):
         _phone_path, phone_info = target(objects, adapter_path, phone)
         clean, advertisements = clean_resources(objects, adapter_path)
         initial_adapter = objects.get(adapter_path, {}).get(ADAPTER, {})
-        show("initial_resources", hid_uuid_present="1812" in uuids(initial_adapter),
-             advertising_instances=advertisements)
+        show(
+            "initial_resources",
+            hid_uuid_present="1812" in uuids(initial_adapter),
+            advertising_instances=advertisements,
+        )
         if not clean:
-            raise Inconclusive("检测到 HID 服务或 LE 广播；本脚本只观察无 HID 的重启后状态")
+            raise Inconclusive(
+                "检测到 HID 服务或 LE 广播；本脚本只观察无 HID 的重启后状态"
+            )
         saved_phone = {key: phone_info.get(key) for key in PHONE_PROPS}
 
         async def snapshot():
@@ -74,10 +94,15 @@ async def observe(args, phone):
             current = await mgmt.connections()
             links = connected_links(reader, index, phone)
             state.update(
-                paired=current_flags.get("Paired"), bonded=current_flags.get("Bonded"),
-                trusted=current_flags.get("Trusted"), bluez_connected=current_phone.get("Connected", False),
-                phone_le_connected=any(peer == phone and kind in (1, 2) for peer, kind in current),
-                hci_le_links=len(links), encrypted=len(links) == 1 and links[0].encrypted,
+                paired=current_flags.get("Paired"),
+                bonded=current_flags.get("Bonded"),
+                trusted=current_flags.get("Trusted"),
+                bluez_connected=current_phone.get("Connected", False),
+                phone_le_connected=any(
+                    peer == phone and kind in (1, 2) for peer, kind in current
+                ),
+                hci_le_links=len(links),
+                encrypted=len(links) == 1 and links[0].encrypted,
                 advertising_instances=advertisements,
             )
             if current_flags != saved_phone:
@@ -85,23 +110,36 @@ async def observe(args, phone):
             return links
 
         phase = "connect"
-        show("waiting_for_connection", timeout_seconds=args.wait_seconds,
-             message="不启动 HID；手机保持锁屏，无需操作。")
+        show(
+            "waiting_for_connection",
+            timeout_seconds=args.wait_seconds,
+            message="不启动 HID；手机保持锁屏，无需操作。",
+        )
         deadline, next_progress = time.monotonic() + args.wait_seconds, 0
         async with asyncio.timeout(args.wait_seconds):
             while True:
                 links = await snapshot()
-                if any(item["address"] == phone and item["address_type"] in (1, 2)
-                       for item in mgmt.disconnect_events[event_start:]):
+                if any(
+                    item["address"] == phone and item["address_type"] in (1, 2)
+                    for item in mgmt.disconnect_events[event_start:]
+                ):
                     raise LinkLost("等待期观察到目标 LE 断线；不把后续重连当作连续链路")
-                if state["phone_le_connected"] and len(links) == 1 and links[0].encrypted:
+                if (
+                    state["phone_le_connected"]
+                    and len(links) == 1
+                    and links[0].encrypted
+                ):
                     handle = links[0].handle
                     break
                 now = time.monotonic()
                 if now >= deadline:
                     raise TimeoutError
                 if now >= next_progress:
-                    show("connection_state", remaining_seconds=round(deadline - now, 1), **state)
+                    show(
+                        "connection_state",
+                        remaining_seconds=round(deadline - now, 1),
+                        **state,
+                    )
                     next_progress = now + 5
                 await asyncio.sleep(0.2)
 
@@ -112,30 +150,58 @@ async def observe(args, phone):
             links = await snapshot()
             check_continuity(handle, links, phone, mgmt.disconnect_events[event_start:])
             if not state["phone_le_connected"]:
-                raise Inconclusive("观察期间 MGMT 未确认目标 LE 连接，不能只凭 HCI 快照判通过")
+                raise Inconclusive(
+                    "观察期间 MGMT 未确认目标 LE 连接，不能只凭 HCI 快照判通过"
+                )
             now = time.monotonic()
             if now >= deadline:
-                show("result", verdict="passed", same_le_link=True, encrypted=True,
-                     observed_seconds=round(now - started, 1),
-                     message="仅证明本轮无 HID/广播时，同一目标加密 LE 链路连续保持。")
+                show(
+                    "result",
+                    verdict="passed",
+                    same_le_link=True,
+                    encrypted=True,
+                    observed_seconds=round(now - started, 1),
+                    message="仅证明本轮无 HID/广播时，同一目标加密 LE 链路连续保持。",
+                )
                 return 0
             if now >= next_progress:
-                show("observing", elapsed_seconds=round(now - started, 1), same_le_link=True, encrypted=True)
+                show(
+                    "observing",
+                    elapsed_seconds=round(now - started, 1),
+                    same_le_link=True,
+                    encrypted=True,
+                )
                 next_progress = now + 10
             await asyncio.sleep(0.2)
     except LinkLost as error:
         show("result", verdict="failed", phase=phase, reason=str(error))
         return 1
     except Inconclusive as error:
-        show("result", verdict="inconclusive", phase=phase, reason=str(error), state=state)
+        show(
+            "result",
+            verdict="inconclusive",
+            phase=phase,
+            reason=str(error),
+            state=state,
+        )
         return 2
     except TimeoutError:
-        show("result", verdict="inconclusive", phase=phase,
-             reason="等待期内未观察到唯一的目标加密 LE 连接", state=state)
+        show(
+            "result",
+            verdict="inconclusive",
+            phase=phase,
+            reason="等待期内未观察到唯一的目标加密 LE 连接",
+            state=state,
+        )
         return 2
     except Exception as error:
-        show("result", verdict="inconclusive", phase=phase, reason="观察后端不可用",
-             error_type=type(error).__name__)
+        show(
+            "result",
+            verdict="inconclusive",
+            phase=phase,
+            reason="观察后端不可用",
+            error_type=type(error).__name__,
+        )
         return 2
     finally:
         close_errors = []
@@ -143,15 +209,25 @@ async def observe(args, phone):
             try:
                 await mgmt.close()
             except Exception as error:
-                close_errors.append({"interface": "mgmt", "error_type": type(error).__name__})
+                close_errors.append(
+                    {"interface": "mgmt", "error_type": type(error).__name__}
+                )
         try:
             await observer.close()
         except Exception as error:
-            close_errors.append({"interface": "dbus", "error_type": type(error).__name__})
-        show("closed", active_disconnect_sent=False,
-             cleanup_errors=close_errors,
-             message=("观察接口已关闭；未修改蓝牙状态，未主动断开任何连接。" if not close_errors else
-                      "观察结束；部分观察接口关闭失败，见 cleanup_errors；未主动断开任何连接。"))
+            close_errors.append(
+                {"interface": "dbus", "error_type": type(error).__name__}
+            )
+        show(
+            "closed",
+            active_disconnect_sent=False,
+            cleanup_errors=close_errors,
+            message=(
+                "观察接口已关闭；未修改蓝牙状态，未主动断开任何连接。"
+                if not close_errors
+                else "观察结束；部分观察接口关闭失败，见 cleanup_errors；未主动断开任何连接。"
+            ),
+        )
 
 
 def main():
@@ -163,7 +239,10 @@ def main():
     args = parser.parse_args()
     if not re.fullmatch(r"hci[0-9]+", args.adapter) or int(args.adapter[3:]) >= 0xFFFF:
         parser.error("需要有效 hci 编号")
-    if any(not math.isfinite(value) or not 0 < value <= 120 for value in (args.wait_seconds, args.observe_seconds)):
+    if any(
+        not math.isfinite(value) or not 0 < value <= 120
+        for value in (args.wait_seconds, args.observe_seconds)
+    ):
         parser.error("等待和观察时限须大于零且不超过 120 秒")
     logging.getLogger("dbus_fast").addHandler(logging.NullHandler())
     logging.getLogger("dbus_fast").propagate = False

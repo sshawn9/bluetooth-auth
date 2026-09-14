@@ -62,9 +62,7 @@ _GENERIC_HID_APPEARANCE = 0x03C0
 # Consumer Control, report ID 1, eight one-bit controls.  The initial report is
 # all zeroes and this module never sends a report notification.
 _CONSUMER_CONTROL_REPORT_MAP = bytes.fromhex(
-    "050C0901A10185011500250175019508"
-    "09CD09B509B609B709E909EA09E20940"
-    "8102C0"
+    "050C0901A1018501150025017501950809CD09B509B609B709E909EA09E209408102C0"
 )
 
 
@@ -443,7 +441,10 @@ def _build_hogp_services() -> tuple[list[Service], Characteristic]:
 
 
 async def _wait_event(
-    emitter: Any, event: str, timeout: float, predicate: Callable[..., bool] | None = None
+    emitter: Any,
+    event: str,
+    timeout: float,
+    predicate: Callable[..., bool] | None = None,
 ) -> tuple[Any, ...]:
     loop = asyncio.get_running_loop()
     future: asyncio.Future[tuple[Any, ...]] = loop.create_future()
@@ -541,39 +542,62 @@ async def _wait_connection(device: Device, timeout: float) -> Any:
         device,
         Device.EVENT_CONNECTION,
         timeout,
-        lambda candidate: candidate.transport == PhysicalTransport.LE
-        and candidate.role == hci.Role.PERIPHERAL,
+        lambda candidate: (
+            candidate.transport == PhysicalTransport.LE
+            and candidate.role == hci.Role.PERIPHERAL
+        ),
     )
     return connection
 
 
 async def _wait_connection_with_progress(
-    device: Device, transport: Transport, timeout: float,
-    emit: Callable[[str, dict], None], cycle: int, name: str, enroll: bool,
+    device: Device,
+    transport: Transport,
+    timeout: float,
+    emit: Callable[[str, dict], None],
+    cycle: int,
+    name: str,
+    enroll: bool,
 ) -> Any:
     started = time.monotonic()
-    emit("waiting_for_connection", {
-        "cycle": cycle, "name": name, "timeout_seconds": timeout,
-        "message": (f"首次配对：请在 iPhone 设置 → 蓝牙中选择 {name}。若列表没有此项，本轮尚未发现设备。"
-                    if enroll else "正在等待已配对的 iPhone 自动连回；重连测试期间不要操作手机。"),
-    })
+    emit(
+        "waiting_for_connection",
+        {
+            "cycle": cycle,
+            "name": name,
+            "timeout_seconds": timeout,
+            "message": (
+                f"首次配对：请在 iPhone 设置 → 蓝牙中选择 {name}。若列表没有此项，本轮尚未发现设备。"
+                if enroll
+                else "正在等待已配对的 iPhone 自动连回；重连测试期间不要操作手机。"
+            ),
+        },
+    )
     operation = asyncio.create_task(
         _while_transport_open(transport, _wait_connection(device, timeout), timeout)
     )
     try:
         while True:
-            done, _ = await asyncio.wait((operation,), timeout=_CONNECTION_PROGRESS_INTERVAL)
+            done, _ = await asyncio.wait(
+                (operation,), timeout=_CONNECTION_PROGRESS_INTERVAL
+            )
             if operation in done:
                 return operation.result()
             elapsed = time.monotonic() - started
-            emit("waiting_for_connection", {
-                "cycle": cycle, "name": name,
-                "elapsed_seconds": round(elapsed, 1),
-                "remaining_seconds": round(max(0, timeout - elapsed), 1),
-                "message": "仍未收到 iPhone 的连接；超时后会停止广播并恢复适配器。",
-            })
+            emit(
+                "waiting_for_connection",
+                {
+                    "cycle": cycle,
+                    "name": name,
+                    "elapsed_seconds": round(elapsed, 1),
+                    "remaining_seconds": round(max(0, timeout - elapsed), 1),
+                    "message": "仍未收到 iPhone 的连接；超时后会停止广播并恢复适配器。",
+                },
+            )
     except TimeoutError as error:
-        raise TimeoutError(f"{timeout:g} 秒内未收到连接：{name}；没有进入配对或服务使用阶段") from error
+        raise TimeoutError(
+            f"{timeout:g} 秒内未收到连接：{name}；没有进入配对或服务使用阶段"
+        ) from error
     finally:
         if not operation.done():
             operation.cancel()
@@ -586,9 +610,7 @@ async def _bond_for_connection(device: Device, connection: Any) -> bool:
     return await device.keystore.get(str(connection.peer_address)) is not None
 
 
-async def _wait_bond_saved(
-    device: Device, connection: Any, timeout: float
-) -> None:
+async def _wait_bond_saved(device: Device, connection: Any, timeout: float) -> None:
     deadline = asyncio.get_running_loop().time() + timeout
     while asyncio.get_running_loop().time() < deadline:
         if not _connection_is_active(connection):
@@ -760,7 +782,9 @@ async def _run_probe(
             config.gap_service_enabled = False
         device = Device.from_config_with_hci(config, transport.source, transport.sink)
         if mode == "hid":
-            device.add_service(GenericAccessService(config.name, _GENERIC_HID_APPEARANCE))
+            device.add_service(
+                GenericAccessService(config.name, _GENERIC_HID_APPEARANCE)
+            )
             services, report = _build_hogp_services()
             for service in services:
                 device.add_service(service)
@@ -829,21 +853,37 @@ async def _run_probe(
                 ),
                 5,
             )
-            emit("advertising", {
-                "cycle": cycle_number, "mode": mode, "name": config.name,
-                "interval_ms": _DISCOVERY_INTERVAL_MS,
-                "name_location": "scan_response" if scan_response_data else "advertising",
-                "advertising_data_hex": advertising_data.hex(),
-                "scan_response_data_hex": scan_response_data.hex(),
-                "packet_type": "legacy_connectable_scannable",
-                "controller_api": "extended" if getattr(device, "supports_le_extended_advertising", False) else "legacy",
-                "message": "控制器已接受广播命令；尚未收到手机连接。",
-            })
+            emit(
+                "advertising",
+                {
+                    "cycle": cycle_number,
+                    "mode": mode,
+                    "name": config.name,
+                    "interval_ms": _DISCOVERY_INTERVAL_MS,
+                    "name_location": "scan_response"
+                    if scan_response_data
+                    else "advertising",
+                    "advertising_data_hex": advertising_data.hex(),
+                    "scan_response_data_hex": scan_response_data.hex(),
+                    "packet_type": "legacy_connectable_scannable",
+                    "controller_api": "extended"
+                    if getattr(device, "supports_le_extended_advertising", False)
+                    else "legacy",
+                    "message": "控制器已接受广播命令；尚未收到手机连接。",
+                },
+            )
             timeout = (
-                options.initial_timeout if cycle_number == 1 else options.reconnect_timeout
+                options.initial_timeout
+                if cycle_number == 1
+                else options.reconnect_timeout
             )
             connection = await _wait_connection_with_progress(
-                device, transport, timeout, emit, cycle_number, config.name,
+                device,
+                transport,
+                timeout,
+                emit,
+                cycle_number,
+                config.name,
                 options.enroll and cycle_number == 1,
             )
             cycle["link"] = True
@@ -856,7 +896,9 @@ async def _run_probe(
             enrolling = not known_peer
             if not known_peer and enrollment_connection is not connection:
                 await _while_transport_open(transport, connection.disconnect(), 5)
-                raise RuntimeError("incoming peer is not present in this probe's keystore")
+                raise RuntimeError(
+                    "incoming peer is not present in this probe's keystore"
+                )
             if not known_peer:
                 connection.request_pairing()
             elif not connection.is_encrypted:

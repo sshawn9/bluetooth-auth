@@ -2,7 +2,7 @@
 
 let
   utils = import (pkgs.path + "/nixos/lib/utils.nix") {
-    lib = pkgs.lib;
+    inherit (pkgs) lib;
     config = { };
     inherit pkgs;
   };

@@ -4,15 +4,15 @@
 
 ## 1. 先选择场景
 
-| 要复现的内容 | 入口与场景 | 必须具备的前提 |
-| --- | --- | --- |
-| 已通过的系统蓝牙与 HID 共存 | `bluez_hid_lab.py`，BZ-HID-04 | 两端保留有效原配对，电脑有另一个已连接蓝牙设备 |
-| 已通过的 HID 注销后连接保持 | `hid_release_test.py`，BZ-HID-05；见 [专用步骤](HID_RELEASE.md) | 已有或可建立目标加密 LE；无需先断开已有连接 |
-| 重启后不启动 HID 的连接观察 | `observe_le_link.py`，BZ-HID-06，20 秒未观察到连接；见 [专用步骤](HID_RELEASE.md#电脑重启后不启动-hid只观察连接) | 重启电脑、保留配对，不运行 HID 或其他主动连接程序 |
-| 重启后临时 HID 恢复、退出后保持 | `hid_release_test.py`，BZ-HID-07；见 [复现命令](HID_RELEASE.md#重启后临时启动-hid连接后退出) | 沿用重启后的配对，记录目标属性；本次 Trusted=true，手机锁屏，保留完整建立与退出日志 |
-| 手机已忘记电脑、电脑仍留配对记录 | `bluez_hid_lab.py --repair-phone-pairing`，BZ-HID-02 | 电脑有目标手机的 Trusted、未 Blocked 记录；手机允许首次操作 |
-| 比较独立 ANCS/HID/CTS 身份 | `ble_lab.py`，EX 系列 | 接受临时独占适配器、原连接中断；使用实验自己的配对 |
-| 看结论或验证代码 | `plan`、`check_offline.py`、JSON 记录 | 无需开启或接触蓝牙 |
+| 要复现的内容                     | 入口与场景                                                                                                       | 必须具备的前提                                                                      |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| 已通过的系统蓝牙与 HID 共存      | `bluez_hid_lab.py`，BZ-HID-04                                                                                    | 两端保留有效原配对，电脑有另一个已连接蓝牙设备                                      |
+| 已通过的 HID 注销后连接保持      | `hid_release_test.py`，BZ-HID-05；见 [专用步骤](HID_RELEASE.md)                                                  | 已有或可建立目标加密 LE；无需先断开已有连接                                         |
+| 重启后不启动 HID 的连接观察      | `observe_le_link.py`，BZ-HID-06，20 秒未观察到连接；见 [专用步骤](HID_RELEASE.md#电脑重启后不启动-hid只观察连接) | 重启电脑、保留配对，不运行 HID 或其他主动连接程序                                   |
+| 重启后临时 HID 恢复、退出后保持  | `hid_release_test.py`，BZ-HID-07；见 [复现命令](HID_RELEASE.md#重启后临时启动-hid连接后退出)                     | 沿用重启后的配对，记录目标属性；本次 Trusted=true，手机锁屏，保留完整建立与退出日志 |
+| 手机已忘记电脑、电脑仍留配对记录 | `bluez_hid_lab.py --repair-phone-pairing`，BZ-HID-02                                                             | 电脑有目标手机的 Trusted、未 Blocked 记录；手机允许首次操作                         |
+| 比较独立 ANCS/HID/CTS 身份       | `ble_lab.py`，EX 系列                                                                                            | 接受临时独占适配器、原连接中断；使用实验自己的配对                                  |
+| 看结论或验证代码                 | `plan`、`check_offline.py`、JSON 记录                                                                            | 无需开启或接触蓝牙                                                                  |
 
 已有结果不要求重跑。ANCS/CTS 命令保留供未来复核当前配置的失败阶段，不作为本轮继续试错的待办。
 
@@ -128,15 +128,15 @@ sudo experiments/iphone_ble/.venv/bin/python -B \
 
 判定时同时查看：
 
-| 字段/事件 | 通过所需或含义 |
-| --- | --- |
-| `target_gatt_access` | `device=target_phone`、`link=LE`、`attribute=report_map` 或 `report` |
-| `result.passed`、`encrypted_phone_hid_access`、`hold` | 都为 true |
-| `original_links_lost` | 空列表；快照之外的短暂中断也会判失败 |
-| `restore.settings_restored`、`connections_restored`、`original_connections_present` | 都为 true |
-| `advertising_instances`、`test_hid_service_removed` | 无其他原有广播时应为 0；测试 HID 已移除 |
-| `phone_hid_subscription_verified=false` | 正常的证据边界；全局订阅不能归属到某一手机 |
-| `phone_audio_isolation_verified=false` | 没有声称全部音频服务被隔离，仍需人工反馈 |
+| 字段/事件                                                                           | 通过所需或含义                                                       |
+| ----------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `target_gatt_access`                                                                | `device=target_phone`、`link=LE`、`attribute=report_map` 或 `report` |
+| `result.passed`、`encrypted_phone_hid_access`、`hold`                               | 都为 true                                                            |
+| `original_links_lost`                                                               | 空列表；快照之外的短暂中断也会判失败                                 |
+| `restore.settings_restored`、`connections_restored`、`original_connections_present` | 都为 true                                                            |
+| `advertising_instances`、`test_hid_service_removed`                                 | 无其他原有广播时应为 0；测试 HID 已移除                              |
+| `phone_hid_subscription_verified=false`                                             | 正常的证据边界；全局订阅不能归属到某一手机                           |
+| `phone_audio_isolation_verified=false`                                              | 没有声称全部音频服务被隔离，仍需人工反馈                             |
 
 单有 `phone_le_connected=true` 不能当作加密 HID 使用通过。如果脚本启动前手机 LE 就已连接，则这轮可以观察保持，但不能单凭它声称完成了一次断开后重连；结合开始状态及恢复中是否断开新增手机 LE 来解释。
 
@@ -252,15 +252,15 @@ sudo experiments/iphone_ble/.venv/bin/python -B experiments/iphone_ble/ble_lab.p
 
 下表针对独占与共存入口。`hid_release_test.py` 与 `observe_le_link.py` 专门观察连接保持，结束时保留目标连接、不执行主动断开；退出和恢复边界见 [专用说明](HID_RELEASE.md)。
 
-| 项目 | 独占入口 | 共存入口 |
-| --- | --- | --- |
-| 进程/临时无线资源 | 关闭自己的 HCI user channel 和服务 | 注销广告/GATT/临时代理，关闭自身 D-Bus、MGMT、monitor |
-| 适配器设置 | 按日志恢复；Alias 核对，不覆盖别处改名 | 恢复自身修改的 Pairable，其余原设置核对 |
-| 本轮手机连接 | 关闭独占无线栈时结束 | 仅断开记录范围内新增目标/候选 LE |
-| 原其他连接 | 独占时可能已断，需要原系统/用户重连 | 要求全程保持；缺失或中断明确报告 |
-| 配对密钥 | `.runtime` 中实验密钥默认保留 | 原 BlueZ 配对保留；修复所得新密钥也保留 |
-| 文件 | 本次归档保留源码、依赖、文档和证据 | 私有运行日志默认保留，不等于临时广播仍运行 |
-| 手机缓存、系统日志、外部服务 | 不承诺回滚 | 不承诺回滚 |
+| 项目                         | 独占入口                               | 共存入口                                              |
+| ---------------------------- | -------------------------------------- | ----------------------------------------------------- |
+| 进程/临时无线资源            | 关闭自己的 HCI user channel 和服务     | 注销广告/GATT/临时代理，关闭自身 D-Bus、MGMT、monitor |
+| 适配器设置                   | 按日志恢复；Alias 核对，不覆盖别处改名 | 恢复自身修改的 Pairable，其余原设置核对               |
+| 本轮手机连接                 | 关闭独占无线栈时结束                   | 仅断开记录范围内新增目标/候选 LE                      |
+| 原其他连接                   | 独占时可能已断，需要原系统/用户重连    | 要求全程保持；缺失或中断明确报告                      |
+| 配对密钥                     | `.runtime` 中实验密钥默认保留          | 原 BlueZ 配对保留；修复所得新密钥也保留               |
+| 文件                         | 本次归档保留源码、依赖、文档和证据     | 私有运行日志默认保留，不等于临时广播仍运行            |
+| 手机缓存、系统日志、外部服务 | 不承诺回滚                             | 不承诺回滚                                            |
 
 原自动锁屏程序可能因独占断线照常锁屏；实验不会改认证或锁屏配置。若操作者先前手动暂停了 `bluetooth-auth-auto-connect.service`，应根据运行前记录恢复它；不要对原本未运行的服务盲目启动。仅当运行前确实 active 且由本次操作暂停时，可执行：
 

@@ -19,9 +19,18 @@ def require(result: bool, message: str) -> None:
         raise AssertionError(message)
 
 
-def authenticate(libpam, confdir: pathlib.Path, service: str, user: str, ruser: str | None,
-                 ble_result: int, next_result: int, expect_success: bool, expect_ble: bool,
-                 expect_next: bool) -> None:
+def authenticate(
+    libpam,
+    confdir: pathlib.Path,
+    service: str,
+    user: str,
+    ruser: str | None,
+    ble_result: int,
+    next_result: int,
+    expect_success: bool,
+    expect_ble: bool,
+    expect_next: bool,
+) -> None:
     state_dir = confdir / "state"
     state_dir.mkdir(exist_ok=True)
     ble_mark = state_dir / f"{service}-{user}-ble"
@@ -32,7 +41,11 @@ def authenticate(libpam, confdir: pathlib.Path, service: str, user: str, ruser: 
     handle = ctypes.c_void_p()
     conversation = PamConv(None, None)
     result = libpam.pam_start_confdir(
-        service.encode(), user.encode(), ctypes.byref(conversation), str(confdir).encode(), ctypes.byref(handle)
+        service.encode(),
+        user.encode(),
+        ctypes.byref(conversation),
+        str(confdir).encode(),
+        ctypes.byref(handle),
     )
     require(result == PAM_SUCCESS, f"pam_start_confdir({service}): {result}")
     try:
@@ -40,15 +53,26 @@ def authenticate(libpam, confdir: pathlib.Path, service: str, user: str, ruser: 
             result = libpam.pam_set_item(handle, PAM_RUSER, ruser.encode())
             require(result == PAM_SUCCESS, f"pam_set_item(PAM_RUSER): {result}")
         for key, value in {
-            "BLE_RESULT": str(ble_result), "NEXT_RESULT": str(next_result),
-            "BLE_MARK": str(ble_mark), "NEXT_MARK": str(next_mark),
+            "BLE_RESULT": str(ble_result),
+            "NEXT_RESULT": str(next_result),
+            "BLE_MARK": str(ble_mark),
+            "NEXT_MARK": str(next_mark),
         }.items():
             result = libpam.pam_putenv(handle, f"{key}={value}".encode())
             require(result == PAM_SUCCESS, f"pam_putenv({key}): {result}")
         result = libpam.pam_authenticate(handle, 0)
-        require((result == PAM_SUCCESS) == expect_success, f"{service}/{user}/{ruser}: PAM result {result}")
-        require(ble_mark.exists() == expect_ble, f"{service}/{user}/{ruser}: BLE invocation mismatch")
-        require(next_mark.exists() == expect_next, f"{service}/{user}/{ruser}: fallback invocation mismatch")
+        require(
+            (result == PAM_SUCCESS) == expect_success,
+            f"{service}/{user}/{ruser}: PAM result {result}",
+        )
+        require(
+            ble_mark.exists() == expect_ble,
+            f"{service}/{user}/{ruser}: BLE invocation mismatch",
+        )
+        require(
+            next_mark.exists() == expect_next,
+            f"{service}/{user}/{ruser}: fallback invocation mismatch",
+        )
     finally:
         libpam.pam_end(handle, result)
 
@@ -56,7 +80,13 @@ def authenticate(libpam, confdir: pathlib.Path, service: str, user: str, ruser: 
 def main() -> None:
     confdir = pathlib.Path(sys.argv[1])
     libpam = ctypes.CDLL(sys.argv[2])
-    libpam.pam_start_confdir.argtypes = [ctypes.c_char_p, ctypes.c_char_p, ctypes.POINTER(PamConv), ctypes.c_char_p, ctypes.POINTER(ctypes.c_void_p)]
+    libpam.pam_start_confdir.argtypes = [
+        ctypes.c_char_p,
+        ctypes.c_char_p,
+        ctypes.POINTER(PamConv),
+        ctypes.c_char_p,
+        ctypes.POINTER(ctypes.c_void_p),
+    ]
     libpam.pam_set_item.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p]
     libpam.pam_putenv.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
     libpam.pam_authenticate.argtypes = [ctypes.c_void_p, ctypes.c_int]
@@ -81,7 +111,9 @@ def main() -> None:
     authenticate(libpam, confdir, "greetd", "nobody", None, 1, 1, False, True, True)
     authenticate(libpam, confdir, "greetd", "root", "nobody", 0, 0, True, False, True)
     # A prior required failure remains fatal even if BLE subsequently succeeds.
-    authenticate(libpam, confdir, "prior-failure", "nobody", None, 0, 0, False, True, True)
+    authenticate(
+        libpam, confdir, "prior-failure", "nobody", None, 0, 0, False, True, True
+    )
 
 
 if __name__ == "__main__":

@@ -23,15 +23,22 @@ def variant(value):
 def objects(*, connected=True, paired=True, bonded=True, trusted=True):
     return {
         "/org/bluez/hci0": {
-            bluez.ADAPTER: {"Powered": variant(True), "UUIDs": variant([]), "Alias": variant("host")},
+            bluez.ADAPTER: {
+                "Powered": variant(True),
+                "UUIDs": variant([]),
+                "Alias": variant("host"),
+            },
             bluez.GATT_MANAGER: {},
             bluez.AD_MANAGER: {},
         },
         TARGET: {
             bluez.DEVICE: {
-                "Adapter": variant("/org/bluez/hci0"), "Address": variant(ADDRESS),
-                "Paired": variant(paired), "Bonded": variant(bonded),
-                "Trusted": variant(trusted), "Blocked": variant(False),
+                "Adapter": variant("/org/bluez/hci0"),
+                "Address": variant(ADDRESS),
+                "Paired": variant(paired),
+                "Bonded": variant(bonded),
+                "Trusted": variant(trusted),
+                "Blocked": variant(False),
                 "Connected": variant(connected),
             }
         },
@@ -72,11 +79,17 @@ class FakeBus:
         if self.register_timeout and message.member.startswith("Register"):
             await asyncio.sleep(60)
         if self.register_failure and message.member.startswith("Register"):
-            return SimpleNamespace(sender=message.destination, message_type=MessageType.ERROR, body=[])
+            return SimpleNamespace(
+                sender=message.destination, message_type=MessageType.ERROR, body=[]
+            )
         if message.member == "GetNameOwner":
             if self.owner_failure:
-                return SimpleNamespace(sender=bluez.DBUS, message_type=MessageType.ERROR, body=[])
-            return SimpleNamespace(sender=bluez.DBUS, message_type=MessageType.METHOD_RETURN, body=[OWNER])
+                return SimpleNamespace(
+                    sender=bluez.DBUS, message_type=MessageType.ERROR, body=[]
+                )
+            return SimpleNamespace(
+                sender=bluez.DBUS, message_type=MessageType.METHOD_RETURN, body=[OWNER]
+            )
         if message.member == "RequestName":
             return SimpleNamespace(
                 sender=bluez.DBUS,
@@ -84,7 +97,11 @@ class FakeBus:
                 body=[self.request_name_reply],
             )
         if message.member == "GetManagedObjects":
-            return SimpleNamespace(sender=OWNER, message_type=MessageType.METHOD_RETURN, body=[self.objects])
+            return SimpleNamespace(
+                sender=OWNER,
+                message_type=MessageType.METHOD_RETURN,
+                body=[self.objects],
+            )
         if message.member == "GetAll":
             interface = message.body[0]
             if message.path == TARGET:
@@ -96,7 +113,9 @@ class FakeBus:
                 message_type=MessageType.METHOD_RETURN,
                 body=[self.objects[message.path][interface]],
             )
-        return SimpleNamespace(sender=message.destination, message_type=MessageType.METHOD_RETURN, body=[])
+        return SimpleNamespace(
+            sender=message.destination, message_type=MessageType.METHOD_RETURN, body=[]
+        )
 
     def add_message_handler(self, handler):
         self.handlers.append(handler)
@@ -156,14 +175,20 @@ class BlueZBackendTests(unittest.IsolatedAsyncioTestCase):
             item.stop()
 
     async def open_backend(self, bus, reader):
-        backend = bluez.BlueZBackend(ADDRESS, call_timeout=0.02, link_reader=reader, bus_factory=lambda: bus)
+        backend = bluez.BlueZBackend(
+            ADDRESS, call_timeout=0.02, link_reader=reader, bus_factory=lambda: bus
+        )
         await backend.open()
         self.addAsyncCleanup(backend.close)
         return backend
 
-    async def test_probe_queries_fresh_snapshot_and_requires_exact_le_encrypted_link(self):
+    async def test_probe_queries_fresh_snapshot_and_requires_exact_le_encrypted_link(
+        self,
+    ):
         bus = FakeBus(objects())
-        reader = FakeReader([LinkInfo(ADDRESS, 1, bluez.HCI_LE_LINK, bluez.BT_CONNECTED, True)])
+        reader = FakeReader(
+            [LinkInfo(ADDRESS, 1, bluez.HCI_LE_LINK, bluez.BT_CONNECTED, True)]
+        )
         backend = await self.open_backend(bus, reader)
 
         self.assertTrue(await backend.connected())
@@ -174,14 +199,22 @@ class BlueZBackendTests(unittest.IsolatedAsyncioTestCase):
         bus.objects = objects()
         reader.links = [LinkInfo(ADDRESS, 1, 1, bluez.BT_CONNECTED, True)]
         self.assertFalse(await backend.connected())
-        reader.links = [LinkInfo(ADDRESS, 1, bluez.HCI_LE_LINK, bluez.BT_CONNECTED, False)]
+        reader.links = [
+            LinkInfo(ADDRESS, 1, bluez.HCI_LE_LINK, bluez.BT_CONNECTED, False)
+        ]
         self.assertFalse(await backend.connected())
-        reader.links = [LinkInfo("FF:FF:FF:FF:FF:FF", 1, bluez.HCI_LE_LINK, bluez.BT_CONNECTED, True)]
+        reader.links = [
+            LinkInfo(
+                "FF:FF:FF:FF:FF:FF", 1, bluez.HCI_LE_LINK, bluez.BT_CONNECTED, True
+            )
+        ]
         self.assertFalse(await backend.connected())
 
     async def test_probe_requires_paired_bonded_and_trusted_target(self):
         bus = FakeBus(objects())
-        reader = FakeReader([LinkInfo(ADDRESS, 1, bluez.HCI_LE_LINK, bluez.BT_CONNECTED, True)])
+        reader = FakeReader(
+            [LinkInfo(ADDRESS, 1, bluez.HCI_LE_LINK, bluez.BT_CONNECTED, True)]
+        )
         backend = await self.open_backend(bus, reader)
 
         for field in ("paired", "bonded", "trusted"):
@@ -193,13 +226,18 @@ class BlueZBackendTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_disconnect_and_owner_change_invalidate_old_result(self):
         bus = FakeBus(objects())
-        reader = FakeReader([LinkInfo(ADDRESS, 1, bluez.HCI_LE_LINK, bluez.BT_CONNECTED, True)])
+        reader = FakeReader(
+            [LinkInfo(ADDRESS, 1, bluez.HCI_LE_LINK, bluez.BT_CONNECTED, True)]
+        )
         backend = await self.open_backend(bus, reader)
         self.assertTrue(await backend.connected())
 
         disconnected = Message(
-            message_type=MessageType.SIGNAL, sender=OWNER, path=TARGET,
-            interface=bluez.DEVICE, member="Disconnected",
+            message_type=MessageType.SIGNAL,
+            sender=OWNER,
+            path=TARGET,
+            interface=bluez.DEVICE,
+            member="Disconnected",
         )
         backend._message(disconnected)
         self.assertEqual(backend.disconnect_count, 1)
@@ -207,9 +245,13 @@ class BlueZBackendTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(await backend.connected())
 
         owner_changed = Message(
-            message_type=MessageType.SIGNAL, sender=bluez.DBUS,
-            path="/org/freedesktop/DBus", interface=bluez.DBUS,
-            member="NameOwnerChanged", signature="sss", body=[bluez.BLUEZ, OWNER, ":1.77"],
+            message_type=MessageType.SIGNAL,
+            sender=bluez.DBUS,
+            path="/org/freedesktop/DBus",
+            interface=bluez.DBUS,
+            member="NameOwnerChanged",
+            signature="sss",
+            body=[bluez.BLUEZ, OWNER, ":1.77"],
         )
         backend._message(owner_changed)
         with self.assertRaises(bluez.BackendError):
@@ -219,8 +261,12 @@ class BlueZBackendTests(unittest.IsolatedAsyncioTestCase):
         bus = FakeBus(objects())
         backend = await self.open_backend(bus, FakeReader())
         forged = Message(
-            message_type=MessageType.METHOD_CALL, serial=1, sender=":1.99", path=bluez.ROOT,
-            interface="org.freedesktop.DBus.Peer", member="Ping",
+            message_type=MessageType.METHOD_CALL,
+            serial=1,
+            sender=":1.99",
+            path=bluez.ROOT,
+            interface="org.freedesktop.DBus.Peer",
+            member="Ping",
         )
         self.assertEqual(forged.sender, ":1.99")
         reply = backend._message(forged)
@@ -228,36 +274,64 @@ class BlueZBackendTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(reply.message_type, MessageType.ERROR)
 
         valid = Message(
-            message_type=MessageType.METHOD_CALL, serial=2, sender=OWNER, path=bluez.ROOT,
-            interface="org.freedesktop.DBus.Peer", member="Ping",
+            message_type=MessageType.METHOD_CALL,
+            serial=2,
+            sender=OWNER,
+            path=bluez.ROOT,
+            interface="org.freedesktop.DBus.Peer",
+            member="Ping",
         )
         self.assertIsNone(backend._message(valid))
 
     async def test_open_holds_registration_without_connection_commands(self):
         bus = FakeBus(objects())
         backend = await self.open_backend(bus, FakeReader())
-        registered = [message.member for message in bus.calls if message.member.startswith("Register")]
+        registered = [
+            message.member
+            for message in bus.calls
+            if message.member.startswith("Register")
+        ]
         self.assertEqual(registered, ["RegisterApplication", "RegisterAdvertisement"])
         self.assertEqual(
-            [message.member for message in bus.calls if message.member.startswith("Register")],
+            [
+                message.member
+                for message in bus.calls
+                if message.member.startswith("Register")
+            ],
             registered,
         )
 
-    async def test_registration_failure_and_timeout_close_bus_without_connection_commands(self):
+    async def test_registration_failure_and_timeout_close_bus_without_connection_commands(
+        self,
+    ):
         for mode in ("failure", "timeout"):
             with self.subTest(mode=mode):
-                bus = FakeBus(objects(), register_failure=mode == "failure", register_timeout=mode == "timeout")
-                backend = bluez.BlueZBackend(ADDRESS, call_timeout=0.02, link_reader=FakeReader(), bus_factory=lambda: bus)
+                bus = FakeBus(
+                    objects(),
+                    register_failure=mode == "failure",
+                    register_timeout=mode == "timeout",
+                )
+                backend = bluez.BlueZBackend(
+                    ADDRESS,
+                    call_timeout=0.02,
+                    link_reader=FakeReader(),
+                    bus_factory=lambda: bus,
+                )
                 with self.assertRaises((bluez.BackendError, TimeoutError)):
                     await backend.open()
                 self.assertTrue(bus.closed)
-                self.assertFalse({"Connect", "Pair", "Set", "Disconnect"} & {m.member for m in bus.calls})
+                self.assertFalse(
+                    {"Connect", "Pair", "Set", "Disconnect"}
+                    & {m.member for m in bus.calls}
+                )
 
     async def test_connected_rejects_disconnect_or_trust_change_during_get_all(self):
         for kind in ("disconnect", "trust"):
             with self.subTest(kind=kind):
                 bus = FakeBus(objects())
-                reader = FakeReader([LinkInfo(ADDRESS, 1, bluez.HCI_LE_LINK, bluez.BT_CONNECTED, True)])
+                reader = FakeReader(
+                    [LinkInfo(ADDRESS, 1, bluez.HCI_LE_LINK, bluez.BT_CONNECTED, True)]
+                )
                 backend = await self.open_backend(bus, reader)
                 bus.target_get_all_gate = asyncio.Event()
                 task = asyncio.create_task(backend.connected())
@@ -287,16 +361,23 @@ class BlueZBackendTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_occupied_name_never_registers_hid(self):
         bus = FakeBus(objects(), request_name_reply=3)
-        backend = bluez.BlueZBackend(ADDRESS, call_timeout=0.02, bus_factory=lambda: bus)
+        backend = bluez.BlueZBackend(
+            ADDRESS, call_timeout=0.02, bus_factory=lambda: bus
+        )
         with self.assertRaises(bluez.BackendError):
             await backend.open()
         self.assertTrue(bus.closed)
         self.assertFalse(any(call.member.startswith("Register") for call in bus.calls))
 
     async def test_connect_or_owner_failure_closes_without_handler_remove_error(self):
-        for bus in (FakeBus(objects(), connect_failure=True), FakeBus(objects(), owner_failure=True)):
+        for bus in (
+            FakeBus(objects(), connect_failure=True),
+            FakeBus(objects(), owner_failure=True),
+        ):
             with self.subTest(owner_failure=bus.owner_failure):
-                backend = bluez.BlueZBackend(ADDRESS, call_timeout=0.02, bus_factory=lambda: bus)
+                backend = bluez.BlueZBackend(
+                    ADDRESS, call_timeout=0.02, bus_factory=lambda: bus
+                )
                 with self.assertRaises((bluez.BackendError, OSError)):
                     await backend.open()
                 self.assertTrue(bus.closed)

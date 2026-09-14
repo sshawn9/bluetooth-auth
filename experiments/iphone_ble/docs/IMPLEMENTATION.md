@@ -40,25 +40,25 @@ HID 的 Report Map 或 Report 读取会产生 `target_gatt_access`，其中带 B
 
 ## 文件与职责
 
-| 文件 | 职责 | 是否产生真实无线动作 |
-| --- | --- | --- |
-| [ble_lab.py](../ble_lab.py) | Bumble 独占入口、状态目录命令、适配器交接/恢复编排。 | `run` 会；`plan`、`report`、`prepare` 不会。 |
-| [radio.py](../radio.py) | Bumble 服务构造、传统广播、连接/加密/服务就绪周期。 | 由独占 `run` 调用时会。 |
-| [adapter.py](../adapter.py) | BlueZ D-Bus 后端、独占适配器交接与写前恢复记录；共存入口复用其 `BlueZBackend`。 | 仅运行/恢复调用时会。 |
-| [state.py](../state.py) | 私有状态、原子日志与路径/权限检查。 | 不直接操作无线。 |
-| [bluez_hid_lab.py](../bluez_hid_lab.py) | BlueZ 共存短测、D-Bus 注册、候选配对、清理和恢复。 | `run`/有记录的 `restore` 会。 |
-| [hid_release_test.py](../hid_release_test.py) | 临时 HID 提供子进程与独立观察父进程；确认服务退出后同一加密 LE 是否保持。 | 运行时注册服务和广播；`--help` 不访问蓝牙。 |
-| [observe_le_link.py](../observe_le_link.py) | 无 HID/广播时，只读等待并观察目标加密 LE。 | 读取系统 D-Bus、MGMT、HCI 状态，不扫描、广播或发起连接。 |
-| [link.py](../python/bluetooth_auth_hid/link.py) | 观察入口复用的内核 LE 句柄、连接状态和加密位读取；归档清单包含该依赖。 | 由观察入口调用时读取 HCI 连接信息。 |
-| [python/](../python/README.md) | Rust 迁移前的 Python HID 原型与包内离线测试，保留各阶段实现。 | 各原型注册或连接函数会访问蓝牙；包内 `tests/run_offline.py` 拦截真实 socket。 |
-| [coexist_gatt.py](../coexist_gatt.py) | 纯 D-Bus HOGP、Battery、DIS 和广告对象；可导出/撤销导出。 | 不连接或注册 D-Bus。 |
-| [coexist_pairing.py](../coexist_pairing.py) | 纯 `Agent1` Numeric Comparison 对象；不注册 Agent。 | 不连接或配对。 |
-| [coexist_link.py](../coexist_link.py) | MGMT Get Connections 与受基线约束的目标 LE 断开。 | 由共存运行/恢复调用时会。 |
-| [coexist_trace.py](../coexist_trace.py) | 可选的控制器广告命令只读摘要。 | 由 `--trace-advertising` 调用时打开 `HCI_CHANNEL_MONITOR`（2），不是 MGMT control channel（3）。 |
-| [check_offline.py](../check_offline.py) | 在临时目录运行测试，拦截 Python 蓝牙 socket 与真实 socket 连接。 | 不运行真实实验；不替代操作系统沙箱。 |
-| [check_public_privacy.py](../check_public_privacy.py) | 静态检查仓库文件中的地址、个人路径与密钥特征。 | 否，只读取文件和 Git。 |
-| [diagnostics/monitor_rssi.py](../diagnostics/monitor_rssi.py) | 早期 BR/EDR RSSI 辅助诊断，不被正式认证或 HID 实验入口调用。 | 由操作者单独运行时会扫描并查询已有连接。 |
-| [tests/](../tests/) | 离线逻辑测试；另有独立临时 D-Bus 上的真实子进程退出回归。 | 不连接系统 D-Bus 或真实控制器。 |
+| 文件                                                          | 职责                                                                            | 是否产生真实无线动作                                                                             |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| [ble_lab.py](../ble_lab.py)                                   | Bumble 独占入口、状态目录命令、适配器交接/恢复编排。                            | `run` 会；`plan`、`report`、`prepare` 不会。                                                     |
+| [radio.py](../radio.py)                                       | Bumble 服务构造、传统广播、连接/加密/服务就绪周期。                             | 由独占 `run` 调用时会。                                                                          |
+| [adapter.py](../adapter.py)                                   | BlueZ D-Bus 后端、独占适配器交接与写前恢复记录；共存入口复用其 `BlueZBackend`。 | 仅运行/恢复调用时会。                                                                            |
+| [state.py](../state.py)                                       | 私有状态、原子日志与路径/权限检查。                                             | 不直接操作无线。                                                                                 |
+| [bluez_hid_lab.py](../bluez_hid_lab.py)                       | BlueZ 共存短测、D-Bus 注册、候选配对、清理和恢复。                              | `run`/有记录的 `restore` 会。                                                                    |
+| [hid_release_test.py](../hid_release_test.py)                 | 临时 HID 提供子进程与独立观察父进程；确认服务退出后同一加密 LE 是否保持。       | 运行时注册服务和广播；`--help` 不访问蓝牙。                                                      |
+| [observe_le_link.py](../observe_le_link.py)                   | 无 HID/广播时，只读等待并观察目标加密 LE。                                      | 读取系统 D-Bus、MGMT、HCI 状态，不扫描、广播或发起连接。                                         |
+| [link.py](../python/bluetooth_auth_hid/link.py)               | 观察入口复用的内核 LE 句柄、连接状态和加密位读取；归档清单包含该依赖。          | 由观察入口调用时读取 HCI 连接信息。                                                              |
+| [python/](../python/README.md)                                | Rust 迁移前的 Python HID 原型与包内离线测试，保留各阶段实现。                   | 各原型注册或连接函数会访问蓝牙；包内 `tests/run_offline.py` 拦截真实 socket。                    |
+| [coexist_gatt.py](../coexist_gatt.py)                         | 纯 D-Bus HOGP、Battery、DIS 和广告对象；可导出/撤销导出。                       | 不连接或注册 D-Bus。                                                                             |
+| [coexist_pairing.py](../coexist_pairing.py)                   | 纯 `Agent1` Numeric Comparison 对象；不注册 Agent。                             | 不连接或配对。                                                                                   |
+| [coexist_link.py](../coexist_link.py)                         | MGMT Get Connections 与受基线约束的目标 LE 断开。                               | 由共存运行/恢复调用时会。                                                                        |
+| [coexist_trace.py](../coexist_trace.py)                       | 可选的控制器广告命令只读摘要。                                                  | 由 `--trace-advertising` 调用时打开 `HCI_CHANNEL_MONITOR`（2），不是 MGMT control channel（3）。 |
+| [check_offline.py](../check_offline.py)                       | 在临时目录运行测试，拦截 Python 蓝牙 socket 与真实 socket 连接。                | 不运行真实实验；不替代操作系统沙箱。                                                             |
+| [check_public_privacy.py](../check_public_privacy.py)         | 静态检查仓库文件中的地址、个人路径与密钥特征。                                  | 否，只读取文件和 Git。                                                                           |
+| [diagnostics/monitor_rssi.py](../diagnostics/monitor_rssi.py) | 早期 BR/EDR RSSI 辅助诊断，不被正式认证或 HID 实验入口调用。                    | 由操作者单独运行时会扫描并查询已有连接。                                                         |
+| [tests/](../tests/)                                           | 离线逻辑测试；另有独立临时 D-Bus 上的真实子进程退出回归。                       | 不连接系统 D-Bus 或真实控制器。                                                                  |
 
 ## Bumble 独占实验
 
@@ -68,15 +68,15 @@ HID 的 Report Map 或 Report 读取会产生 `target_gatt_access`，其中带 B
 
 广播为传统可连接、可扫描 LE 广播，配置 20 ms 间隔。HID 的完整名称和 Appearance 可进入主广告；ANCS 128 位征询 UUID 可能使名称进入 scan response。能否出现在 iPhone 设置页仍是实测问题，不能由广播构造成功推断。
 
-| `ble_lab.py` 命令 | 关键参数 | 输出/退出语义 |
-| --- | --- | --- |
-| `plan` | 无 | 只显示计划；成功为 0。 |
-| `setup` | 无 | 创建本目录 `.venv` 所需依赖；不访问蓝牙。 |
-| `prepare` | `--state-dir` | 创建固定实验身份和私有状态；不开始广播。 |
-| `run MODE` | `--adapter hciN`、`--enroll`、`--initial-timeout`、`--reconnect-timeout`、`--hold-seconds`、`--cycles` | 真实独占实验。0 表示配置的所有周期通过；1 为实验失败；2 为配置/恢复错误；130 为中断。 |
-| `report` | `--state-dir` | 只读取已有结果。 |
-| `restore` | `--state-dir` | 仅按恢复记录恢复适配器。 |
-| `clean` / `uninstall` | `--state-dir` | 仅在无待恢复记录时移除受管理状态/工具；属于破坏性操作。 |
+| `ble_lab.py` 命令     | 关键参数                                                                                               | 输出/退出语义                                                                         |
+| --------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| `plan`                | 无                                                                                                     | 只显示计划；成功为 0。                                                                |
+| `setup`               | 无                                                                                                     | 创建本目录 `.venv` 所需依赖；不访问蓝牙。                                             |
+| `prepare`             | `--state-dir`                                                                                          | 创建固定实验身份和私有状态；不开始广播。                                              |
+| `run MODE`            | `--adapter hciN`、`--enroll`、`--initial-timeout`、`--reconnect-timeout`、`--hold-seconds`、`--cycles` | 真实独占实验。0 表示配置的所有周期通过；1 为实验失败；2 为配置/恢复错误；130 为中断。 |
+| `report`              | `--state-dir`                                                                                          | 只读取已有结果。                                                                      |
+| `restore`             | `--state-dir`                                                                                          | 仅按恢复记录恢复适配器。                                                              |
+| `clean` / `uninstall` | `--state-dir`                                                                                          | 仅在无待恢复记录时移除受管理状态/工具；属于破坏性操作。                               |
 
 运行事件按阶段输出：`adapter_handoff`、`radio_ready`、`advertising`、`link`、`security_request`、`encryption`、`bond_saved`、`service_ready`、`hold_complete`、`cycle_disconnect`、`result` 与 `restore`。只有到达 `service_ready` 并完成配置的保持与周期，才应称该轮通过；注册广播、列表可见或建立 ACL 链路都不足以单独证明成功。[radio.py](../radio.py)
 
@@ -98,11 +98,11 @@ HID 的 Report Map 或 Report 读取会产生 `target_gatt_access`，其中带 B
 
 应用加入 HID，并按需补充 DIS 和 Battery；若原 Adapter UUIDs 已有 DIS (0x180A) 或 Battery (0x180F)，`HidApplication(include_dis=False/include_battery=False)` 不再注册第二份服务。共享 GAP/GATT 由 BlueZ 保持，不导出第二份 0x1800/0x1801。[coexist_gatt.py](../coexist_gatt.py)
 
-| `bluez_hid_lab.py` 命令 | 关键参数 | 退出码与结论 |
-| --- | --- | --- |
-| `plan` | 无 | 仅显示边界，0。 |
-| `run` | `--adapter hciN`、`--phone` 或 `--phone-file`、`--wait-seconds`、`--hold-seconds`、`--repair-phone-pairing`、`--trace-advertising` | 0：保持期通过；1：测试失败/原连接缺失；2：配置或恢复错误；3：证据不足；130：中断。 |
-| `restore` | `--state-dir` | 处理遗留记录、恢复 Pairable、撤销新增目标 LE 链路并核对临时资源。 |
+| `bluez_hid_lab.py` 命令 | 关键参数                                                                                                                           | 退出码与结论                                                                       |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `plan`                  | 无                                                                                                                                 | 仅显示边界，0。                                                                    |
+| `run`                   | `--adapter hciN`、`--phone` 或 `--phone-file`、`--wait-seconds`、`--hold-seconds`、`--repair-phone-pairing`、`--trace-advertising` | 0：保持期通过；1：测试失败/原连接缺失；2：配置或恢复错误；3：证据不足；130：中断。 |
+| `restore`               | `--state-dir`                                                                                                                      | 处理遗留记录、恢复 Pairable、撤销新增目标 LE 链路并核对临时资源。                  |
 
 成功标准同时要求：预先存在的其他连接未中断、目标会话的身份/安全证据成立、出现目标加密 LE HID ReadValue 访问，并完成保持期。`phone_hid_subscription_verified` 保持为 false；全局订阅仅是诊断信息。目标 LE 连接存在但没有归属读取、身份未收敛或修复模式未出现确认，均应为 `inconclusive`，而非“手机不支持”。[bluez_hid_lab.py](../bluez_hid_lab.py)
 
@@ -133,10 +133,10 @@ HID 的 Report Map 或 Report 读取会产生 `target_gatt_access`，其中带 B
 
 两个新增入口均接受 `--phone-file`、`--adapter`、`--wait-seconds`、`--observe-seconds`，默认等待 20 秒、观察 60 秒；每个时限必须大于零且不超过 120 秒。地址文件显式传入，环境变量只是复现命令中的路径引用。具体命令见 [HID_RELEASE.md](HID_RELEASE.md)。
 
-| 入口 | 提供进程与观察流程 | 通过所需的证据 |
-| --- | --- | --- |
+| 入口                  | 提供进程与观察流程                                                                                             | 通过所需的证据                                                                                  |
+| --------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | `hid_release_test.py` | 子进程注册 HID/广播；父进程等待目标加密 LE，保持 5 秒基线，再让子进程关闭 D-Bus 并退出，确认资源撤销后观察连接 | 子进程退出码 0、D-Bus 关闭确认、总线身份消失、HID UUID 移除且广播实例为 0；随后同一加密 LE 保持 |
-| `observe_le_link.py` | 不创建 HID 提供进程，仅在 HID UUID 缺失、广播实例为 0 的条件下等待和观察 | 同一加密 LE 保持，整个观察期间可核实无 HID/广播；无法读取资源状态时不能判通过 |
+| `observe_le_link.py`  | 不创建 HID 提供进程，仅在 HID UUID 缺失、广播实例为 0 的条件下等待和观察                                       | 同一加密 LE 保持，整个观察期间可核实无 HID/广播；无法读取资源状态时不能判通过                   |
 
 两者按指定适配器和身份地址匹配目标，联合读取 MGMT 目标 LE 与唯一 HCI LE 链路，核对加密位，跟踪连接句柄和 MGMT 断线事件；断线后重连不能抵消连续性失败。身份不能对应或读取结果不足时，不猜测 RPA 归属，不以 BlueZ 的通用 Connected 属性代替目标加密 LE。
 
@@ -181,16 +181,16 @@ HID 退出/只读观察的逻辑回归也包含在 `check_offline.py` 中。独�
 
 资料用于解释协议和 API，不能替代本次实测；BlueZ 引用固定为 5.87，Apple 档案资料不作为当前全部 iOS 行为的保证。
 
-| 资料 | 保留用途 |
-| --- | --- |
-| [BlueZ LEAdvertisement API](https://github.com/bluez/bluez/blob/5.87/doc/org.bluez.LEAdvertisement.rst) | 区分 LocalName、ServiceUUIDs、SolicitUUIDs、Discoverable 与广播间隔 |
-| [BlueZ Agent API](https://github.com/bluez/bluez/blob/5.87/doc/org.bluez.Agent.rst) | 数字确认、拒绝及取消代理请求 |
-| [BlueZ GattCharacteristic API](https://github.com/bluez/bluez/blob/5.87/doc/org.bluez.GattCharacteristic.rst) | 加密访问标记、ReadValue 与全局 StartNotify 的边界 |
-| [BlueZ Device API](https://github.com/bluez/bluez/blob/5.87/doc/org.bluez.Device.rst) | 设备与配对属性；通用 Connect 不能保证仅连接非音频配置文件 |
-| [BlueZ MGMT protocol](https://github.com/bluez/bluez/blob/5.87/doc/mgmt-protocol.rst) | 连接列表、地址类型与指定链路断开 |
-| [Apple ANCS 规范](https://developer.apple.com/library/archive/documentation/CoreBluetooth/Reference/AppleNotificationCenterServiceSpecification/Specification/Specification.html) | iPhone 提供通知服务的候选依据 |
-| [TI ANCS 示例](https://github.com/TexasInstruments/ble-sdk-210-extra/blob/master/Projects/ble/ancs/README.md) | 服务征询、配对和授权流程的参考实现，不是本机成功证据 |
-| [Apple QA1931](https://developer.apple.com/library/archive/qa/qa1931/_index.html) | 初始 20 ms 广播间隔建议的来源，不保证设置列表可见性 |
-| [旧版 Apple 蓝牙配件指南](https://www.bluetooth.com/wp-content/uploads/attachments/BluetoothDesignGuidelines.pdf) | CTS 等 iOS 服务及维持连接的历史资料，不能替代当前 iPhone 实测 |
-| [Bumble Linux 文档](https://google.github.io/bumble/platforms/linux.html) | HCI user channel 独占方式；本目录依赖固定为 Bumble 0.0.234 |
-| [HID over GATT Profile](https://www.bluetooth.com/specifications/specs/hid-over-gatt-profile-hogp/) | 标准 HOGP 服务与报告机制 |
+| 资料                                                                                                                                                                              | 保留用途                                                            |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| [BlueZ LEAdvertisement API](https://github.com/bluez/bluez/blob/5.87/doc/org.bluez.LEAdvertisement.rst)                                                                           | 区分 LocalName、ServiceUUIDs、SolicitUUIDs、Discoverable 与广播间隔 |
+| [BlueZ Agent API](https://github.com/bluez/bluez/blob/5.87/doc/org.bluez.Agent.rst)                                                                                               | 数字确认、拒绝及取消代理请求                                        |
+| [BlueZ GattCharacteristic API](https://github.com/bluez/bluez/blob/5.87/doc/org.bluez.GattCharacteristic.rst)                                                                     | 加密访问标记、ReadValue 与全局 StartNotify 的边界                   |
+| [BlueZ Device API](https://github.com/bluez/bluez/blob/5.87/doc/org.bluez.Device.rst)                                                                                             | 设备与配对属性；通用 Connect 不能保证仅连接非音频配置文件           |
+| [BlueZ MGMT protocol](https://github.com/bluez/bluez/blob/5.87/doc/mgmt-protocol.rst)                                                                                             | 连接列表、地址类型与指定链路断开                                    |
+| [Apple ANCS 规范](https://developer.apple.com/library/archive/documentation/CoreBluetooth/Reference/AppleNotificationCenterServiceSpecification/Specification/Specification.html) | iPhone 提供通知服务的候选依据                                       |
+| [TI ANCS 示例](https://github.com/TexasInstruments/ble-sdk-210-extra/blob/master/Projects/ble/ancs/README.md)                                                                     | 服务征询、配对和授权流程的参考实现，不是本机成功证据                |
+| [Apple QA1931](https://developer.apple.com/library/archive/qa/qa1931/_index.html)                                                                                                 | 初始 20 ms 广播间隔建议的来源，不保证设置列表可见性                 |
+| [旧版 Apple 蓝牙配件指南](https://www.bluetooth.com/wp-content/uploads/attachments/BluetoothDesignGuidelines.pdf)                                                                 | CTS 等 iOS 服务及维持连接的历史资料，不能替代当前 iPhone 实测       |
+| [Bumble Linux 文档](https://google.github.io/bumble/platforms/linux.html)                                                                                                         | HCI user channel 独占方式；本目录依赖固定为 Bumble 0.0.234          |
+| [HID over GATT Profile](https://www.bluetooth.com/specifications/specs/hid-over-gatt-profile-hogp/)                                                                               | 标准 HOGP 服务与报告机制                                            |

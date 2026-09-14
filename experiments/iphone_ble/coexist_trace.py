@@ -37,13 +37,19 @@ LE_SET_EXTENDED_ADVERTISING_DATA: Final = 0x2037
 LE_SET_EXTENDED_SCAN_RESPONSE_DATA: Final = 0x2038
 LE_SET_EXTENDED_ADVERTISING_ENABLE: Final = 0x2039
 
-_ALLOWED = frozenset((
-    LE_SET_ADVERTISING_PARAMETERS, LE_SET_ADVERTISING_DATA,
-    LE_SET_SCAN_RESPONSE_DATA, LE_SET_ADVERTISING_ENABLE,
-    LE_SET_ADVERTISING_SET_RANDOM_ADDRESS,
-    LE_SET_EXTENDED_ADVERTISING_PARAMETERS, LE_SET_EXTENDED_ADVERTISING_DATA,
-    LE_SET_EXTENDED_SCAN_RESPONSE_DATA, LE_SET_EXTENDED_ADVERTISING_ENABLE,
-))
+_ALLOWED = frozenset(
+    (
+        LE_SET_ADVERTISING_PARAMETERS,
+        LE_SET_ADVERTISING_DATA,
+        LE_SET_SCAN_RESPONSE_DATA,
+        LE_SET_ADVERTISING_ENABLE,
+        LE_SET_ADVERTISING_SET_RANDOM_ADDRESS,
+        LE_SET_EXTENDED_ADVERTISING_PARAMETERS,
+        LE_SET_EXTENDED_ADVERTISING_DATA,
+        LE_SET_EXTENDED_SCAN_RESPONSE_DATA,
+        LE_SET_EXTENDED_ADVERTISING_ENABLE,
+    )
+)
 
 
 class MonitorCapabilityError(RuntimeError):
@@ -61,7 +67,11 @@ def _ad_summary(payload: bytes, location: str) -> dict[str, Any]:
     represented in a result.  HID is recognised only from the standard 16-bit
     service UUID list types.
     """
-    result: dict[str, Any] = {"location": location, "length": len(payload), "hid_service": False}
+    result: dict[str, Any] = {
+        "location": location,
+        "length": len(payload),
+        "hid_service": False,
+    }
     offset = 0
     flags: list[int] = []
     appearances: list[int] = []
@@ -74,12 +84,15 @@ def _ad_summary(payload: bytes, location: str) -> dict[str, Any]:
         if offset + size > len(payload):
             break
         kind = payload[offset]
-        value = payload[offset + 1:offset + size]
+        value = payload[offset + 1 : offset + size]
         offset += size
         if kind == 0x01 and len(value) == 1:
             flags.append(value[0])
         elif kind in (0x02, 0x03) and len(value) % 2 == 0:
-            if any(value[item:item + 2] == b"\x12\x18" for item in range(0, len(value), 2)):
+            if any(
+                value[item : item + 2] == b"\x12\x18"
+                for item in range(0, len(value), 2)
+            ):
                 result["hid_service"] = True
         elif kind == 0x19 and len(value) == 2:
             appearances.append(struct.unpack("<H", value)[0])
@@ -99,7 +112,9 @@ def _ad_summary(payload: bytes, location: str) -> dict[str, Any]:
 class CoexistTrace:
     """A passive local-controller command trace; this class has no send API."""
 
-    def __init__(self, raw_socket, index: int, emit: Callable[[str, dict[str, Any]], None]):
+    def __init__(
+        self, raw_socket, index: int, emit: Callable[[str, dict[str, Any]], None]
+    ):
         self._socket = raw_socket
         self.index = index
         self._emit = emit
@@ -109,21 +124,33 @@ class CoexistTrace:
         self._statuses: list[dict[str, Any]] = []
 
     @classmethod
-    async def open(cls, index: int, emit: Callable[[str, dict[str, Any]], None]) -> "CoexistTrace":
+    async def open(
+        cls, index: int, emit: Callable[[str, dict[str, Any]], None]
+    ) -> "CoexistTrace":
         if type(index) is not int or not 0 <= index < HCI_DEV_NONE:
             raise ValueError("controller index must be an integer from 0 through 65534")
         if not callable(emit):
             raise TypeError("emit must be callable")
         raw_socket = None
         try:
-            raw_socket = socket.socket(AF_BLUETOOTH, socket.SOCK_RAW | socket.SOCK_NONBLOCK, BTPROTO_HCI)
+            raw_socket = socket.socket(
+                AF_BLUETOOTH, socket.SOCK_RAW | socket.SOCK_NONBLOCK, BTPROTO_HCI
+            )
             libc = ctypes.CDLL(None, use_errno=True)
-            libc.bind.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_char), ctypes.c_int)
+            libc.bind.argtypes = (
+                ctypes.c_int,
+                ctypes.POINTER(ctypes.c_char),
+                ctypes.c_int,
+            )
             libc.bind.restype = ctypes.c_int
             # A monitor socket receives all controllers; record headers carry
             # the controller index, which we strictly filter below.
-            address = struct.pack("<HHH", AF_BLUETOOTH, HCI_DEV_NONE, HCI_CHANNEL_MONITOR)
-            if libc.bind(raw_socket.fileno(), ctypes.create_string_buffer(address), len(address)):
+            address = struct.pack(
+                "<HHH", AF_BLUETOOTH, HCI_DEV_NONE, HCI_CHANNEL_MONITOR
+            )
+            if libc.bind(
+                raw_socket.fileno(), ctypes.create_string_buffer(address), len(address)
+            ):
                 error_number = ctypes.get_errno()
                 raise OSError(error_number, os.strerror(error_number))
             result = cls(raw_socket, index, emit)
@@ -132,14 +159,18 @@ class CoexistTrace:
         except (OSError, AttributeError) as error:
             if raw_socket is not None:
                 raw_socket.close()
-            raise MonitorCapabilityError("cannot open Linux HCI monitor channel (suitable Bluetooth capability is required)") from error
+            raise MonitorCapabilityError(
+                "cannot open Linux HCI monitor channel (suitable Bluetooth capability is required)"
+            ) from error
         except BaseException:
             if raw_socket is not None:
                 raw_socket.close()
             raise
 
     def _install_reader(self) -> None:
-        asyncio.get_running_loop().add_reader(self._socket.fileno(), self._read_available)
+        asyncio.get_running_loop().add_reader(
+            self._socket.fileno(), self._read_available
+        )
         self._reader_installed = True
 
     def _read_available(self) -> None:
@@ -211,18 +242,36 @@ class CoexistTrace:
                 return
             opcode = struct.unpack_from("<H", parameters, 1)[0]
             if opcode in _ALLOWED:
-                self._record("advertising_status", {"opcode": f"0x{opcode:04x}", "status": parameters[3], "event": "complete"})
+                self._record(
+                    "advertising_status",
+                    {
+                        "opcode": f"0x{opcode:04x}",
+                        "status": parameters[3],
+                        "event": "complete",
+                    },
+                )
         elif event == HCI_EV_COMMAND_STATUS:
             if len(parameters) != 4:
                 return
             opcode = struct.unpack_from("<H", parameters, 2)[0]
             if opcode in _ALLOWED:
-                self._record("advertising_status", {"opcode": f"0x{opcode:04x}", "status": parameters[0], "event": "status"})
+                self._record(
+                    "advertising_status",
+                    {
+                        "opcode": f"0x{opcode:04x}",
+                        "status": parameters[0],
+                        "event": "status",
+                    },
+                )
 
     def summary(self) -> dict[str, Any]:
-        return {"scope": "local_controller_commands", "controller_index": self.index,
-                "commands": [dict(item) for item in self._commands],
-                "statuses": [dict(item) for item in self._statuses], "closed": self._closed}
+        return {
+            "scope": "local_controller_commands",
+            "controller_index": self.index,
+            "commands": [dict(item) for item in self._commands],
+            "statuses": [dict(item) for item in self._statuses],
+            "closed": self._closed,
+        }
 
     async def close(self) -> None:
         self._terminate()
@@ -232,11 +281,29 @@ def _decode_command(opcode: int, p: bytes) -> dict[str, Any] | None:
     details: dict[str, Any] = {"opcode": f"0x{opcode:04x}"}
     if opcode == LE_SET_ADVERTISING_PARAMETERS and len(p) == 15:
         minimum, maximum = struct.unpack_from("<HH", p)
-        details.update(handle=0, pdu="legacy", connectable=p[4] in (0, 1), scannable=p[4] in (0, 2),
-                       interval_ms={"min": _interval_ms(minimum), "max": _interval_ms(maximum)},
-                       channel_map=p[13], filter_policy=p[14], own_address_type=p[5])
-    elif opcode in (LE_SET_ADVERTISING_DATA, LE_SET_SCAN_RESPONSE_DATA) and len(p) == 32 and p[0] <= 31:
-        details.update(handle=0, pdu="legacy", data=_ad_summary(p[1:1 + p[0]], "primary" if opcode == LE_SET_ADVERTISING_DATA else "scan_response"))
+        details.update(
+            handle=0,
+            pdu="legacy",
+            connectable=p[4] in (0, 1),
+            scannable=p[4] in (0, 2),
+            interval_ms={"min": _interval_ms(minimum), "max": _interval_ms(maximum)},
+            channel_map=p[13],
+            filter_policy=p[14],
+            own_address_type=p[5],
+        )
+    elif (
+        opcode in (LE_SET_ADVERTISING_DATA, LE_SET_SCAN_RESPONSE_DATA)
+        and len(p) == 32
+        and p[0] <= 31
+    ):
+        details.update(
+            handle=0,
+            pdu="legacy",
+            data=_ad_summary(
+                p[1 : 1 + p[0]],
+                "primary" if opcode == LE_SET_ADVERTISING_DATA else "scan_response",
+            ),
+        )
     elif opcode == LE_SET_ADVERTISING_ENABLE and len(p) == 1:
         details.update(handle=0, pdu="legacy", enable=bool(p[0]))
     elif opcode == LE_SET_ADVERTISING_SET_RANDOM_ADDRESS and len(p) == 7:
@@ -245,18 +312,48 @@ def _decode_command(opcode: int, p: bytes) -> dict[str, Any] | None:
         properties = struct.unpack_from("<H", p, 1)[0]
         minimum = int.from_bytes(p[3:6], "little")
         maximum = int.from_bytes(p[6:9], "little")
-        details.update(handle=p[0], pdu="legacy" if properties & 0x0010 else "extended",
-                       connectable=bool(properties & 0x0001), scannable=bool(properties & 0x0002),
-                       interval_ms={"min": _interval_ms(minimum), "max": _interval_ms(maximum)},
-                       channel_map=p[9], filter_policy=p[18], own_address_type=p[10])
-    elif opcode in (LE_SET_EXTENDED_ADVERTISING_DATA, LE_SET_EXTENDED_SCAN_RESPONSE_DATA) and len(p) >= 4 and p[3] == len(p) - 4:
+        details.update(
+            handle=p[0],
+            pdu="legacy" if properties & 0x0010 else "extended",
+            connectable=bool(properties & 0x0001),
+            scannable=bool(properties & 0x0002),
+            interval_ms={"min": _interval_ms(minimum), "max": _interval_ms(maximum)},
+            channel_map=p[9],
+            filter_policy=p[18],
+            own_address_type=p[10],
+        )
+    elif (
+        opcode in (LE_SET_EXTENDED_ADVERTISING_DATA, LE_SET_EXTENDED_SCAN_RESPONSE_DATA)
+        and len(p) >= 4
+        and p[3] == len(p) - 4
+    ):
         # The Extended HCI API can configure either an extended or a legacy PDU.
         # Only Set Extended Advertising Parameters carries the properties bit
         # that tells us which PDU is actually selected.
-        details.update(handle=p[0], controller_api="extended", operation=p[1], data=_ad_summary(p[4:], "primary" if opcode == LE_SET_EXTENDED_ADVERTISING_DATA else "scan_response"))
-    elif opcode == LE_SET_EXTENDED_ADVERTISING_ENABLE and len(p) >= 2 and len(p) == 2 + p[1] * 4:
-        sets = [{"handle": p[offset], "duration_ms": struct.unpack_from("<H", p, offset + 1)[0] * 10,
-                 "max_events": p[offset + 3]} for offset in range(2, len(p), 4)]
+        details.update(
+            handle=p[0],
+            controller_api="extended",
+            operation=p[1],
+            data=_ad_summary(
+                p[4:],
+                "primary"
+                if opcode == LE_SET_EXTENDED_ADVERTISING_DATA
+                else "scan_response",
+            ),
+        )
+    elif (
+        opcode == LE_SET_EXTENDED_ADVERTISING_ENABLE
+        and len(p) >= 2
+        and len(p) == 2 + p[1] * 4
+    ):
+        sets = [
+            {
+                "handle": p[offset],
+                "duration_ms": struct.unpack_from("<H", p, offset + 1)[0] * 10,
+                "max_events": p[offset + 3],
+            }
+            for offset in range(2, len(p), 4)
+        ]
         details.update(controller_api="extended", enable=bool(p[0]), sets=sets)
     else:
         return None

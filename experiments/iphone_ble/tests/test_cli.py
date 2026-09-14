@@ -35,7 +35,9 @@ class CliTests(unittest.TestCase):
         return code, stdout.getvalue(), stderr.getvalue()
 
     def test_offline_commands_cannot_reach_hardware(self):
-        with mock.patch.object(adapter.BlueZBackend, "open", side_effect=AssertionError("hardware access")):
+        with mock.patch.object(
+            adapter.BlueZBackend, "open", side_effect=AssertionError("hardware access")
+        ):
             self.assertEqual(self.invoke("plan")[0], 0)
             self.assertFalse(self.state.exists())
             self.assertEqual(self.invoke("prepare")[0], 0)
@@ -46,11 +48,17 @@ class CliTests(unittest.TestCase):
 
     def test_no_bond_refused_before_handoff(self):
         LabState(self.state).prepare()
-        fake_radio = types.SimpleNamespace(ProbeOptions=object, run_probe=mock.AsyncMock())
-        with mock.patch.dict(sys.modules, {"radio": fake_radio}), \
-             mock.patch.object(ble_lab, "require_root"), \
-             mock.patch.object(ble_lab, "require_dependencies"), \
-             mock.patch.object(adapter, "acquire", new_callable=mock.AsyncMock) as acquire:
+        fake_radio = types.SimpleNamespace(
+            ProbeOptions=object, run_probe=mock.AsyncMock()
+        )
+        with (
+            mock.patch.dict(sys.modules, {"radio": fake_radio}),
+            mock.patch.object(ble_lab, "require_root"),
+            mock.patch.object(ble_lab, "require_dependencies"),
+            mock.patch.object(
+                adapter, "acquire", new_callable=mock.AsyncMock
+            ) as acquire,
+        ):
             code, _, error = self.invoke("run", "ancs", "--adapter", "hci0")
             self.assertEqual(code, 2)
             self.assertIn("尚无配对", error)
@@ -59,12 +67,20 @@ class CliTests(unittest.TestCase):
     def test_reenroll_refused_before_handoff(self):
         state = LabState(self.state)
         state.prepare()
-        (self.state / "hid" / "keys.json").write_text(json.dumps({"namespace": {"phone": {"ltk": {"value": "12" * 16}}}}))
-        fake_radio = types.SimpleNamespace(ProbeOptions=object, run_probe=mock.AsyncMock())
-        with mock.patch.dict(sys.modules, {"radio": fake_radio}), \
-             mock.patch.object(ble_lab, "require_root"), \
-             mock.patch.object(ble_lab, "require_dependencies"), \
-             mock.patch.object(adapter, "acquire", new_callable=mock.AsyncMock) as acquire:
+        (self.state / "hid" / "keys.json").write_text(
+            json.dumps({"namespace": {"phone": {"ltk": {"value": "12" * 16}}}})
+        )
+        fake_radio = types.SimpleNamespace(
+            ProbeOptions=object, run_probe=mock.AsyncMock()
+        )
+        with (
+            mock.patch.dict(sys.modules, {"radio": fake_radio}),
+            mock.patch.object(ble_lab, "require_root"),
+            mock.patch.object(ble_lab, "require_dependencies"),
+            mock.patch.object(
+                adapter, "acquire", new_callable=mock.AsyncMock
+            ) as acquire,
+        ):
             code, _, error = self.invoke("run", "hid", "--adapter", "hci0", "--enroll")
             self.assertEqual(code, 2)
             self.assertIn("已有配对", error)
@@ -85,8 +101,13 @@ class CliTests(unittest.TestCase):
         outside = self.base / "unrelated"
         outside.write_text("preserve")
         (environment / "python").symlink_to(outside)
-        atomic_json(tool / ".environment.json", {"kind": KIND, "environment": str(environment)})
-        with mock.patch.object(ble_lab, "HERE", tool), contextlib.redirect_stdout(io.StringIO()):
+        atomic_json(
+            tool / ".environment.json", {"kind": KIND, "environment": str(environment)}
+        )
+        with (
+            mock.patch.object(ble_lab, "HERE", tool),
+            contextlib.redirect_stdout(io.StringIO()),
+        ):
             ble_lab.uninstall(runtime)
         self.assertFalse(tool.exists())
         self.assertEqual(outside.read_text(), "preserve")
@@ -111,15 +132,25 @@ class CliTests(unittest.TestCase):
             ProbeOptions=lambda **kwargs: types.SimpleNamespace(**kwargs),
             run_probe=mock.AsyncMock(side_effect=RuntimeError("fake HCI failure")),
         )
-        with mock.patch.dict(sys.modules, {"radio": fake_radio}), \
-             mock.patch.object(ble_lab, "require_root"), \
-             mock.patch.object(ble_lab, "require_dependencies"), \
-             mock.patch.object(adapter, "_owned_backend", new=mock.AsyncMock(return_value=(backend, False))):
-            code, _, _ = self.invoke("run", "ancs", "--adapter", "hci0", "--enroll", "--cycles", "0")
+        with (
+            mock.patch.dict(sys.modules, {"radio": fake_radio}),
+            mock.patch.object(ble_lab, "require_root"),
+            mock.patch.object(ble_lab, "require_dependencies"),
+            mock.patch.object(
+                adapter,
+                "_owned_backend",
+                new=mock.AsyncMock(return_value=(backend, False)),
+            ),
+        ):
+            code, _, _ = self.invoke(
+                "run", "ancs", "--adapter", "hci0", "--enroll", "--cycles", "0"
+            )
         self.assertEqual(code, 1)
         self.assertEqual(backend.properties, original)
         self.assertFalse(LabState(self.state).journal.exists())
-        self.assertIn("restore", [item["event"] for item in LabState(self.state).results()])
+        self.assertIn(
+            "restore", [item["event"] for item in LabState(self.state).results()]
+        )
 
     def test_probe_success_cannot_mask_restore_failure(self):
         state = LabState(self.state)
@@ -131,13 +162,22 @@ class CliTests(unittest.TestCase):
             return {"passed": True}
 
         fake_radio = types.SimpleNamespace(
-            ProbeOptions=lambda **kwargs: types.SimpleNamespace(**kwargs), run_probe=fake_probe,
+            ProbeOptions=lambda **kwargs: types.SimpleNamespace(**kwargs),
+            run_probe=fake_probe,
         )
-        with mock.patch.dict(sys.modules, {"radio": fake_radio}), \
-             mock.patch.object(ble_lab, "require_root"), \
-             mock.patch.object(ble_lab, "require_dependencies"), \
-             mock.patch.object(adapter, "_owned_backend", new=mock.AsyncMock(return_value=(backend, False))):
-            code, _, _ = self.invoke("run", "ancs", "--adapter", "hci0", "--enroll", "--cycles", "0")
+        with (
+            mock.patch.dict(sys.modules, {"radio": fake_radio}),
+            mock.patch.object(ble_lab, "require_root"),
+            mock.patch.object(ble_lab, "require_dependencies"),
+            mock.patch.object(
+                adapter,
+                "_owned_backend",
+                new=mock.AsyncMock(return_value=(backend, False)),
+            ),
+        ):
+            code, _, _ = self.invoke(
+                "run", "ancs", "--adapter", "hci0", "--enroll", "--cycles", "0"
+            )
         self.assertEqual(code, 2)
         self.assertTrue(state.journal.exists())
         with self.assertRaises(RuntimeError):

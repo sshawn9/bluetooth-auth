@@ -430,12 +430,8 @@
                 "location": "primary",
                 "length": 11,
                 "hid_service": true,
-                "flags": [
-                  6
-                ],
-                "appearance": [
-                  960
-                ]
+                "flags": [6],
+                "appearance": [960]
               }
             },
             {
@@ -447,9 +443,7 @@
                 "location": "scan_response",
                 "length": 3,
                 "hid_service": false,
-                "local_name": [
-                  "<COMPUTER_NAME>"
-                ]
+                "local_name": ["<COMPUTER_NAME>"]
               }
             },
             {

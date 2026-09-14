@@ -28,10 +28,15 @@ class PublicPrivacyTests(unittest.TestCase):
         source_key = sample("source_", "attachment_id")
         content = f"{home}\n{mac}\n{token}\n{source_key}\n".encode()
         findings = privacy.scan(["notes.txt"], lambda _path: content)
-        self.assertEqual([item[1:] for item in findings], [
-            (1, "personal-absolute-path"), (2, "bluetooth-address"),
-            (3, "private-key-or-token"), (4, "original-source-linkage"),
-        ])
+        self.assertEqual(
+            [item[1:] for item in findings],
+            [
+                (1, "personal-absolute-path"),
+                (2, "bluetooth-address"),
+                (3, "private-key-or-token"),
+                (4, "original-source-linkage"),
+            ],
+        )
         rendered = "\n".join(":".join(map(str, item)) for item in findings)
         self.assertNotIn(mac, rendered)
         self.assertNotIn(token, rendered)
@@ -39,18 +44,37 @@ class PublicPrivacyTests(unittest.TestCase):
     def test_private_paths_and_fixture_policy_are_narrow(self):
         device_path = sample("/org/bluez/hci0/dev_", "AA_BB_CC_DD_EE_FF")
         findings = privacy.scan(
-            [".runtime/events.jsonl", "experiments/iphone_ble/tests/test_radio.py", "tests/new_test.py"],
-            lambda path: ((b"11" + b":22:33:44:55:66\n" + device_path.encode()) if path.endswith(".py") else b""),
+            [
+                ".runtime/events.jsonl",
+                "experiments/iphone_ble/tests/test_radio.py",
+                "tests/new_test.py",
+            ],
+            lambda path: (
+                (b"11" + b":22:33:44:55:66\n" + device_path.encode())
+                if path.endswith(".py")
+                else b""
+            ),
         )
-        self.assertIn((".runtime/events.jsonl", 0, "private-runtime-path-tracked"), findings)
-        self.assertNotIn(("experiments/iphone_ble/tests/test_radio.py", 1, "bluetooth-address"), findings)
+        self.assertIn(
+            (".runtime/events.jsonl", 0, "private-runtime-path-tracked"), findings
+        )
+        self.assertNotIn(
+            ("experiments/iphone_ble/tests/test_radio.py", 1, "bluetooth-address"),
+            findings,
+        )
         self.assertIn(("tests/new_test.py", 1, "bluetooth-address"), findings)
         self.assertIn(("tests/new_test.py", 2, "bluez-device-address-path"), findings)
 
     def test_existing_fixture_does_not_allow_arbitrary_address(self):
         unknown = ":".join(("AB", "BC", "CD", "DE", "EF", "F1"))
-        findings = privacy.scan(["experiments/iphone_ble/tests/test_radio.py"], lambda _path: unknown.encode())
-        self.assertEqual(findings, [("experiments/iphone_ble/tests/test_radio.py", 1, "bluetooth-address")])
+        findings = privacy.scan(
+            ["experiments/iphone_ble/tests/test_radio.py"],
+            lambda _path: unknown.encode(),
+        )
+        self.assertEqual(
+            findings,
+            [("experiments/iphone_ble/tests/test_radio.py", 1, "bluetooth-address")],
+        )
 
     def test_symlink_target_is_never_read(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -58,10 +82,15 @@ class PublicPrivacyTests(unittest.TestCase):
             target = root / "private-data"
             target.write_text(sample("gh", "p_", "A" * 24))
             (root / "link").symlink_to("private-data")
-            self.assertEqual(privacy._worktree_reader(str(root))("link"), b"private-data")
+            self.assertEqual(
+                privacy._worktree_reader(str(root))("link"), b"private-data"
+            )
 
     def test_git_failure_does_not_echo_private_root(self):
-        with tempfile.TemporaryDirectory() as directory, contextlib.redirect_stderr(io.StringIO()) as stderr:
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            contextlib.redirect_stderr(io.StringIO()) as stderr,
+        ):
             status = privacy.main(["--root", str(Path(directory) / "private-location")])
         self.assertEqual(status, 2)
         self.assertNotIn(directory, stderr.getvalue())

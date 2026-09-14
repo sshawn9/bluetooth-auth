@@ -51,7 +51,9 @@ class MgmtCapabilityError(MgmtError):
 class MgmtCommandError(MgmtError):
     def __init__(self, opcode: int, status: int):
         self.opcode, self.status = opcode, status
-        super().__init__(f"MGMT opcode 0x{opcode:04x} failed with status 0x{status:02x}")
+        super().__init__(
+            f"MGMT opcode 0x{opcode:04x} failed with status 0x{status:02x}"
+        )
 
 
 class MgmtProtocolError(MgmtError):
@@ -68,7 +70,10 @@ def _address(address: str) -> tuple[str, bytes]:
         raw = bytes(int(piece, 16) for piece in pieces)
     except ValueError as error:
         raise ValueError("Bluetooth address must be six hexadecimal octets") from error
-    if any(len(piece) != 2 or not all(char in "0123456789abcdefABCDEF" for char in piece) for piece in pieces):
+    if any(
+        len(piece) != 2 or not all(char in "0123456789abcdefABCDEF" for char in piece)
+        for piece in pieces
+    ):
         raise ValueError("Bluetooth address must be six hexadecimal octets")
     return ":".join(piece.upper() for piece in pieces), raw[::-1]
 
@@ -79,17 +84,25 @@ def _connection(item: tuple[str, int]) -> tuple[str, int]:
     address, address_type = item
     canonical, _ = _address(address)
     if type(address_type) is not int or address_type not in (0, 1, 2):
-        raise ValueError("address type must be 0 (BR/EDR), 1 (LE public), or 2 (LE random)")
+        raise ValueError(
+            "address type must be 0 (BR/EDR), 1 (LE public), or 2 (LE random)"
+        )
     return canonical, address_type
 
 
 class MgmtLink:
     """One serial MGMT control socket for one explicitly selected hci index."""
 
-    def __init__(self, raw_socket, index: int, baseline: Iterable[tuple[str, int]] | None):
+    def __init__(
+        self, raw_socket, index: int, baseline: Iterable[tuple[str, int]] | None
+    ):
         self._socket = raw_socket
         self.index = index
-        self._baseline = None if baseline is None else frozenset(_connection(item) for item in baseline)
+        self._baseline = (
+            None
+            if baseline is None
+            else frozenset(_connection(item) for item in baseline)
+        )
         self._lock = asyncio.Lock()
         self._waiting: tuple[int, asyncio.Future[tuple[int, int, bytes]]] | None = None
         # Passive event history for the caller's coexistence verdict.  MGMT
@@ -99,17 +112,29 @@ class MgmtLink:
         self._reader_installed = False
 
     @classmethod
-    async def open(cls, index: int, *, baseline: Iterable[tuple[str, int]] | None = None) -> "MgmtLink":
+    async def open(
+        cls, index: int, *, baseline: Iterable[tuple[str, int]] | None = None
+    ) -> "MgmtLink":
         if type(index) is not int or not 0 <= index < HCI_DEV_NONE:
             raise ValueError("controller index must be an integer from 0 through 65534")
         raw_socket = None
         try:
-            raw_socket = socket.socket(AF_BLUETOOTH, socket.SOCK_RAW | socket.SOCK_NONBLOCK, BTPROTO_HCI)
+            raw_socket = socket.socket(
+                AF_BLUETOOTH, socket.SOCK_RAW | socket.SOCK_NONBLOCK, BTPROTO_HCI
+            )
             libc = ctypes.CDLL(None, use_errno=True)
-            libc.bind.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_char), ctypes.c_int)
+            libc.bind.argtypes = (
+                ctypes.c_int,
+                ctypes.POINTER(ctypes.c_char),
+                ctypes.c_int,
+            )
             libc.bind.restype = ctypes.c_int
-            address = struct.pack("<HHH", AF_BLUETOOTH, HCI_DEV_NONE, HCI_CHANNEL_CONTROL)
-            if libc.bind(raw_socket.fileno(), ctypes.create_string_buffer(address), len(address)):
+            address = struct.pack(
+                "<HHH", AF_BLUETOOTH, HCI_DEV_NONE, HCI_CHANNEL_CONTROL
+            )
+            if libc.bind(
+                raw_socket.fileno(), ctypes.create_string_buffer(address), len(address)
+            ):
                 error_number = ctypes.get_errno()
                 raise OSError(error_number, os.strerror(error_number))
             result = cls(raw_socket, index, baseline)
@@ -127,7 +152,9 @@ class MgmtLink:
             raise
 
     def _install_reader(self) -> None:
-        asyncio.get_running_loop().add_reader(self._socket.fileno(), self._read_available)
+        asyncio.get_running_loop().add_reader(
+            self._socket.fileno(), self._read_available
+        )
         self._reader_installed = True
 
     def _read_available(self) -> None:
@@ -155,7 +182,9 @@ class MgmtLink:
         if event == MGMT_EV_DEVICE_DISCONNECTED:
             if len(body) == 8 and body[6] in (0, 1, 2):
                 address = ":".join(f"{octet:02X}" for octet in body[:6][::-1])
-                self.disconnect_events.append({"address": address, "address_type": body[6], "reason": body[7]})
+                self.disconnect_events.append(
+                    {"address": address, "address_type": body[6], "reason": body[7]}
+                )
             return
         if event not in (MGMT_EV_CMD_COMPLETE, MGMT_EV_CMD_STATUS):
             return  # all other asynchronous MGMT traffic is deliberately discarded
@@ -192,22 +221,33 @@ class MgmtLink:
             response = asyncio.get_running_loop().create_future()
             self._waiting = (opcode, response)
             try:
-                packet = struct.pack("<HHH", opcode, self.index, len(parameters)) + parameters
+                packet = (
+                    struct.pack("<HHH", opcode, self.index, len(parameters))
+                    + parameters
+                )
                 try:
                     written = self._socket.send(packet)
                 except OSError as error:
                     response.cancel()
                     await self.close()
-                    raise MgmtError(f"MGMT control socket write failed: {error}") from error
+                    raise MgmtError(
+                        f"MGMT control socket write failed: {error}"
+                    ) from error
                 if written != len(packet):
                     response.cancel()
                     await self.close()
-                    raise MgmtError("MGMT control socket did not accept a complete command")
-                event, status, data = await asyncio.wait_for(asyncio.shield(response), COMMAND_TIMEOUT)
+                    raise MgmtError(
+                        "MGMT control socket did not accept a complete command"
+                    )
+                event, status, data = await asyncio.wait_for(
+                    asyncio.shield(response), COMMAND_TIMEOUT
+                )
             except asyncio.TimeoutError as error:
                 response.cancel()
                 await self.close()
-                raise MgmtError(f"MGMT opcode 0x{opcode:04x} timed out after {COMMAND_TIMEOUT:g} seconds") from error
+                raise MgmtError(
+                    f"MGMT opcode 0x{opcode:04x} timed out after {COMMAND_TIMEOUT:g} seconds"
+                ) from error
             except asyncio.CancelledError:
                 # MGMT has no request id.  Closing prevents a late reply from being
                 # mistaken for the next same-opcode request after cancellation.
@@ -220,7 +260,9 @@ class MgmtLink:
             if event == MGMT_EV_CMD_STATUS:
                 if status == 0:
                     await self.close()
-                    raise MgmtProtocolError(f"MGMT opcode 0x{opcode:04x} reported unexpected successful Command Status")
+                    raise MgmtProtocolError(
+                        f"MGMT opcode 0x{opcode:04x} reported unexpected successful Command Status"
+                    )
                 raise MgmtCommandError(opcode, status)
             if status:
                 raise MgmtCommandError(opcode, status)
@@ -235,32 +277,50 @@ class MgmtLink:
             raise MgmtProtocolError("Get Connections response has an invalid length")
         result = set()
         for offset in range(2, len(data), 7):
-            address = ":".join(f"{octet:02X}" for octet in data[offset:offset + 6][::-1])
+            address = ":".join(
+                f"{octet:02X}" for octet in data[offset : offset + 6][::-1]
+            )
             address_type = data[offset + 6]
             if address_type not in (0, 1, 2):
-                raise MgmtProtocolError(f"Get Connections returned invalid address type {address_type}")
+                raise MgmtProtocolError(
+                    f"Get Connections returned invalid address type {address_type}"
+                )
             result.add((address, address_type))
         return result
 
     async def disconnect_le(self, address: str, address_type: int) -> None:
         canonical, wire_address = _address(address)
         if type(address_type) is not int or address_type not in (1, 2):
-            raise ValueError("disconnect_le accepts only LE public (1) or LE random (2), never BR/EDR")
+            raise ValueError(
+                "disconnect_le accepts only LE public (1) or LE random (2), never BR/EDR"
+            )
         if self._baseline is None:
-            raise MgmtError("disconnect is disabled without an explicit pre-experiment baseline")
+            raise MgmtError(
+                "disconnect is disabled without an explicit pre-experiment baseline"
+            )
         target = (canonical, address_type)
         if target in self._baseline:
-            raise MgmtError("refusing to disconnect a connection present in the pre-experiment baseline")
+            raise MgmtError(
+                "refusing to disconnect a connection present in the pre-experiment baseline"
+            )
         if target not in await self.connections():
-            raise MgmtError("refusing to disconnect a link that is not currently connected")
-        returned = await self._command(MGMT_OP_DISCONNECT, wire_address + bytes((address_type,)))
+            raise MgmtError(
+                "refusing to disconnect a link that is not currently connected"
+            )
+        returned = await self._command(
+            MGMT_OP_DISCONNECT, wire_address + bytes((address_type,))
+        )
         if len(returned) != 7 or returned != wire_address + bytes((address_type,)):
-            raise MgmtProtocolError("Disconnect response did not echo the requested LE address and type")
+            raise MgmtProtocolError(
+                "Disconnect response did not echo the requested LE address and type"
+            )
 
     async def close(self) -> None:
         self._terminate(MgmtError("MGMT control channel was closed"))
 
 
-async def open(index: int, *, baseline: Iterable[tuple[str, int]] | None = None) -> MgmtLink:
+async def open(
+    index: int, *, baseline: Iterable[tuple[str, int]] | None = None
+) -> MgmtLink:
     """Open the MGMT control channel for ``hci<index>`` without taking it over."""
     return await MgmtLink.open(index, baseline=baseline)
