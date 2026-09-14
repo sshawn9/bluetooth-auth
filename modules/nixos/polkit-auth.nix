@@ -7,8 +7,8 @@
 let
   cfg = config.my.security.bluetoothAuth;
   helper = "${cfg.package}/bin/bluetooth-auth-link";
-  allowedActions = builtins.toJSON cfg.polkitAuth.allowedActions;
-  trustedUser = builtins.toJSON cfg.user;
+  allowedActions = builtins.toJSON cfg.auth.polkit.allowedActions;
+  trustedUser = builtins.toJSON cfg.trustedUser;
   defaultAllowedActions = [
     "org.freedesktop.login1.power-off"
     "org.freedesktop.login1.power-off-multiple-sessions"
@@ -43,7 +43,7 @@ let
   ];
 in
 {
-  options.my.security.bluetoothAuth.polkitAuth = {
+  options.my.security.bluetoothAuth.auth.polkit = {
     enable = lib.mkEnableOption "polkit authentication bypass when the Bluetooth device is connected";
 
     allowedActions = lib.mkOption {
@@ -54,7 +54,7 @@ in
     };
   };
 
-  config = lib.mkIf (cfg.enable && cfg.polkitAuth.enable) {
+  config = lib.mkIf (cfg.enable && cfg.auth.polkit.enable) {
     security.polkit.enable = true;
 
     # The Rust checker reads the host HCI connection table directly.
@@ -87,7 +87,7 @@ in
           polkit.spawn([
             ${builtins.toJSON helper},
             "--address-file",
-            ${builtins.toJSON cfg.bluetoothAddressFile},
+            ${builtins.toJSON cfg.device.address.file},
             "--connect",
             "-1"
           ]);

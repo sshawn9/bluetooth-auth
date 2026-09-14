@@ -160,10 +160,10 @@ let
       my.security.bluetoothAuth = {
         enable = true;
         package = fakeBle;
-        user = "trusted";
-        group = "test-bluetooth-auth";
-        bluetoothAddressFile = "/run/noctalia-test/address";
-        connect.timeoutMilliseconds = 5000;
+        trustedUser = "trusted";
+        accessGroup = "test-bluetooth-auth";
+        device.address.file = "/run/noctalia-test/address";
+        connection.timeoutMs = 5000;
       };
     };
   disabledSystem = import (pkgs.path + "/nixos/lib/eval-config.nix") {
@@ -182,10 +182,12 @@ let
       {
         my.security.bluetoothAuth.noctaliaAutoLock = {
           enable = true;
-          unlockedConnectedIntervalMilliseconds = 1100;
-          unlockedDisconnectedIntervalMilliseconds = 2200;
-          lockedConnectedIntervalMilliseconds = 3300;
-          lockedDisconnectedIntervalMilliseconds = 4400;
+          sleepIntervalsMs = {
+            unlockedConnected = 1100;
+            unlockedDisconnected = 2200;
+            lockedConnected = 3300;
+            lockedDisconnected = 4400;
+          };
         };
       }
     ];
@@ -320,14 +322,16 @@ pkgs.testers.runNixOSTest {
         };
       my.security.bluetoothAuth = {
         autoConnect.enable = true;
-        sudoAuth.enable = true;
-        polkitAuth.enable = true;
+        auth.sudo.enable = true;
+        auth.polkit.enable = true;
         noctaliaAutoLock = {
           enable = true;
-          unlockedConnectedIntervalMilliseconds = 1100;
-          unlockedDisconnectedIntervalMilliseconds = 2200;
-          lockedConnectedIntervalMilliseconds = 3300;
-          lockedDisconnectedIntervalMilliseconds = 4400;
+          sleepIntervalsMs = {
+            unlockedConnected = 1100;
+            unlockedDisconnected = 2200;
+            lockedConnected = 3300;
+            lockedDisconnected = 4400;
+          };
         };
       };
     };

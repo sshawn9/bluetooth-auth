@@ -6,10 +6,10 @@
 
 let
   cfg = config.my.security.bluetoothAuth;
-  pamService = cfg.greetdAuth.pamService;
+  pamService = cfg.auth.greetd.pamService;
 in
 {
-  options.my.security.bluetoothAuth.greetdAuth = {
+  options.my.security.bluetoothAuth.auth.greetd = {
     enable = lib.mkEnableOption "greetd PAM authentication bypass when the Bluetooth device is connected";
 
     pamService = lib.mkOption {
@@ -20,7 +20,7 @@ in
     };
   };
 
-  config = lib.mkIf (cfg.enable && cfg.greetdAuth.enable) {
+  config = lib.mkIf (cfg.enable && cfg.auth.greetd.enable) {
     security.pam.services.${pamService}.rules.auth = import ./pam-auth.nix {
       inherit config lib;
       service = pamService;

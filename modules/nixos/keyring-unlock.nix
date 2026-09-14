@@ -8,36 +8,38 @@
 
 let
   cfg = config.my.security.bluetoothAuth;
-  unlock = cfg.keyringUnlock;
+  unlock = cfg.gnomeKeyringUnlock;
 in
 {
-  options.my.security.bluetoothAuth.keyringUnlock = {
+  options.my.security.bluetoothAuth.gnomeKeyringUnlock = {
     enable = lib.mkEnableOption "unlocking the GNOME login keyring with SOPS after a Bluetooth connection check";
 
-    sopsFile = lib.mkOption {
-      type = lib.types.path;
-      description = "SOPS-encrypted file containing the existing login keyring password.";
-    };
+    password = {
+      sopsFile = lib.mkOption {
+        type = lib.types.path;
+        description = "SOPS-encrypted file containing the existing login keyring password.";
+      };
 
-    sopsKey = lib.mkOption {
-      type = lib.types.str;
-      default = "login_keyring_password";
-      description = "Top-level string key containing the password in sopsFile.";
-    };
+      sopsField = lib.mkOption {
+        type = lib.types.str;
+        default = "login_keyring_password";
+        description = "Top-level string field containing the password in password.sopsFile.";
+      };
 
-    ageKeyFile = lib.mkOption {
-      type = lib.types.nullOr lib.types.str;
-      default = null;
-      example = "/home/alice/.config/sops/age/keys.txt";
-      description = "Runtime path to the user's age identity file. When unset, SOPS uses its normal key lookup.";
+      ageKeyFile = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        example = "/home/alice/.config/sops/age/keys.txt";
+        description = "Runtime path to the user's age identity file for decrypting password.sopsFile. When unset, SOPS uses its normal key lookup.";
+      };
     };
   };
 
   config = lib.mkIf (cfg.enable && unlock.enable) {
     assertions = [
       {
-        assertion = cfg.user != "";
-        message = "Bluetooth keyring unlocking requires my.security.bluetoothAuth.user.";
+        assertion = cfg.trustedUser != "";
+        message = "Bluetooth keyring unlocking requires my.security.bluetoothAuth.trustedUser.";
       }
     ];
 
@@ -46,10 +48,10 @@ in
       wantedBy = [ "graphical-session.target" ];
       after = [ "graphical-session.target" ];
       partOf = [ "graphical-session.target" ];
-      unitConfig.ConditionUser = cfg.user;
+      unitConfig.ConditionUser = cfg.trustedUser;
       path = [ pkgs.sops ];
-      environment = lib.optionalAttrs (unlock.ageKeyFile != null) {
-        SOPS_AGE_KEY_FILE = unlock.ageKeyFile;
+      environment = lib.optionalAttrs (unlock.password.ageKeyFile != null) {
+        SOPS_AGE_KEY_FILE = unlock.password.ageKeyFile;
       };
 
       serviceConfig = {
@@ -57,16 +59,16 @@ in
         ExecStart = utils.escapeSystemdExecArgs [
           "${cfg.package}/bin/bluetooth-auth-keyring-unlock"
           "--address-file"
-          cfg.bluetoothAddressFile
+          cfg.device.address.file
           "--timeout-ms"
-          (toString cfg.connect.timeoutMilliseconds)
+          (toString cfg.connection.timeoutMs)
           "--sops-file"
-          "${unlock.sopsFile}"
+          "${unlock.password.sopsFile}"
           "--sops-key"
-          unlock.sopsKey
+          unlock.password.sopsField
         ];
         RemainAfterExit = true;
-        TimeoutStartSec = "${toString (cfg.connect.timeoutMilliseconds + 15000)}ms";
+        TimeoutStartSec = "${toString (cfg.connection.timeoutMs + 15000)}ms";
       };
     };
   };

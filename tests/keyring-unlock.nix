@@ -28,14 +28,16 @@ let
         nixpkgs.overlays = [ (_: _: { sops = loggedSops; }) ];
         my.security.bluetoothAuth = {
           enable = true;
-          user = "alice";
-          bluetoothAddressFile = "/proc/self/cwd/address";
-          connect.timeoutMilliseconds = 100;
-          keyringUnlock = {
+          trustedUser = "alice";
+          device.address.file = "/proc/self/cwd/address";
+          connection.timeoutMs = 100;
+          gnomeKeyringUnlock = {
             enable = true;
             # Resolve fixtures in the isolated build's working directory.
-            sopsFile = "/proc/self/cwd/password.yaml";
-            ageKeyFile = "/proc/self/cwd/age-key.txt";
+            password = {
+              sopsFile = "/proc/self/cwd/password.yaml";
+              ageKeyFile = "/proc/self/cwd/age-key.txt";
+            };
           };
         };
       }

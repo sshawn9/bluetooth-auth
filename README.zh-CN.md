@@ -67,18 +67,18 @@ sudo ./result/bin/bluetooth-auth-hid-server
 
           my.security.bluetoothAuth = {
             enable = true;
-            user = "alice";
-            bluetoothAddressFile = "/run/secrets/bluetooth_address";
+            trustedUser = "alice";
+            device.address.file = "/run/secrets/bluetooth_address";
 
-            connect.timeoutMilliseconds = 7000;
+            connection.timeoutMs = 7000;
             autoConnect.enable = true;
-            sudoAuth.enable = true;
+            auth.sudo.enable = true;
 
             # 根据实际环境启用。
-            # polkitAuth.enable = true;
-            # lockerAuth.enable = true;
-            # lockerAuth.pamService = "login";
-            # greetdAuth.enable = true;
+            # auth.polkit.enable = true;
+            # auth.locker.enable = true;
+            # auth.locker.pamService = "login";
+            # auth.greetd.enable = true;
             # noctaliaAutoLock.enable = true;
           };
         }
@@ -88,7 +88,7 @@ sudo ./result/bin/bluetooth-auth-hid-server
 }
 ```
 
-总开关会把包中的命令加入系统 `PATH`，各项集成仍默认关闭。仅使用系统级自动连接时可以不设置 `user`；使用认证、Noctalia 自动锁屏或 Keyring 解锁时应指定用户。
+总开关会把包中的命令加入系统 `PATH`，各项集成仍默认关闭。仅使用系统级自动连接时可以不设置 `trustedUser`；使用认证、Noctalia 自动锁屏或 Keyring 解锁时应指定用户。
 
 ### 设备地址与 SOPS
 
@@ -97,13 +97,13 @@ sudo ./result/bin/bluetooth-auth-hid-server
 ```nix
 {
   sops.secrets.bluetooth_address = { };
-  my.security.bluetoothAuth.sopsSecret = "bluetooth_address";
+  my.security.bluetoothAuth.device.address.sopsSecretName = "bluetooth_address";
 }
 ```
 
-`sopsSecret` 会优先使用该 secret 的运行时路径，覆盖 `bluetoothAddressFile`，并设置 `group = cfg.group`、`mode = "0440"`。默认组名为 `bluetooth-auth-connect`；模块会将指定用户及启用 polkit 时的 `polkituser` 加入该组。
+`device.address.sopsSecretName` 会优先使用该 secret 的运行时路径，覆盖 `device.address.file`，并设置 `group = cfg.accessGroup`、`mode = "0440"`。默认组名为 `bluetooth-auth-connect`；模块会将指定用户及启用 polkit 时的 `polkituser` 加入该组。
 
-直接提供 `bluetoothAddressFile` 同样受支持，但文件的属组、权限和创建时机由使用方管理。用户服务需要指定用户可读；polkit 集成还需要 `polkituser` 可读。地址文件应在相应程序启动前可用，文件内容不会写入命令行参数。
+直接提供 `device.address.file` 同样受支持，但文件的属组、权限和创建时机由使用方管理。用户服务需要指定用户可读；polkit 集成还需要 `polkituser` 可读。地址文件应在相应程序启动前可用，文件内容不会写入命令行参数。
 
 ## 认证与自动连接
 
@@ -117,9 +117,9 @@ sudo、locker 和 greetd 接入 PAM；polkit 使用自己的授权规则。它�
 
 认证入口不等待后台连接完成。后台后来连上，也不会把已经返回失败的那次蓝牙检查改成成功。
 
-PAM 规则限制为配置用户；sudo 也处理该用户作为请求方的情况。polkit 另外要求活跃的本地会话，以及 action 在 `polkitAuth.allowedActions` 中。默认列表覆盖部分电源、systemd、NetworkManager、UDisks 和 UPower 操作，完整列表见 [polkit 模块](modules/nixos/polkit-auth.nix)；设置 `[]` 即不通过蓝牙放行任何 action。
+PAM 规则限制为配置用户；sudo 也处理该用户作为请求方的情况。polkit 另外要求活跃的本地会话，以及 action 在 `auth.polkit.allowedActions` 中。默认列表覆盖部分电源、systemd、NetworkManager、UDisks 和 UPower 操作，完整列表见 [polkit 模块](modules/nixos/polkit-auth.nix)；设置 `[]` 即不通过蓝牙放行任何 action。
 
-`greetdAuth` 可以直接启用。`lockerAuth.pamService` 默认 `login`，需要与锁屏器实际使用的 PAM 服务一致；修改共享的 `login` PAM 服务也会影响使用它的其他入口。
+`auth.greetd` 可以直接启用。`auth.locker.pamService` 默认 `login`，需要与锁屏器实际使用的 PAM 服务一致；修改共享的 `login` PAM 服务也会影响使用它的其他入口。
 
 启用 `autoConnect` 后，还会在这些时机提前尝试连接：
 
@@ -150,17 +150,17 @@ Noctalia 必须在用户环境中可用。图形会话需要在启动 `graphical
 
 ## GNOME Keyring 解锁
 
-蓝牙免密登录不会产生登录密码，原有 `pam_gnome_keyring` 因而可能无法解锁 login 钥匙串。可选的 `keyringUnlock` 在图形会话启动后运行一次，保留原有密码登录的解锁流程。
+蓝牙免密登录不会产生登录密码，原有 `pam_gnome_keyring` 因而可能无法解锁 login 钥匙串。可选的 `gnomeKeyringUnlock` 在图形会话启动后运行一次，保留原有密码登录的解锁流程。
 
 ```nix
 {
   services.gnome.gnome-keyring.enable = true;
 
-  my.security.bluetoothAuth.keyringUnlock = {
+  my.security.bluetoothAuth.gnomeKeyringUnlock = {
     enable = true;
-    sopsFile = ./keyring.enc.yaml;
-    sopsKey = "login_keyring_password";
-    ageKeyFile = "/home/alice/.config/sops/age/keys.txt";
+    password.sopsFile = ./keyring.enc.yaml;
+    password.sopsField = "login_keyring_password";
+    password.ageKeyFile = "/home/alice/.config/sops/age/keys.txt";
   };
 }
 ```
@@ -179,28 +179,28 @@ SOPS 文件中的指定顶层字符串保存**现有 login 钥匙串的密码**�
 | --- | --- | --- |
 | `enable` | `false` | 安装工具并启用模块配置；具体集成单独开启。 |
 | `package` | flake 包 | 提供五个 Rust 程序的包。 |
-| `user` | `""` | 允许免密认证及运行用户服务的用户。 |
-| `group` | `"bluetooth-auth-connect"` | 连接 socket、锁文件和可选地址文件的访问组。 |
-| `bluetoothAddressFile` | `""` | 包含手机身份地址的运行时文件。 |
-| `sopsSecret` | `null` | sops-nix secret 名称；设置后覆盖地址路径并配置组读取权限。 |
-| `connect.timeoutMilliseconds` | `7000` | 后台连接、状态监听器及用户服务每次连接尝试的时间预算。 |
+| `trustedUser` | `""` | 允许免密认证及运行用户服务的用户。 |
+| `accessGroup` | `"bluetooth-auth-connect"` | 连接 socket、锁文件和可选地址文件的访问组。 |
+| `device.address.file` | `""` | 包含手机身份地址的运行时文件。 |
+| `device.address.sopsSecretName` | `null` | 引用的 sops-nix secret 名称；设置后覆盖地址路径并配置组读取权限。 |
+| `connection.timeoutMs` | `7000` | 后台连接、状态监听器及用户服务每次连接尝试的时间预算。 |
 | `autoConnect.enable` | `false` | 开机、BlueZ 重启、睡眠恢复及蓝牙开启时提前连接。 |
-| `sudoAuth.enable` | `false` | sudo PAM 集成。 |
-| `polkitAuth.enable` | `false` | polkit 授权集成。 |
-| `polkitAuth.allowedActions` | 模块中的桌面 action 列表 | 允许通过蓝牙放行的 polkit action。 |
-| `lockerAuth.enable` | `false` | 锁屏器 PAM 集成。 |
-| `lockerAuth.pamService` | `"login"` | 锁屏器使用的 PAM 服务。 |
-| `greetdAuth.enable` | `false` | greetd PAM 集成。 |
-| `greetdAuth.pamService` | `"greetd"` | greetd 使用的 PAM 服务。 |
+| `auth.sudo.enable` | `false` | sudo PAM 集成。 |
+| `auth.polkit.enable` | `false` | polkit 授权集成。 |
+| `auth.polkit.allowedActions` | 模块中的桌面 action 列表 | 允许通过蓝牙放行的 polkit action。 |
+| `auth.locker.enable` | `false` | 锁屏器 PAM 集成。 |
+| `auth.locker.pamService` | `"login"` | 锁屏器使用的 PAM 服务。 |
+| `auth.greetd.enable` | `false` | greetd PAM 集成。 |
+| `auth.greetd.pamService` | `"greetd"` | greetd 使用的 PAM 服务。 |
 | `noctaliaAutoLock.enable` | `false` | 启用 Noctalia 自动锁屏用户服务。 |
-| `noctaliaAutoLock.unlockedConnectedIntervalMilliseconds` | `30000` | 未锁定、已连接后的休眠。 |
-| `noctaliaAutoLock.unlockedDisconnectedIntervalMilliseconds` | `30000` | 未锁定、未连接后的休眠。 |
-| `noctaliaAutoLock.lockedConnectedIntervalMilliseconds` | `120000` | 已锁定、已连接后的休眠。 |
-| `noctaliaAutoLock.lockedDisconnectedIntervalMilliseconds` | `60000` | 已锁定、未连接后的休眠。 |
-| `keyringUnlock.enable` | `false` | 启用 GNOME login 钥匙串自动解锁。 |
-| `keyringUnlock.sopsFile` | 启用时必填 | 含现有钥匙串密码的 SOPS 加密文件。 |
-| `keyringUnlock.sopsKey` | `"login_keyring_password"` | SOPS 文件中的顶层字符串字段名。 |
-| `keyringUnlock.ageKeyFile` | `null` | 用户 age 密钥路径；不设置时使用 SOPS 自身的密钥查找机制。 |
+| `noctaliaAutoLock.sleepIntervalsMs.unlockedConnected` | `30000` | 未锁定、已连接后的休眠。 |
+| `noctaliaAutoLock.sleepIntervalsMs.unlockedDisconnected` | `30000` | 未锁定、未连接后的休眠。 |
+| `noctaliaAutoLock.sleepIntervalsMs.lockedConnected` | `120000` | 已锁定、已连接后的休眠。 |
+| `noctaliaAutoLock.sleepIntervalsMs.lockedDisconnected` | `60000` | 已锁定、未连接后的休眠。 |
+| `gnomeKeyringUnlock.enable` | `false` | 启用 GNOME login 钥匙串自动解锁。 |
+| `gnomeKeyringUnlock.password.sopsFile` | 启用时必填 | 含现有钥匙串密码的 SOPS 加密文件。 |
+| `gnomeKeyringUnlock.password.sopsField` | `"login_keyring_password"` | SOPS 文件中的顶层字符串字段名。 |
+| `gnomeKeyringUnlock.password.ageKeyFile` | `null` | 用户 age 密钥路径；不设置时使用 SOPS 自身的密钥查找机制。 |
 
 ## 命令行工具
 
@@ -230,7 +230,7 @@ bluetooth-auth-link --address-file /run/secrets/bluetooth_address --connect -1
 | 正数，例如 `7000` | 退出 `0` | 尝试一次并等待，正数为毫秒预算 |
 | 负数，规范写法为 `-1` | 退出 `0` | 通知后台连接，本次仍退出 `1` |
 
-不指定 `--connect` 时默认 `15000`。负数的绝对值不控制超时，后台使用 Nix 的 `connect.timeoutMilliseconds`。无连接和普通超时保持安静，运行错误写入 stderr；参数格式错误退出 `2`。
+不指定 `--connect` 时默认 `15000`。负数的绝对值不控制超时，后台使用 Nix 的 `connection.timeoutMs`。无连接和普通超时保持安静，运行错误写入 stderr；参数格式错误退出 `2`。
 
 同步连接使用 `/run/bluetooth-auth/hci0.lock`。模块在启用自动连接或任一认证/用户服务集成时创建它；不要删除或替换正在使用的锁文件。异步模式另外要求 `/run/bluetooth-auth/connect.sock`，该 socket 随 sudo、polkit、locker、greetd、Noctalia 自动锁屏或 Keyring 集成启用，单独启用 `autoConnect` 不创建它。
 

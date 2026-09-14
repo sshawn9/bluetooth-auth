@@ -7,31 +7,31 @@
 
 let
   cfg = config.my.security.bluetoothAuth;
-  timeout = cfg.connect.timeoutMilliseconds;
+  timeout = cfg.connection.timeoutMs;
   socketEnabled =
     cfg.enable
     && (
-      cfg.sudoAuth.enable
-      || cfg.lockerAuth.enable
-      || cfg.polkitAuth.enable
-      || cfg.greetdAuth.enable
+      cfg.auth.sudo.enable
+      || cfg.auth.locker.enable
+      || cfg.auth.polkit.enable
+      || cfg.auth.greetd.enable
       || cfg.noctaliaAutoLock.enable
-      || cfg.keyringUnlock.enable
+      || cfg.gnomeKeyringUnlock.enable
     );
   autoConnectEnabled = cfg.enable && cfg.autoConnect.enable;
 in
 {
-  options.my.security.bluetoothAuth.connect.timeoutMilliseconds = lib.mkOption {
+  options.my.security.bluetoothAuth.connection.timeoutMs = lib.mkOption {
     type = lib.types.ints.between 1 2147483647;
     default = 7000;
     example = 5000;
-    description = "Maximum duration of one background HID connection attempt, in milliseconds.";
+    description = "Maximum duration of one HID connection attempt, in milliseconds, shared by authentication helpers and background services.";
   };
 
   config = lib.mkIf (socketEnabled || autoConnectEnabled) {
     systemd.tmpfiles.rules = [
-      "d /run/bluetooth-auth 0750 root ${cfg.group} -"
-      "f /run/bluetooth-auth/hci0.lock 0660 root ${cfg.group} -"
+      "d /run/bluetooth-auth 0750 root ${cfg.accessGroup} -"
+      "f /run/bluetooth-auth/hci0.lock 0660 root ${cfg.accessGroup} -"
     ];
 
     systemd.sockets.bluetooth-auth-connect = lib.mkIf socketEnabled {
@@ -41,7 +41,7 @@ in
       socketConfig = {
         ListenDatagram = "/run/bluetooth-auth/connect.sock";
         SocketUser = "root";
-        SocketGroup = cfg.group;
+        SocketGroup = cfg.accessGroup;
         SocketMode = "0660";
         DirectoryMode = "0750";
         Accept = false;
@@ -65,7 +65,7 @@ in
         ExecStart = utils.escapeSystemdExecArgs [
           "${cfg.package}/bin/bluetooth-auth-link"
           "--address-file"
-          cfg.bluetoothAddressFile
+          cfg.device.address.file
           "--connect"
           (toString timeout)
         ];

@@ -21,7 +21,7 @@ in
       "quiet"
       "user"
       "="
-      cfg.user
+      cfg.trustedUser
     ];
   };
 
@@ -34,7 +34,7 @@ in
       "quiet"
       "${cfg.package}/bin/bluetooth-auth-link"
       "--address-file"
-      cfg.bluetoothAddressFile
+      cfg.device.address.file
       "--connect"
       "-1"
     ];
@@ -50,7 +50,7 @@ in
       "quiet"
       "ruser"
       "="
-      cfg.user
+      cfg.trustedUser
     ];
   };
 }

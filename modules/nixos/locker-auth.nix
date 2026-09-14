@@ -6,10 +6,10 @@
 
 let
   cfg = config.my.security.bluetoothAuth;
-  pamService = cfg.lockerAuth.pamService;
+  pamService = cfg.auth.locker.pamService;
 in
 {
-  options.my.security.bluetoothAuth.lockerAuth = {
+  options.my.security.bluetoothAuth.auth.locker = {
     enable = lib.mkEnableOption "locker PAM authentication bypass when the Bluetooth device is connected";
 
     pamService = lib.mkOption {
@@ -21,7 +21,7 @@ in
 
   };
 
-  config = lib.mkIf (cfg.enable && cfg.lockerAuth.enable) {
+  config = lib.mkIf (cfg.enable && cfg.auth.locker.enable) {
     security.pam.services.${pamService}.rules.auth = import ./pam-auth.nix {
       inherit config lib;
       service = pamService;

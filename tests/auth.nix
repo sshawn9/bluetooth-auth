@@ -31,18 +31,18 @@ let
         networking.useDHCP = false;
         my.security.bluetoothAuth = {
           enable = true;
-          user = "nobody";
-          bluetoothAddressFile = "/private/test-address";
-          sudoAuth.enable = true;
-          lockerAuth = {
+          trustedUser = "nobody";
+          device.address.file = "/private/test-address";
+          auth.sudo.enable = true;
+          auth.locker = {
             enable = true;
             pamService = "login";
           };
-          polkitAuth = {
+          auth.polkit = {
             enable = true;
             allowedActions = [ "test.bluetooth-action" ];
           };
-          greetdAuth.enable = true;
+          auth.greetd.enable = true;
         };
       }
     ];
@@ -61,9 +61,9 @@ let
         networking.useDHCP = false;
         my.security.bluetoothAuth = {
           enable = true;
-          user = "nobody";
-          bluetoothAddressFile = "/private/test-address";
-          greetdAuth.enable = true;
+          trustedUser = "nobody";
+          device.address.file = "/private/test-address";
+          auth.greetd.enable = true;
         };
       }
     ];

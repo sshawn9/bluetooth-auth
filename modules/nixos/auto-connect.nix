@@ -54,9 +54,9 @@ in
             ExecStart = utils.escapeSystemdExecArgs [
               "${cfg.package}/bin/bluetooth-auth-power-monitor"
               "--address-file"
-              cfg.bluetoothAddressFile
+              cfg.device.address.file
               "--timeout-ms"
-              (toString cfg.connect.timeoutMilliseconds)
+              (toString cfg.connection.timeoutMs)
             ];
             Restart = "on-failure";
             RestartSec = "5s";

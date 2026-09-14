@@ -67,18 +67,18 @@ Merge the following into your flake while retaining your existing system configu
 
           my.security.bluetoothAuth = {
             enable = true;
-            user = "alice";
-            bluetoothAddressFile = "/run/secrets/bluetooth_address";
+            trustedUser = "alice";
+            device.address.file = "/run/secrets/bluetooth_address";
 
-            connect.timeoutMilliseconds = 7000;
+            connection.timeoutMs = 7000;
             autoConnect.enable = true;
-            sudoAuth.enable = true;
+            auth.sudo.enable = true;
 
             # Enable as appropriate for the environment.
-            # polkitAuth.enable = true;
-            # lockerAuth.enable = true;
-            # lockerAuth.pamService = "login";
-            # greetdAuth.enable = true;
+            # auth.polkit.enable = true;
+            # auth.locker.enable = true;
+            # auth.locker.pamService = "login";
+            # auth.greetd.enable = true;
             # noctaliaAutoLock.enable = true;
           };
         }
@@ -88,7 +88,7 @@ Merge the following into your flake while retaining your existing system configu
 }
 ```
 
-The main switch places the package commands on the system `PATH`; individual integrations remain disabled by default. `user` can be omitted when using only system-level automatic connection. Specify it for authentication, Noctalia automatic locking, or Keyring unlocking.
+The main switch places the package commands on the system `PATH`; individual integrations remain disabled by default. `trustedUser` can be omitted when using only system-level automatic connection. Specify it for authentication, Noctalia automatic locking, or Keyring unlocking.
 
 ### Device address and SOPS
 
@@ -97,13 +97,13 @@ A system that already imports the sops-nix NixOS module can name an existing sec
 ```nix
 {
   sops.secrets.bluetooth_address = { };
-  my.security.bluetoothAuth.sopsSecret = "bluetooth_address";
+  my.security.bluetoothAuth.device.address.sopsSecretName = "bluetooth_address";
 }
 ```
 
-`sopsSecret` takes precedence over `bluetoothAddressFile`, uses the secret's runtime path, and sets `group = cfg.group` and `mode = "0440"`. The default group is `bluetooth-auth-connect`; the module adds the configured user and, with polkit enabled, `polkituser` to it.
+`device.address.sopsSecretName` takes precedence over `device.address.file`, uses the secret's runtime path, and sets `group = cfg.accessGroup` and `mode = "0440"`. The default group is `bluetooth-auth-connect`; the module adds the configured user and, with polkit enabled, `polkituser` to it.
 
-Providing `bluetoothAddressFile` directly is also supported, but the caller manages its group, permissions, and availability. User services need the configured user to read it; polkit also needs `polkituser` to read it. The file must be available before the relevant program starts, and its contents are not passed in command-line arguments.
+Providing `device.address.file` directly is also supported, but the caller manages its group, permissions, and availability. User services need the configured user to read it; polkit also needs `polkituser` to read it. The file must be available before the relevant program starts, and its contents are not passed in command-line arguments.
 
 ## Authentication and automatic connection
 
@@ -117,9 +117,9 @@ sudo, locker, and greetd use PAM; polkit uses its own authorization rule. They a
 
 Authentication entry points do not wait for the background connection. A later successful connection cannot turn the Bluetooth check that already returned failure into success.
 
-PAM rules are restricted to the configured user; sudo also handles that user as the requesting user. polkit additionally requires an active local session and an action in `polkitAuth.allowedActions`. Its default list covers selected power, systemd, NetworkManager, UDisks, and UPower actions; see the complete list in the [polkit module](modules/nixos/polkit-auth.nix). Set it to `[]` to authorize no actions through Bluetooth.
+PAM rules are restricted to the configured user; sudo also handles that user as the requesting user. polkit additionally requires an active local session and an action in `auth.polkit.allowedActions`. Its default list covers selected power, systemd, NetworkManager, UDisks, and UPower actions; see the complete list in the [polkit module](modules/nixos/polkit-auth.nix). Set it to `[]` to authorize no actions through Bluetooth.
 
-`greetdAuth` can be enabled directly. `lockerAuth.pamService` defaults to `login` and must match the PAM service used by the locker. Changing a shared `login` PAM service also affects other entry points that use it.
+`auth.greetd` can be enabled directly. `auth.locker.pamService` defaults to `login` and must match the PAM service used by the locker. Changing a shared `login` PAM service also affects other entry points that use it.
 
 With `autoConnect` enabled, a connection is also attempted in advance at these points:
 
@@ -150,17 +150,17 @@ Noctalia must be available in the user environment. Before starting `graphical-s
 
 ## GNOME Keyring unlocking
 
-Bluetooth passwordless login does not supply a login password, so `pam_gnome_keyring` may not unlock the login keyring. The optional `keyringUnlock` runs once after the graphical session starts and retains the existing password-login unlock path.
+Bluetooth passwordless login does not supply a login password, so `pam_gnome_keyring` may not unlock the login keyring. The optional `gnomeKeyringUnlock` runs once after the graphical session starts and retains the existing password-login unlock path.
 
 ```nix
 {
   services.gnome.gnome-keyring.enable = true;
 
-  my.security.bluetoothAuth.keyringUnlock = {
+  my.security.bluetoothAuth.gnomeKeyringUnlock = {
     enable = true;
-    sopsFile = ./keyring.enc.yaml;
-    sopsKey = "login_keyring_password";
-    ageKeyFile = "/home/alice/.config/sops/age/keys.txt";
+    password.sopsFile = ./keyring.enc.yaml;
+    password.sopsField = "login_keyring_password";
+    password.ageKeyFile = "/home/alice/.config/sops/age/keys.txt";
   };
 }
 ```
@@ -179,28 +179,28 @@ All paths are relative to `my.security.bluetoothAuth`.
 | --- | --- | --- |
 | `enable` | `false` | Installs tools and enables module configuration; enable each integration separately. |
 | `package` | flake package | Package providing the five Rust programs. |
-| `user` | `""` | User permitted for passwordless authentication and user services. |
-| `group` | `"bluetooth-auth-connect"` | Access group for the connection socket, lock file, and optional address file. |
-| `bluetoothAddressFile` | `""` | Runtime file containing the phone identity address. |
-| `sopsSecret` | `null` | sops-nix secret name; overrides the address path and configures group read permission. |
-| `connect.timeoutMilliseconds` | `7000` | Per-attempt budget for background connection, the power monitor, and user services. |
+| `trustedUser` | `""` | User permitted for passwordless authentication and user services. |
+| `accessGroup` | `"bluetooth-auth-connect"` | Access group for the connection socket, lock file, and optional address file. |
+| `device.address.file` | `""` | Runtime file containing the phone identity address. |
+| `device.address.sopsSecretName` | `null` | Name of the referenced sops-nix secret; overrides the address path and configures group read permission. |
+| `connection.timeoutMs` | `7000` | Per-attempt budget for background connection, the power monitor, and user services. |
 | `autoConnect.enable` | `false` | Connect in advance at boot, BlueZ restart, sleep resume, and Bluetooth power-on. |
-| `sudoAuth.enable` | `false` | sudo PAM integration. |
-| `polkitAuth.enable` | `false` | polkit authorization integration. |
-| `polkitAuth.allowedActions` | desktop action list in the module | polkit actions permitted through Bluetooth. |
-| `lockerAuth.enable` | `false` | Locker PAM integration. |
-| `lockerAuth.pamService` | `"login"` | PAM service used by the locker. |
-| `greetdAuth.enable` | `false` | greetd PAM integration. |
-| `greetdAuth.pamService` | `"greetd"` | PAM service used by greetd. |
+| `auth.sudo.enable` | `false` | sudo PAM integration. |
+| `auth.polkit.enable` | `false` | polkit authorization integration. |
+| `auth.polkit.allowedActions` | desktop action list in the module | polkit actions permitted through Bluetooth. |
+| `auth.locker.enable` | `false` | Locker PAM integration. |
+| `auth.locker.pamService` | `"login"` | PAM service used by the locker. |
+| `auth.greetd.enable` | `false` | greetd PAM integration. |
+| `auth.greetd.pamService` | `"greetd"` | PAM service used by greetd. |
 | `noctaliaAutoLock.enable` | `false` | Enable the Noctalia automatic-lock user service. |
-| `noctaliaAutoLock.unlockedConnectedIntervalMilliseconds` | `30000` | Sleep after an unlocked, connected check. |
-| `noctaliaAutoLock.unlockedDisconnectedIntervalMilliseconds` | `30000` | Sleep after an unlocked, disconnected check. |
-| `noctaliaAutoLock.lockedConnectedIntervalMilliseconds` | `120000` | Sleep after a locked, connected check. |
-| `noctaliaAutoLock.lockedDisconnectedIntervalMilliseconds` | `60000` | Sleep after a locked, disconnected check. |
-| `keyringUnlock.enable` | `false` | Enable automatic GNOME login-keyring unlocking. |
-| `keyringUnlock.sopsFile` | required when enabled | SOPS-encrypted file holding the existing keyring password. |
-| `keyringUnlock.sopsKey` | `"login_keyring_password"` | Top-level string field in the SOPS file. |
-| `keyringUnlock.ageKeyFile` | `null` | User age-key path; when unset, SOPS uses its own key-discovery mechanism. |
+| `noctaliaAutoLock.sleepIntervalsMs.unlockedConnected` | `30000` | Sleep after an unlocked, connected check. |
+| `noctaliaAutoLock.sleepIntervalsMs.unlockedDisconnected` | `30000` | Sleep after an unlocked, disconnected check. |
+| `noctaliaAutoLock.sleepIntervalsMs.lockedConnected` | `120000` | Sleep after a locked, connected check. |
+| `noctaliaAutoLock.sleepIntervalsMs.lockedDisconnected` | `60000` | Sleep after a locked, disconnected check. |
+| `gnomeKeyringUnlock.enable` | `false` | Enable automatic GNOME login-keyring unlocking. |
+| `gnomeKeyringUnlock.password.sopsFile` | required when enabled | SOPS-encrypted file holding the existing keyring password. |
+| `gnomeKeyringUnlock.password.sopsField` | `"login_keyring_password"` | Top-level string field in the SOPS file. |
+| `gnomeKeyringUnlock.password.ageKeyFile` | `null` | User age-key path; when unset, SOPS uses its own key-discovery mechanism. |
 
 ## Command-line tools
 
@@ -230,7 +230,7 @@ bluetooth-auth-link --address-file /run/secrets/bluetooth_address --connect -1
 | Positive, such as `7000` | Exit `0` | Attempt once and wait; the positive value is the millisecond budget |
 | Negative, conventionally `-1` | Exit `0` | Notify the background service; this invocation still exits `1` |
 
-Without `--connect`, the default is `15000`. A negative magnitude does not set a timeout; the background service uses Nix's `connect.timeoutMilliseconds`. No connection and an ordinary timeout are silent, runtime errors go to stderr, and invalid arguments exit `2`.
+Without `--connect`, the default is `15000`. A negative magnitude does not set a timeout; the background service uses Nix's `connection.timeoutMs`. No connection and an ordinary timeout are silent, runtime errors go to stderr, and invalid arguments exit `2`.
 
 Synchronous connections use `/run/bluetooth-auth/hci0.lock`. The module creates it when automatic connection or any authentication/user-service integration is enabled; do not delete or replace a lock file in use. Asynchronous mode also requires `/run/bluetooth-auth/connect.sock`. The socket is enabled by sudo, polkit, locker, greetd, Noctalia automatic locking, or Keyring integration; `autoConnect` alone does not create it.
 

@@ -30,24 +30,24 @@ in
       description = "Package that provides the bluetooth-auth command-line tools.";
     };
 
-    user = lib.mkOption {
+    trustedUser = lib.mkOption {
       type = lib.types.str;
       default = "";
       example = "alice";
-      description = "User trusted by sudo, polkit, and PAM auth and targeted by auto-lock.";
+      description = "User authorized by Bluetooth authentication and targeted by automatic locking and keyring unlocking.";
     };
 
-    group = lib.mkOption {
+    accessGroup = lib.mkOption {
       type = lib.types.str;
       default = "bluetooth-auth-connect";
       description = ''
         Group with access to the connection socket and lock file. Address-file
         permissions can also use this group. It includes the configured user
-        and, when polkitAuth is enabled, polkituser.
+        and, when auth.polkit is enabled, polkituser.
       '';
     };
 
-    bluetoothAddressFile = lib.mkOption {
+    device.address.file = lib.mkOption {
       type = lib.types.str;
       default = "";
       example = lib.literalExpression "config.sops.secrets.auth_bluetooth_address.path";
@@ -55,7 +55,7 @@ in
         Runtime file containing the Bluetooth device address. Use this with
         secret managers such as sops-nix.
         When noctaliaAutoLock is enabled, the configured user must be able to
-        read this file. When polkitAuth is enabled, polkituser must also be able
+        read this file. When auth.polkit is enabled, polkituser must also be able
         to read it.
       '';
     };
@@ -63,7 +63,8 @@ in
 
   config = lib.mkIf cfg.enable {
     environment.systemPackages = [ cfg.package ];
-    users.groups.${cfg.group}.members =
-      lib.optional (cfg.user != "") cfg.user ++ lib.optional cfg.polkitAuth.enable "polkituser";
+    users.groups.${cfg.accessGroup}.members =
+      lib.optional (cfg.trustedUser != "") cfg.trustedUser
+      ++ lib.optional cfg.auth.polkit.enable "polkituser";
   };
 }
