@@ -1,6 +1,52 @@
-{ pkgs }:
+{ pkgs, package }:
 
 let
+  bluetoothPython = pkgs.python3.withPackages (ps: [ ps.dbus-next ]);
+  fakeBluez = pkgs.writeText "bluetooth-auth-fake-bluez.py" ''
+    import asyncio
+    from dbus_next import BusType
+    from dbus_next.aio import MessageBus
+    from dbus_next.service import ServiceInterface, dbus_property
+
+    class Adapter(ServiceInterface):
+        def __init__(self):
+            super().__init__("org.bluez.Adapter1")
+            self.powered = False
+
+        @dbus_property()
+        def Powered(self) -> "b":
+            return self.powered
+
+        @Powered.setter
+        def Powered(self, value: "b"):
+            if self.powered != value:
+                self.powered = value
+                self.emit_properties_changed({"Powered": value})
+
+    async def main():
+        bus = await MessageBus(bus_type=BusType.SYSTEM).connect()
+        bus.export("/org/bluez/hci0", Adapter())
+        await bus.request_name("org.bluez")
+        await bus.wait_for_disconnect()
+
+    asyncio.run(main())
+  '';
+  sleepServices = [
+    "systemd-suspend"
+    "systemd-hibernate"
+    "systemd-hybrid-sleep"
+    "systemd-suspend-then-hibernate"
+  ];
+  fakeSleep = pkgs.writeShellScript "bluetooth-auth-test-sleep" ''
+    while test -e /run/bluetooth-auth-sleep-hold; do ${pkgs.coreutils}/bin/sleep 0.05; done
+    test ! -e /run/bluetooth-auth-sleep-fail
+  '';
+  fakeBluetoothAddress = pkgs.writeShellScript "bluetooth-auth-test-address" ''
+    ${pkgs.coreutils}/bin/mkdir -p /run/noctalia-test
+    printf '%s\n' 02:00:00:00:00:01 > /run/noctalia-test/address
+    ${pkgs.coreutils}/bin/chown trusted /run/noctalia-test /run/noctalia-test/address
+    ${pkgs.coreutils}/bin/chmod 0400 /run/noctalia-test/address
+  '';
   fakeNoctalia = pkgs.writeShellScriptBin "noctalia" ''
     set -eu
     test "$#" -eq 2
@@ -71,12 +117,23 @@ let
       ];
       networking.useDHCP = false;
       environment.systemPackages = [ pkgs.socat ];
+      services.dbus.enable = true;
+      services.dbus.packages = [
+        (pkgs.writeTextDir "share/dbus-1/system.d/bluetooth-auth-fake-bluez.conf" ''
+          <busconfig>
+            <policy user="root">
+              <allow own="org.bluez"/>
+              <allow send_destination="org.bluez"/>
+            </policy>
+          </busconfig>
+        '')
+      ];
       systemd.services.bluetooth = {
         wantedBy = [ "multi-user.target" ];
         serviceConfig = {
-          Type = "oneshot";
-          RemainAfterExit = true;
-          ExecStart = "${pkgs.coreutils}/bin/true";
+          Type = "dbus";
+          BusName = "org.bluez";
+          ExecStart = "${bluetoothPython}/bin/python ${fakeBluez}";
         };
       };
       users.users.trusted.isNormalUser = true;
@@ -133,10 +190,33 @@ let
       }
     ];
   };
+  autoConnectOnlySystem = import (pkgs.path + "/nixos/lib/eval-config.nix") {
+    inherit (pkgs.stdenv.hostPlatform) system;
+    modules = [
+      common
+      {
+        my.security.bluetoothAuth.autoConnect.enable = true;
+      }
+    ];
+  };
+  bothSystem = import (pkgs.path + "/nixos/lib/eval-config.nix") {
+    inherit (pkgs.stdenv.hostPlatform) system;
+    modules = [
+      common
+      {
+        my.security.bluetoothAuth = {
+          noctaliaAutoLock.enable = true;
+          autoConnect.enable = true;
+        };
+      }
+    ];
+  };
 in
 assert !(builtins.hasAttr "bluetooth-auth-connect" disabledSystem.config.systemd.sockets);
+assert !(builtins.hasAttr "bluetooth-auth-power-monitor" disabledSystem.config.systemd.services);
 assert builtins.hasAttr "bluetooth-auth-connect" autoLockSystem.config.systemd.sockets;
 assert builtins.hasAttr "bluetooth-auth-connect" autoLockSystem.config.systemd.services;
+assert !(builtins.hasAttr "bluetooth-auth-power-monitor" autoLockSystem.config.systemd.services);
 assert pkgs.lib.any (
   rule: pkgs.lib.hasInfix "/run/bluetooth-auth/hci0.lock" rule
 ) autoLockSystem.config.systemd.tmpfiles.rules;
@@ -181,13 +261,65 @@ assert pkgs.lib.hasInfix "\"--locked-connected-interval-ms\" \"3300\""
   autoLockSystem.config.systemd.user.services.bluetooth-auth-auto-lock.serviceConfig.ExecStart;
 assert pkgs.lib.hasInfix "\"--locked-disconnected-interval-ms\" \"4400\""
   autoLockSystem.config.systemd.user.services.bluetooth-auth-auto-lock.serviceConfig.ExecStart;
+assert !(builtins.hasAttr "bluetooth-auth-connect" autoConnectOnlySystem.config.systemd.sockets);
+assert builtins.hasAttr "bluetooth-auth-connect" autoConnectOnlySystem.config.systemd.services;
+assert
+  autoConnectOnlySystem.config.systemd.services.bluetooth-auth-power-monitor.serviceConfig.Type
+  == "dbus";
+assert
+  autoConnectOnlySystem.config.systemd.services.bluetooth-auth-power-monitor.serviceConfig.BusName
+  == "org.bluetooth_auth.PowerMonitor";
+assert pkgs.lib.hasInfix "\"--address-file\" \"/run/noctalia-test/address\""
+  autoConnectOnlySystem.config.systemd.services.bluetooth-auth-power-monitor.serviceConfig.ExecStart;
+assert pkgs.lib.hasInfix "\"--timeout-ms\" \"5000\""
+  autoConnectOnlySystem.config.systemd.services.bluetooth-auth-power-monitor.serviceConfig.ExecStart;
+assert pkgs.lib.elem "bluetooth.service"
+  autoConnectOnlySystem.config.systemd.services.bluetooth-auth-power-monitor.before;
+assert pkgs.lib.any (
+  rule: pkgs.lib.hasInfix "/run/bluetooth-auth/hci0.lock" rule
+) autoConnectOnlySystem.config.systemd.tmpfiles.rules;
+assert pkgs.lib.elem "bluetooth.service"
+  autoConnectOnlySystem.config.systemd.services.bluetooth-auth-connect.wantedBy;
+assert pkgs.lib.elem "bluetooth.service"
+  autoConnectOnlySystem.config.systemd.services.bluetooth-auth-connect.after;
+assert pkgs.lib.all (
+  service:
+  pkgs.lib.elem "bluetooth-auth-connect.service"
+    autoConnectOnlySystem.config.systemd.services.${service}.onSuccess
+) sleepServices;
+assert autoLockSystem.config.systemd.services.bluetooth-auth-connect.wantedBy == [ ];
+assert builtins.hasAttr "bluetooth-auth-connect" bothSystem.config.systemd.sockets;
+assert builtins.hasAttr "bluetooth-auth-connect" bothSystem.config.systemd.services;
+assert pkgs.lib.any (
+  rule: pkgs.lib.hasInfix "/run/bluetooth-auth/hci0.lock" rule
+) bothSystem.config.systemd.tmpfiles.rules;
 pkgs.testers.runNixOSTest {
   name = "bluetooth-auth-connect";
   requiredFeatures.kvm = false;
   nodes = {
     machine = {
       imports = [ common ];
+      # Replace only the sleep command; exercise the actual unit dependencies and OnSuccess.
+      systemd.services =
+        pkgs.lib.genAttrs sleepServices (_: {
+          serviceConfig.ExecStart = [
+            ""
+            "${fakeSleep}"
+          ];
+        })
+        // {
+          fake-bluetooth-address = {
+            requiredBy = [ "bluetooth-auth-power-monitor.service" ];
+            before = [ "bluetooth-auth-power-monitor.service" ];
+            serviceConfig = {
+              Type = "oneshot";
+              ExecStart = fakeBluetoothAddress;
+            };
+          };
+          bluetooth-auth-power-monitor.serviceConfig.ExecStart = pkgs.lib.mkForce "${package}/bin/bluetooth-auth-power-monitor --address-file /run/noctalia-test/address --timeout-ms 5000";
+        };
       my.security.bluetoothAuth = {
+        autoConnect.enable = true;
         sudoAuth.enable = true;
         polkitAuth.enable = true;
         noctaliaAutoLock = {
@@ -202,7 +334,46 @@ pkgs.testers.runNixOSTest {
   };
   testScript = ''
     start_all()
-    machine.wait_for_unit("bluetooth-auth-connect.socket")
+    machine.wait_for_unit("bluetooth-auth-connect.socket", timeout=30)
+    machine.wait_for_unit("bluetooth-auth-power-monitor.service", timeout=15)
+    machine.wait_for_unit("bluetooth.service", timeout=15)
+    machine.wait_until_succeeds("test $(wc -l < /run/bluetooth-auth-connect-test.log) = 1 && test $(systemctl show -p ActiveState --value bluetooth-auth-connect.service) = inactive", timeout=15)
+
+    # BlueZ restarts trigger a connection without waiting for that connection to finish.
+    machine.succeed("touch /run/bluetooth-auth-connect-hold")
+    machine.succeed("timeout 2 systemctl restart bluetooth.service")
+    machine.wait_until_succeeds("test $(wc -l < /run/bluetooth-auth-connect-test.log) = 2")
+    machine.succeed("test $(systemctl show -p ActiveState --value bluetooth-auth-connect.service) = activating")
+    machine.succeed("rm /run/bluetooth-auth-connect-hold")
+    machine.wait_until_succeeds("test $(systemctl show -p ActiveState --value bluetooth-auth-connect.service) = inactive")
+
+    # No connection starts until the sleep operation has completed successfully.
+    machine.succeed("touch /run/bluetooth-auth-sleep-hold")
+    machine.succeed("systemctl start --no-block systemd-suspend.service")
+    machine.wait_until_succeeds("test $(systemctl show -p ActiveState --value systemd-suspend.service) = activating")
+    machine.succeed("test $(wc -l < /run/bluetooth-auth-connect-test.log) = 2")
+    machine.succeed("rm /run/bluetooth-auth-sleep-hold")
+    machine.wait_until_succeeds("test $(wc -l < /run/bluetooth-auth-connect-test.log) = 3 && test $(systemctl show -p ActiveState --value bluetooth-auth-connect.service) = inactive")
+    for count, service in enumerate(["systemd-hibernate", "systemd-hybrid-sleep", "systemd-suspend-then-hibernate"], start=4):
+        machine.succeed(f"systemctl start {service}.service")
+        machine.wait_until_succeeds(f"test $(wc -l < /run/bluetooth-auth-connect-test.log) = {count} && test $(systemctl show -p ActiveState --value bluetooth-auth-connect.service) = inactive")
+
+    # A failed sleep operation does not trigger a connection.
+    machine.succeed("touch /run/bluetooth-auth-sleep-fail")
+    machine.fail("systemctl start systemd-suspend.service")
+    machine.succeed("sleep 1; test $(wc -l < /run/bluetooth-auth-connect-test.log) = 6")
+    machine.succeed("rm /run/bluetooth-auth-sleep-fail")
+
+    # Connection failure is final for this event; the next event can start another attempt.
+    machine.succeed("touch /run/bluetooth-auth-connect-fail")
+    machine.succeed("systemctl start systemd-suspend.service")
+    machine.wait_until_succeeds("test $(wc -l < /run/bluetooth-auth-connect-test.log) = 7 && test $(systemctl show -p ActiveState --value bluetooth-auth-connect.service) = failed")
+    machine.succeed("sleep 1; test $(wc -l < /run/bluetooth-auth-connect-test.log) = 7")
+    machine.succeed("rm /run/bluetooth-auth-connect-fail")
+    machine.succeed("systemctl start systemd-suspend.service")
+    machine.wait_until_succeeds("test $(wc -l < /run/bluetooth-auth-connect-test.log) = 8 && test $(systemctl show -p ActiveState --value bluetooth-auth-connect.service) = inactive")
+
+    machine.succeed("rm /run/bluetooth-auth-connect-test.log")
     machine.succeed("rm -f /run/noctalia-test/auto-lock.log /run/noctalia-test/auto-lock-running /run/noctalia-test/auto-lock-fail")
     machine.succeed("mkdir -p /run/noctalia-test; chown trusted /run/noctalia-test; printf private-fake-address >/run/noctalia-test/address; chown trusted /run/noctalia-test/address; chmod 0400 /run/noctalia-test/address")
     machine.succeed("loginctl enable-linger trusted; systemctl start user@$(id -u trusted).service")

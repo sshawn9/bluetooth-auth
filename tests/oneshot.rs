@@ -20,7 +20,10 @@ use std::{
 };
 
 use dbus::{
-    Path as DbusPath, arg::PropMap, blocking::Connection, channel::MatchingReceiver,
+    Message, Path as DbusPath,
+    arg::{PropMap, Variant},
+    blocking::Connection,
+    channel::{MatchingReceiver, Sender},
     message::MatchRule,
 };
 use dbus_crossroads::Crossroads;
@@ -63,6 +66,7 @@ struct AdapterData {
 struct FakeBluez {
     calls: Arc<Mutex<Calls>>,
     behavior: Arc<AtomicU8>,
+    signals: mpsc::Sender<(&'static str, PropMap)>,
     stop: Arc<AtomicBool>,
     thread: Option<thread::JoinHandle<()>>,
 }
@@ -73,6 +77,7 @@ impl FakeBluez {
         let behavior = Arc::new(AtomicU8::new(Behavior::Accept as u8));
         let stop = Arc::new(AtomicBool::new(false));
         let (ready_tx, ready_rx) = mpsc::channel();
+        let (signals, received_signals) = mpsc::channel::<(&'static str, PropMap)>();
         let thread_calls = calls.clone();
         let thread_behavior = behavior.clone();
         let thread_stop = stop.clone();
@@ -184,6 +189,23 @@ impl FakeBluez {
             );
             ready_tx.send(()).unwrap();
             while !thread_stop.load(Ordering::Acquire) {
+                for (path, properties) in received_signals.try_iter() {
+                    connection
+                        .send(
+                            Message::new_signal(
+                                path,
+                                "org.freedesktop.DBus.Properties",
+                                "PropertiesChanged",
+                            )
+                            .unwrap()
+                            .append3(
+                                "org.bluez.Adapter1",
+                                properties,
+                                Vec::<String>::new(),
+                            ),
+                        )
+                        .unwrap();
+                }
                 connection.process(Duration::from_millis(10)).unwrap();
             }
         });
@@ -191,6 +213,7 @@ impl FakeBluez {
         Self {
             calls,
             behavior,
+            signals,
             stop,
             thread: Some(thread),
         }
@@ -203,6 +226,10 @@ impl FakeBluez {
 
     fn snapshot(&self) -> Calls {
         self.calls.lock().unwrap().clone()
+    }
+
+    fn emit(&self, path: &'static str, properties: PropMap) {
+        self.signals.send((path, properties)).unwrap();
     }
 
     fn wait_for_registrations(&self) -> Calls {
@@ -406,6 +433,144 @@ fn assert_failed(output: &Output, message: &str) {
         output.stdout.is_empty(),
         "{message}: {}",
         String::from_utf8_lossy(&output.stdout)
+    );
+}
+
+#[test]
+fn powered_events_query_or_connect_directly() {
+    let bus = PrivateBus::start();
+    let shim = compile_shim(&bus.directory);
+    let phone = bus.directory.join("phone");
+    let log = bus.directory.join("hci.log");
+    let ready = bus.directory.join("connected");
+    fs::write(&phone, format!("{TARGET}\n")).unwrap();
+    fs::write(&ready, b"").unwrap();
+    provision_lock(&bus.directory);
+    let fake = FakeBluez::start(&bus.address);
+    let mut command = Command::new(env!("CARGO_BIN_EXE_bluetooth-auth-power-monitor"));
+    command
+        .args([
+            "--address-file",
+            phone.to_str().unwrap(),
+            "--timeout-ms",
+            "200",
+        ])
+        .env("DBUS_SYSTEM_BUS_ADDRESS", &bus.address)
+        .env("LD_PRELOAD", &shim)
+        .env("BT_AUTH_RUNTIME_DIR", &bus.directory)
+        .env("BT_AUTH_HCI_SCENARIO", "external")
+        .env("BT_AUTH_HCI_READY_FILE", &ready)
+        .env("BT_AUTH_HCI_LOG", &log)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+    let mut child = BoundedChild::spawn(&mut command);
+    let connection = Connection::new_address(&bus.address).unwrap();
+    let proxy = connection.with_proxy(
+        "org.freedesktop.DBus",
+        "/org/freedesktop/DBus",
+        Duration::from_secs(1),
+    );
+    let deadline = Instant::now() + Duration::from_secs(2);
+    loop {
+        let (owned,): (bool,) = proxy
+            .method_call(
+                "org.freedesktop.DBus",
+                "NameHasOwner",
+                ("org.bluetooth_auth.PowerMonitor",),
+            )
+            .unwrap();
+        if owned {
+            break;
+        }
+        assert!(Instant::now() < deadline, "listener did not become ready");
+        thread::sleep(Duration::from_millis(10));
+    }
+    let wait_for_query = |previous| {
+        let deadline = Instant::now() + Duration::from_secs(2);
+        while query_count(&log) <= previous {
+            assert!(Instant::now() < deadline, "event did not query the link");
+            thread::sleep(Duration::from_millis(10));
+        }
+    };
+    let powered = |fake: &FakeBluez| {
+        fake.emit(
+            "/org/bluez/hci0",
+            [("Powered".into(), Variant(Box::new(true) as _))].into(),
+        );
+    };
+
+    // Startup, power-off, unrelated properties and other adapters never connect.
+    fake.emit(
+        "/org/bluez/hci0",
+        [("Powered".into(), Variant(Box::new(false) as _))].into(),
+    );
+    fake.emit(
+        "/org/bluez/hci0",
+        [(
+            "Alias".into(),
+            Variant(Box::new("Fake adapter".to_owned()) as _),
+        )]
+        .into(),
+    );
+    fake.emit(
+        "/org/bluez/hci1",
+        [("Powered".into(), Variant(Box::new(true) as _))].into(),
+    );
+    thread::sleep(Duration::from_millis(100));
+    assert_eq!(query_count(&log), 0);
+    assert!(fake.snapshot().methods.is_empty());
+
+    // An existing encrypted connection takes the library's query-only fast path.
+    // No systemd service exists on this bus to perform the query for the listener.
+    powered(&fake);
+    wait_for_query(0);
+    assert_eq!(query_count(&log), 1);
+    assert!(fake.snapshot().methods.is_empty());
+
+    // A missing connection gets one attempt, releases its resources on timeout,
+    // and remains idle until another Powered event arrives.
+    fs::remove_file(&ready).unwrap();
+    powered(&fake);
+    let calls = fake.wait_for_registrations();
+    assert_owners_gone(&bus, &calls);
+    let queries = query_count(&log);
+    thread::sleep(Duration::from_millis(100));
+    assert_eq!(query_count(&log), queries, "timeout must not retry");
+    assert_registration_counts(&fake.snapshot(), 1, 1);
+    assert_no_forbidden_methods(&fake.snapshot());
+
+    // A registration error also leaves the listener alive for the next event.
+    fake.reset(Behavior::RejectAdvertisement);
+    powered(&fake);
+    let calls = fake.wait_for_registrations();
+    assert_owners_gone(&bus, &calls);
+    let queries = query_count(&log);
+    thread::sleep(Duration::from_millis(100));
+    assert_eq!(query_count(&log), queries, "errors must not retry");
+
+    // The next event can succeed and release HID without exiting the listener.
+    fake.reset(Behavior::Accept);
+    powered(&fake);
+    let calls = fake.wait_for_registrations();
+    fs::write(&ready, b"").unwrap();
+    assert_owners_gone(&bus, &calls);
+    assert_registration_counts(&fake.snapshot(), 1, 1);
+    assert_no_forbidden_methods(&fake.snapshot());
+
+    // The signal subscription still follows BlueZ after its bus owner changes.
+    drop(fake);
+    let fake = FakeBluez::start(&bus.address);
+    let queries = query_count(&log);
+    powered(&fake);
+    wait_for_query(queries);
+    assert_eq!(query_count(&log), queries + 1);
+    assert!(fake.snapshot().methods.is_empty());
+
+    child.0.as_mut().unwrap().kill().unwrap();
+    let output = child.wait(Duration::from_secs(2));
+    assert!(
+        String::from_utf8_lossy(&output.stderr).contains("simulated advertisement rejection"),
+        "{output:?}"
     );
 }
 

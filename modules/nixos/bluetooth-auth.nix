@@ -12,6 +12,7 @@ in
     ./sops.nix
     ./keyring-unlock.nix
     ./connect.nix
+    ./auto-connect.nix
     ./noctalia-auto-lock.nix
     ./sudo-auth.nix
     ./polkit-auth.nix

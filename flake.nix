@@ -33,7 +33,9 @@
           checks.auth = pkgs.callPackage ./tests/auth.nix {
             package = self'.packages.bluetooth-auth;
           };
-          checks.connect = pkgs.callPackage ./tests/connect.nix { };
+          checks.connect = pkgs.callPackage ./tests/connect.nix {
+            package = self'.packages.bluetooth-auth;
+          };
           checks.keyring-unlock = pkgs.callPackage ./tests/keyring-unlock.nix {
             package = self'.packages.bluetooth-auth;
           };
