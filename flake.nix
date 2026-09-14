@@ -8,24 +8,6 @@
       url = "github:hercules-ci/flake-parts";
       inputs.nixpkgs-lib.follows = "nixpkgs";
     };
-
-    pyproject-nix = {
-      url = "github:pyproject-nix/pyproject.nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    uv2nix = {
-      url = "github:pyproject-nix/uv2nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.pyproject-nix.follows = "pyproject-nix";
-    };
-
-    pyproject-build-systems = {
-      url = "github:pyproject-nix/build-system-pkgs";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.pyproject-nix.follows = "pyproject-nix";
-      inputs.uv2nix.follows = "uv2nix";
-    };
   };
 
   outputs =
@@ -41,25 +23,20 @@
       ];
 
       perSystem =
-        { pkgs, ... }:
+        { pkgs, self', ... }:
         {
           packages = rec {
-            bluetooth-auth = pkgs.callPackage ./package.nix {
-              inherit pkgs;
-              inherit (inputs)
-                pyproject-build-systems
-                pyproject-nix
-                uv2nix
-                ;
-            };
+            bluetooth-auth = pkgs.callPackage ./package.nix { };
             default = bluetooth-auth;
           };
 
+          checks.auth = pkgs.callPackage ./tests/auth.nix {
+            package = self'.packages.bluetooth-auth;
+          };
+          checks.connect = pkgs.callPackage ./tests/connect.nix { };
+
           devShells.default = pkgs.mkShell {
-            packages = [
-              pkgs.python3
-              pkgs.uv
-            ];
+            inputsFrom = [ self'.packages.bluetooth-auth ];
           };
         };
 

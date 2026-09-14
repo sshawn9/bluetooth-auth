@@ -102,6 +102,7 @@ dependencies = [
  "dbus",
  "dbus-crossroads",
  "libc",
+ "serde_json",
  "tokio",
 ]
 

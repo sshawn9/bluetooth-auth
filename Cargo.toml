@@ -8,6 +8,7 @@ license = "MIT"
 bluer = { version = "0.17.4", features = ["bluetoothd"] }
 clap = { version = "4", features = ["derive"] }
 libc = "0.2"
+serde_json = "1"
 tokio = { version = "1", features = ["rt", "sync", "time", "macros"] }
 
 [dev-dependencies]

@@ -6,9 +6,7 @@
 
 let
   cfg = config.my.security.bluetoothAuth;
-  mkSettingsFile = import ./settings-file.nix;
-  settingsFile = mkSettingsFile cfg;
-  helper = "${cfg.package}/bin/bluetooth-auth-oneshot-auth";
+  helper = "${cfg.package}/bin/ble-link";
   allowedActions = builtins.toJSON cfg.polkitAuth.allowedActions;
   trustedUser = builtins.toJSON cfg.user;
   defaultAllowedActions = [
@@ -48,12 +46,6 @@ in
   options.my.security.bluetoothAuth.polkitAuth = {
     enable = lib.mkEnableOption "polkit authentication bypass when the Bluetooth device is connected";
 
-    timeoutSeconds = lib.mkOption {
-      type = lib.types.ints.between 1 2147483647;
-      default = 2;
-      description = "Maximum time to wait for the Bluetooth connection check during polkit auth.";
-    };
-
     allowedActions = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = defaultAllowedActions;
@@ -64,6 +56,15 @@ in
 
   config = lib.mkIf (cfg.enable && cfg.polkitAuth.enable) {
     security.polkit.enable = true;
+
+    # The Rust checker reads the host HCI connection table directly.
+    systemd.services.polkit.serviceConfig = {
+      PrivateNetwork = false;
+      RestrictAddressFamilies = [
+        "AF_UNIX"
+        "AF_BLUETOOTH"
+      ];
+    };
 
     security.polkit.extraConfig = ''
       polkit.addRule(function(action, subject) {
@@ -85,8 +86,10 @@ in
         try {
           polkit.spawn([
             ${builtins.toJSON helper},
-            ${builtins.toJSON "${settingsFile}"},
-            "polkit"
+            "--address-file",
+            ${builtins.toJSON cfg.bluetoothAddressFile},
+            "--connect",
+            "-1"
           ]);
           return polkit.Result.YES;
         } catch (error) {

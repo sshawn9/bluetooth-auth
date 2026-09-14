@@ -1,6 +1,11 @@
 use std::{
+    error::Error,
+    fs::{self, TryLockError},
     io,
-    os::fd::{AsRawFd, FromRawFd, OwnedFd},
+    os::{
+        fd::{AsRawFd, FromRawFd, OwnedFd},
+        unix::fs::OpenOptionsExt,
+    },
     time::Duration,
 };
 
@@ -10,6 +15,9 @@ use bluer::gatt::local::{
     Application, ApplicationHandle, Characteristic, CharacteristicNotify, CharacteristicRead,
     CharacteristicWrite, CharacteristicWriteMethod, Descriptor, DescriptorRead, ReqError, Service,
 };
+use tokio::{runtime::Builder, time};
+
+const LOCK_PATH: &str = "/run/bluetooth-auth/hci0.lock";
 
 /// Use `None` for manual enrollment, or `Some(address)` to restrict HID access.
 pub async fn register_hid(target_address: Option<Address>) -> bluer::Result<ApplicationHandle> {
@@ -208,4 +216,45 @@ pub fn query_connection(target_address: Address) -> bluer::Result<bool> {
     Ok(connection.is_some_and(|entry| {
         u32::from_ne_bytes([entry[12], entry[13], entry[14], entry[15]]) & 0x0004 != 0 // HCI_LM_ENCRYPT
     }))
+}
+
+pub fn query_or_connect(target: Address, timeout_ms: u64) -> Result<bool, Box<dyn Error>> {
+    if query_connection(target)? {
+        return Ok(true);
+    }
+    let deadline = time::Instant::now()
+        .checked_add(Duration::from_millis(timeout_ms))
+        .ok_or("Connection timeout is too large")?;
+    let lock_interval = Duration::from_millis((timeout_ms / 20).max(100));
+    // Provision this file once; never replace or unlink a lock that another process may hold.
+    let lock = fs::File::options()
+        .read(true)
+        .custom_flags(libc::O_NOFOLLOW)
+        .open(LOCK_PATH)
+        .map_err(|error| format!("Cannot open connection lock {LOCK_PATH}: {error}"))?;
+    let runtime = Builder::new_current_thread().enable_all().build()?;
+    let result = runtime.block_on(async {
+        time::timeout_at(deadline, async {
+            loop {
+                match lock.try_lock() {
+                    Ok(()) => break,
+                    Err(TryLockError::WouldBlock) => time::sleep(lock_interval).await,
+                    Err(TryLockError::Error(error)) => return Err(error.into()),
+                }
+            }
+            if query_connection(target)? {
+                return Ok(true);
+            }
+            let _hid = register_hid(Some(target)).await?;
+            let _advertisement = advertise().await?;
+            while !query_connection(target)? {
+                time::sleep(Duration::from_millis(10)).await;
+            }
+            Ok::<bool, Box<dyn Error>>(true)
+        })
+        .await
+    });
+    // Close all D-Bus connections, including partial registrations, before releasing the lock.
+    drop(runtime);
+    result.unwrap_or(Ok(false))
 }

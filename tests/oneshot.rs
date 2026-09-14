@@ -2,8 +2,12 @@
 #![cfg(target_os = "linux")]
 
 use std::{
-    fs,
-    os::unix::process::ExitStatusExt,
+    fs::{self, OpenOptions},
+    os::unix::{
+        fs::{OpenOptionsExt, PermissionsExt},
+        net::UnixDatagram,
+        process::ExitStatusExt,
+    },
     path::{Path, PathBuf},
     process::{Child, Command, Output, Stdio},
     sync::{
@@ -285,38 +289,48 @@ impl Drop for BoundedChild {
     }
 }
 
-fn command(
+fn link_command(
     bus: &PrivateBus,
     shim: &Path,
     phone: &Path,
     log: &Path,
-    hci_scenario: &str,
-    timeout_seconds: u32,
+    scenario: &str,
+    connect: i64,
 ) -> Command {
     fs::write(log, b"").unwrap();
-    let mut command = Command::new(env!("CARGO_BIN_EXE_ble-ask-or-connect"));
+    let runtime = &bus.directory;
+    provision_lock(runtime);
+    let mut command = Command::new(env!("CARGO_BIN_EXE_ble-link"));
     command
-        .args(["--address-file", phone.to_str().unwrap()])
-        .args(["--timeout-seconds", &timeout_seconds.to_string()])
+        .args([
+            "--address-file",
+            phone.to_str().unwrap(),
+            "--connect",
+            &connect.to_string(),
+        ])
         .env("DBUS_SYSTEM_BUS_ADDRESS", &bus.address)
         .env("LD_PRELOAD", shim)
-        .env("BT_AUTH_HCI_SCENARIO", hci_scenario)
+        .env("BT_AUTH_RUNTIME_DIR", runtime)
+        .env("BT_AUTH_HCI_SCENARIO", scenario)
         .env("BT_AUTH_HCI_LOG", log)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
     command
 }
 
-fn run(
-    bus: &PrivateBus,
-    shim: &Path,
-    phone: &Path,
-    log: &Path,
-    hci_scenario: &str,
-    timeout_seconds: u32,
-) -> Output {
-    let mut command = command(bus, shim, phone, log, hci_scenario, timeout_seconds);
-    BoundedChild::spawn(&mut command).wait(Duration::from_secs(4))
+fn provision_lock(runtime: &Path) {
+    OpenOptions::new()
+        .read(true)
+        .custom_flags(libc::O_NOFOLLOW)
+        .open(runtime.join("hci0.lock"))
+        .or_else(|_| {
+            OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .mode(0o600)
+                .open(runtime.join("hci0.lock"))
+        })
+        .unwrap();
 }
 
 fn assert_registration_counts(calls: &Calls, gatt: usize, advertisements: usize) {
@@ -396,7 +410,232 @@ fn assert_failed(output: &Output, message: &str) {
 }
 
 #[test]
-fn oneshot_executable_is_bounded_and_releases_dbus_owners() {
+fn noctalia_auto_lock_monitors_and_locks() {
+    let bus = PrivateBus::start();
+    let shim = compile_shim(&bus.directory);
+    let phone = bus.directory.join("phone");
+    let hci_log = bus.directory.join("hci.log");
+    let noctalia_log = bus.directory.join("noctalia.log");
+    let noctalia_state = bus.directory.join("noctalia.state");
+    fs::write(&phone, format!("{TARGET}\n")).unwrap();
+    let fake = FakeBluez::start(&bus.address);
+    let shell = std::env::split_paths(&std::env::var_os("PATH").unwrap())
+        .map(|directory| directory.join("sh"))
+        .find(|candidate| candidate.is_file())
+        .expect("a POSIX shell is required for the Noctalia mock");
+    let noctalia_path = bus.directory.join("noctalia");
+    fs::write(
+        &noctalia_path,
+        format!(
+            "#!{}\n{}",
+            shell.display(),
+            r#"set -eu
+case "$*" in
+  'msg status') IFS= read -r state < "$NOCTALIA_STATE_FILE"; printf 'status\n' >> "$NOCTALIA_LOG"; printf '%s\n' "$state" ;;
+  'msg session lock') printf 'lock\n' >> "$NOCTALIA_LOG"; test "$NOCTALIA_LOCK_FAIL" = 0 || { printf 'simulated lock failure\n'; exit 1; }; test "${NOCTALIA_LOCK_NOOP:-0}" = 0 || exit 0; printf '%s\n' '{"locked":true}' > "$NOCTALIA_STATE_FILE" ;;
+  *) exit 64 ;;
+esac
+"#,
+        ),
+    )
+    .unwrap();
+    fs::set_permissions(&noctalia_path, fs::Permissions::from_mode(0o755)).unwrap();
+    // Intervals: unlocked/connected, unlocked/disconnected, locked/connected, locked/disconnected.
+    let noctalia =
+        |scenario: &str, timeout_ms: u64, state: &str, lock_fails: bool, intervals: [u64; 4]| {
+            fs::write(&hci_log, b"").unwrap();
+            fs::write(&noctalia_log, b"").unwrap();
+            fs::write(&noctalia_state, format!("{state}\n")).unwrap();
+            provision_lock(&bus.directory);
+            let mut command = Command::new(env!("CARGO_BIN_EXE_ble-noctalia-auto-lock"));
+            command
+                .args([
+                    "--address-file",
+                    phone.to_str().unwrap(),
+                    "--timeout-ms",
+                    &timeout_ms.to_string(),
+                    "--unlocked-connected-interval-ms",
+                    &intervals[0].to_string(),
+                    "--unlocked-disconnected-interval-ms",
+                    &intervals[1].to_string(),
+                    "--locked-connected-interval-ms",
+                    &intervals[2].to_string(),
+                    "--locked-disconnected-interval-ms",
+                    &intervals[3].to_string(),
+                ])
+                .env("DBUS_SYSTEM_BUS_ADDRESS", &bus.address)
+                .env("LD_PRELOAD", &shim)
+                .env("BT_AUTH_RUNTIME_DIR", &bus.directory)
+                .env("BT_AUTH_HCI_SCENARIO", scenario)
+                .env("BT_AUTH_HCI_LOG", &hci_log)
+                .env("PATH", &bus.directory)
+                .env("NOCTALIA_LOG", &noctalia_log)
+                .env("NOCTALIA_STATE_FILE", &noctalia_state)
+                .env("NOCTALIA_LOCK_FAIL", if lock_fails { "1" } else { "0" })
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped());
+            command
+        };
+    let wait_for_status_calls = |expected: usize| {
+        let deadline = Instant::now() + Duration::from_secs(3);
+        loop {
+            let log = fs::read_to_string(&noctalia_log).unwrap();
+            if log.lines().filter(|line| *line == "status").count() >= expected {
+                return log;
+            }
+            assert!(
+                Instant::now() < deadline,
+                "next status check did not arrive: {log:?}"
+            );
+            thread::sleep(Duration::from_millis(10));
+        }
+    };
+
+    // A locked, connected session keeps querying but never attempts BLE or locks again.
+    provision_lock(&bus.directory);
+    let lock_path = bus.directory.join("hci0.lock");
+    let held_lock = OpenOptions::new()
+        .read(true)
+        .custom_flags(libc::O_NOFOLLOW)
+        .open(&lock_path)
+        .unwrap();
+    held_lock.try_lock().unwrap();
+    fake.reset(Behavior::Accept);
+    let mut command = noctalia(
+        "encrypted",
+        80,
+        r#"{"locked":true}"#,
+        false,
+        [30_000, 30_000, 100, 30_000],
+    );
+    let child = BoundedChild::spawn(&mut command);
+    assert!(!wait_for_status_calls(2).lines().any(|line| line == "lock"));
+    assert!(fake.snapshot().methods.is_empty());
+    assert_eq!(unsafe { libc::kill(child.id() as i32, libc::SIGTERM) }, 0);
+    assert_eq!(
+        child.wait(Duration::from_secs(2)).status.signal(),
+        Some(libc::SIGTERM)
+    );
+    drop(held_lock);
+
+    // Locked/disconnected attempts BLE again but never requests another session lock.
+    fake.reset(Behavior::Accept);
+    let mut command = noctalia(
+        "unencrypted",
+        80,
+        r#"{"locked":true}"#,
+        false,
+        [30_000, 30_000, 30_000, 100],
+    );
+    let child = BoundedChild::spawn(&mut command);
+    assert!(!wait_for_status_calls(2).lines().any(|line| line == "lock"));
+    assert_eq!(unsafe { libc::kill(child.id() as i32, libc::SIGTERM) }, 0);
+    assert_eq!(
+        child.wait(Duration::from_secs(2)).status.signal(),
+        Some(libc::SIGTERM)
+    );
+    let calls = fake.snapshot();
+    assert!(!calls.gatt.is_empty());
+    assert!(!calls.advertisements.is_empty());
+    assert_no_forbidden_methods(&calls);
+    assert_owners_gone(&bus, &calls);
+
+    // After connecting, a second status call proves a new cycle began.
+    // The other three intervals are 30 seconds, beyond the test deadline.
+    fake.reset(Behavior::Accept);
+    let mut command = noctalia(
+        "delayed",
+        250,
+        r#"{"locked":false}"#,
+        false,
+        [100, 30_000, 30_000, 30_000],
+    );
+    let child = BoundedChild::spawn(&mut command);
+    let calls = fake.wait_for_registrations();
+    assert_owners_gone(&bus, &calls);
+    assert!(!wait_for_status_calls(2).lines().any(|line| line == "lock"));
+    assert_registration_counts(&calls, 1, 1);
+    assert_no_forbidden_methods(&calls);
+    assert_eq!(unsafe { libc::kill(child.id() as i32, libc::SIGTERM) }, 0);
+    assert_eq!(
+        child.wait(Duration::from_secs(2)).status.signal(),
+        Some(libc::SIGTERM)
+    );
+
+    // A busy shared lock times out: lock once, then use the locked/disconnected interval.
+    let held_lock = OpenOptions::new()
+        .read(true)
+        .custom_flags(libc::O_NOFOLLOW)
+        .open(&lock_path)
+        .unwrap();
+    held_lock.try_lock().unwrap();
+    fake.reset(Behavior::Accept);
+    let mut command = noctalia(
+        "disconnected",
+        80,
+        r#"{"locked":false}"#,
+        false,
+        [30_000, 30_000, 30_000, 100],
+    );
+    let child = BoundedChild::spawn(&mut command);
+    // The second status call verifies locking; the third starts the next cycle.
+    assert_eq!(
+        wait_for_status_calls(3)
+            .lines()
+            .filter(|line| *line == "lock")
+            .count(),
+        1
+    );
+    assert!(fake.snapshot().methods.is_empty());
+    assert_eq!(unsafe { libc::kill(child.id() as i32, libc::SIGTERM) }, 0);
+    assert_eq!(
+        child.wait(Duration::from_secs(2)).status.signal(),
+        Some(libc::SIGTERM)
+    );
+
+    // An accepted lock request can leave the session unlocked: use the fourth interval.
+    fake.reset(Behavior::Accept);
+    let mut command = noctalia(
+        "disconnected",
+        80,
+        r#"{"locked":false}"#,
+        false,
+        [30_000, 100, 30_000, 30_000],
+    );
+    command.env("NOCTALIA_LOCK_NOOP", "1");
+    let child = BoundedChild::spawn(&mut command);
+    wait_for_status_calls(3);
+    assert!(fake.snapshot().methods.is_empty());
+    assert_eq!(unsafe { libc::kill(child.id() as i32, libc::SIGTERM) }, 0);
+    let output = child.wait(Duration::from_secs(2));
+    assert_eq!(output.status.signal(), Some(libc::SIGTERM));
+    assert!(
+        String::from_utf8_lossy(&output.stderr)
+            .contains("Noctalia still reports an unlocked session after 300 ms"),
+        "{output:?}"
+    );
+    drop(held_lock);
+
+    // Noctalia command failures still terminate the monitor.
+    let held_lock = OpenOptions::new()
+        .read(true)
+        .custom_flags(libc::O_NOFOLLOW)
+        .open(&lock_path)
+        .unwrap();
+    held_lock.try_lock().unwrap();
+    fake.reset(Behavior::Accept);
+    let mut command = noctalia("disconnected", 80, r#"{"locked":false}"#, true, [30_000; 4]);
+    let output = BoundedChild::spawn(&mut command).wait(Duration::from_secs(2));
+    assert_failed(&output, "Noctalia lock failure should propagate");
+    assert!(
+        String::from_utf8_lossy(&output.stderr).contains("simulated lock failure"),
+        "{output:?}"
+    );
+    assert_eq!(fs::read_to_string(&noctalia_log).unwrap(), "status\nlock\n");
+}
+
+#[test]
+fn link_query_notify_and_sync_contracts() {
     let bus = PrivateBus::start();
     let shim = compile_shim(&bus.directory);
     let phone = bus.directory.join("phone");
@@ -404,95 +643,212 @@ fn oneshot_executable_is_bounded_and_releases_dbus_owners() {
     fs::write(&phone, format!("{TARGET}\n")).unwrap();
     let fake = FakeBluez::start(&bus.address);
 
-    fake.reset(Behavior::Accept);
-    let output = run(&bus, &shim, &phone, &log, "encrypted", 1);
-    assert!(output.status.success(), "fast path failed: {output:?}");
-    assert_eq!(query_count(&log), 1);
-    let calls = fake.snapshot();
-    assert_registration_counts(&calls, 0, 0);
-    assert_no_forbidden_methods(&calls);
+    for (scenario, success) in [
+        ("encrypted", true),
+        ("disconnected", false),
+        ("unencrypted", false),
+        ("error", false),
+    ] {
+        fake.reset(Behavior::Accept);
+        let mut command = link_command(&bus, &shim, &phone, &log, scenario, 0);
+        let output = BoundedChild::spawn(&mut command).wait(Duration::from_secs(2));
+        assert_eq!(output.status.success(), success, "{scenario}: {output:?}");
+        assert_eq!(query_count(&log), 1, "{scenario}");
+        assert!(fake.snapshot().methods.is_empty(), "{scenario}");
+    }
 
+    let connect_socket = bus.directory.join("connect.sock");
+    let receiver = UnixDatagram::bind(&connect_socket).unwrap();
+    receiver.set_nonblocking(true).unwrap();
+    for (scenario, success) in [("encrypted", true), ("error", false)] {
+        fake.reset(Behavior::Accept);
+        let mut command = link_command(&bus, &shim, &phone, &log, scenario, -1);
+        let output = BoundedChild::spawn(&mut command).wait(Duration::from_secs(2));
+        assert_eq!(output.status.success(), success, "{scenario}: {output:?}");
+        let mut no_packet = [0; 8];
+        assert_eq!(
+            receiver.recv(&mut no_packet).unwrap_err().kind(),
+            std::io::ErrorKind::WouldBlock,
+            "{scenario} query should not request connection"
+        );
+    }
+    // -1 is the canonical value; any negative input has the same async behavior.
+    for connect in [-1, -2, -1500, i64::MIN] {
+        fake.reset(Behavior::Accept);
+        let mut command = link_command(&bus, &shim, &phone, &log, "disconnected", connect);
+        let output = BoundedChild::spawn(&mut command).wait(Duration::from_secs(2));
+        assert_eq!(output.status.code(), Some(1), "{connect}: {output:?}");
+        let mut payload = [0; 2];
+        assert_eq!(receiver.recv(&mut payload).unwrap(), 1);
+        assert_eq!(payload[0], 1);
+        assert_eq!(query_count(&log), 1);
+        assert!(fake.snapshot().methods.is_empty());
+    }
+    drop(receiver);
+
+    // Waiting for a busy lock expires as a normal failure without registering anything.
+    let lock_path = bus.directory.join("hci0.lock");
+    let held_lock = OpenOptions::new()
+        .read(true)
+        .custom_flags(libc::O_NOFOLLOW)
+        .open(&lock_path)
+        .unwrap();
+    held_lock.try_lock().unwrap();
     fake.reset(Behavior::Accept);
-    let output = run(&bus, &shim, &phone, &log, "delayed", 1);
+    let mut command = link_command(&bus, &shim, &phone, &log, "disconnected", 80);
+    let started = Instant::now();
+    let output = BoundedChild::spawn(&mut command).wait(Duration::from_secs(2));
+    assert!(started.elapsed() >= Duration::from_millis(80));
+    assert_eq!(output.status.code(), Some(1), "busy lock: {output:?}");
+    assert!(
+        output.stdout.is_empty() && output.stderr.is_empty(),
+        "busy lock: {output:?}"
+    );
+    assert!(fake.snapshot().methods.is_empty());
+    fake.reset(Behavior::Accept);
+    let mut command = link_command(&bus, &shim, &phone, &log, "encrypted", 1000);
+    let output = BoundedChild::spawn(&mut command).wait(Duration::from_secs(2));
     assert!(
         output.status.success(),
-        "delayed success failed: {output:?}"
+        "busy encrypted fast path: {output:?}"
     );
-    assert!(query_count(&log) > 1);
-    let calls = fake.snapshot();
-    assert_registration_counts(&calls, 1, 1);
-    assert_no_forbidden_methods(&calls);
-    assert_owners_gone(&bus, &calls);
-
-    fake.reset(Behavior::Accept);
-    let started = Instant::now();
-    let output = run(&bus, &shim, &phone, &log, "unencrypted", 1);
-    assert_failed(&output, "unencrypted link should time out");
-    assert!(started.elapsed() < Duration::from_secs(3));
-    assert!(query_count(&log) > 1);
-    let calls = fake.snapshot();
-    assert_registration_counts(&calls, 1, 1);
-    assert_no_forbidden_methods(&calls);
-    assert_owners_gone(&bus, &calls);
-
-    fake.reset(Behavior::Accept);
-    let output = run(&bus, &shim, &phone, &log, "error", 1);
-    assert_failed(&output, "HCI query error should fail");
     assert_eq!(query_count(&log), 1);
+    assert!(fake.snapshot().methods.is_empty());
+    drop(held_lock);
+
+    // A waiter's timeout does not interrupt the holder; terminating the holder
+    // releases the lock for a later attempt.
+    fake.reset(Behavior::Accept);
+    let mut holder_command = link_command(&bus, &shim, &phone, &log, "unencrypted", 1000);
+    let mut holder = BoundedChild::spawn(&mut holder_command);
+    fake.wait_for_registrations();
+    let mut command = link_command(&bus, &shim, &phone, &log, "disconnected", 80);
+    let output = BoundedChild::spawn(&mut command).wait(Duration::from_secs(2));
+    assert_eq!(output.status.code(), Some(1), "active holder: {output:?}");
+    assert!(
+        output.stdout.is_empty() && output.stderr.is_empty(),
+        "active holder: {output:?}"
+    );
+    assert!(holder.0.as_mut().unwrap().try_wait().unwrap().is_none());
+    assert_eq!(unsafe { libc::kill(holder.id() as i32, libc::SIGTERM) }, 0);
+    let output = holder.wait(Duration::from_secs(2));
+    assert_eq!(output.status.signal(), Some(libc::SIGTERM), "{output:?}");
     let calls = fake.snapshot();
-    assert_registration_counts(&calls, 0, 0);
+    assert_registration_counts(&calls, 1, 1);
     assert_no_forbidden_methods(&calls);
+    assert_owners_gone(&bus, &calls);
 
     fake.reset(Behavior::Accept);
-    let output = run(&bus, &shim, &phone, &log, "late-error", 1);
-    assert_failed(&output, "HCI query error after registration should fail");
-    assert_eq!(query_count(&log), 2);
-    let calls = fake.snapshot();
-    assert_registration_counts(&calls, 1, 1);
-    assert_no_forbidden_methods(&calls);
-    assert_owners_gone(&bus, &calls);
-
-    fake.reset(Behavior::RejectGatt);
-    let output = run(&bus, &shim, &phone, &log, "disconnected", 1);
-    assert_failed(&output, "GATT rejection should fail");
-    let calls = fake.snapshot();
-    assert_registration_counts(&calls, 1, 0);
-    assert_no_forbidden_methods(&calls);
-    assert_owners_gone(&bus, &calls);
-
-    fake.reset(Behavior::RejectAdvertisement);
-    let output = run(&bus, &shim, &phone, &log, "disconnected", 1);
-    assert_failed(&output, "advertisement rejection should fail");
-    let calls = fake.snapshot();
-    assert_registration_counts(&calls, 1, 1);
-    assert_no_forbidden_methods(&calls);
-    assert_owners_gone(&bus, &calls);
-
-    fake.reset(Behavior::HangAdvertisement);
-    let started = Instant::now();
-    let output = run(&bus, &shim, &phone, &log, "disconnected", 1);
-    assert_failed(
-        &output,
-        "partial advertisement registration should time out",
+    let mut command = link_command(&bus, &shim, &phone, &log, "unencrypted", 80);
+    let output = BoundedChild::spawn(&mut command).wait(Duration::from_secs(2));
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "connection was not established: {output:?}"
     );
-    assert!(started.elapsed() < Duration::from_secs(3));
+    assert!(
+        output.stderr.is_empty(),
+        "a normal connection timeout must not report a runtime error: {output:?}"
+    );
     let calls = fake.snapshot();
     assert_registration_counts(&calls, 1, 1);
     assert_no_forbidden_methods(&calls);
     assert_owners_gone(&bus, &calls);
 
-    for signal in [libc::SIGINT, libc::SIGTERM] {
-        fake.reset(Behavior::Accept);
-        let mut process = command(&bus, &shim, &phone, &log, "disconnected", 10);
-        let child = BoundedChild::spawn(&mut process);
-        fake.wait_for_registrations();
-        assert_eq!(unsafe { libc::kill(child.id() as i32, signal) }, 0);
-        let output = child.wait(Duration::from_secs(2));
-        assert_eq!(output.status.signal(), Some(signal), "{output:?}");
+    // Failed or stalled registrations release both D-Bus ownership and the lock.
+    for (behavior, advertisements) in [
+        (Behavior::RejectGatt, 0),
+        (Behavior::RejectAdvertisement, 1),
+        (Behavior::HangAdvertisement, 1),
+    ] {
+        fake.reset(behavior);
+        let mut command = link_command(&bus, &shim, &phone, &log, "disconnected", 250);
+        let output = BoundedChild::spawn(&mut command).wait(Duration::from_secs(2));
+        if behavior == Behavior::HangAdvertisement {
+            assert_eq!(output.status.code(), Some(1), "{output:?}");
+            assert!(output.stderr.is_empty(), "normal timeout: {output:?}");
+        } else {
+            assert_failed(&output, "registration error should fail");
+        }
         let calls = fake.snapshot();
-        assert_registration_counts(&calls, 1, 1);
+        assert_registration_counts(&calls, 1, advertisements);
         assert_no_forbidden_methods(&calls);
         assert_owners_gone(&bus, &calls);
+        let post_error_lock = OpenOptions::new()
+            .read(true)
+            .custom_flags(libc::O_NOFOLLOW)
+            .open(&lock_path)
+            .unwrap();
+        post_error_lock.try_lock().unwrap();
+    }
+
+    fake.reset(Behavior::Accept);
+    let ready = bus.directory.join("connected");
+    let mut command = link_command(&bus, &shim, &phone, &log, "external", 1000);
+    command.env("BT_AUTH_HCI_READY_FILE", &ready);
+    let child = BoundedChild::spawn(&mut command);
+    fake.wait_for_registrations();
+    fs::write(&ready, b"").unwrap();
+    let output = child.wait(Duration::from_secs(2));
+    assert!(
+        output.status.success(),
+        "released lock should allow connection: {output:?}"
+    );
+    let calls = fake.snapshot();
+    assert_registration_counts(&calls, 1, 1);
+    assert_no_forbidden_methods(&calls);
+    assert_owners_gone(&bus, &calls);
+    let post_success_lock = fs::File::open(&lock_path).unwrap();
+    post_success_lock.try_lock().unwrap();
+}
+
+#[test]
+fn link_lock_wait_rechecks_connection_and_shares_deadline() {
+    let bus = PrivateBus::start();
+    let shim = compile_shim(&bus.directory);
+    let phone = bus.directory.join("phone");
+    let log = bus.directory.join("hci.log");
+    fs::write(&phone, format!("{TARGET}\n")).unwrap();
+    let fake = FakeBluez::start(&bus.address);
+    provision_lock(&bus.directory);
+
+    for connected in [true, false] {
+        fake.reset(Behavior::Accept);
+        let held_lock = fs::File::open(bus.directory.join("hci0.lock")).unwrap();
+        held_lock.try_lock().unwrap();
+        let ready = bus.directory.join(format!("connected-{connected}"));
+        let mut command = link_command(&bus, &shim, &phone, &log, "external", 2000);
+        command.env("BT_AUTH_HCI_READY_FILE", &ready);
+        let mut child = BoundedChild::spawn(&mut command);
+        let deadline = Instant::now() + Duration::from_secs(2);
+        while query_count(&log) < 2 {
+            assert!(Instant::now() < deadline, "initial queries did not arrive");
+            thread::sleep(Duration::from_millis(10));
+        }
+        thread::sleep(Duration::from_millis(1200));
+        assert!(child.0.as_mut().unwrap().try_wait().unwrap().is_none());
+        assert!(fake.snapshot().methods.is_empty());
+        if connected {
+            fs::write(&ready, b"").unwrap();
+        }
+        drop(held_lock);
+
+        // Only the remaining part of the 2-second budget is available after release.
+        // Restarting that budget here would exceed this test deadline.
+        let output = child.wait(Duration::from_millis(1300));
+        assert_eq!(output.status.success(), connected, "{output:?}");
+        let calls = fake.snapshot();
+        if connected {
+            // Reuse the connection established while waiting, with no HID registration.
+            assert!(calls.methods.is_empty());
+        } else {
+            assert!(output.stderr.is_empty(), "normal timeout: {output:?}");
+            assert_registration_counts(&calls, 1, 1);
+            assert_no_forbidden_methods(&calls);
+            assert_owners_gone(&bus, &calls);
+        }
+        let released_lock = fs::File::open(bus.directory.join("hci0.lock")).unwrap();
+        released_lock.try_lock().unwrap();
     }
 }
 
