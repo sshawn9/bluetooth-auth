@@ -57,15 +57,36 @@ struct Calls {
     methods: Vec<String>,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
+struct AdapterState {
+    discoverable: bool,
+    connectable: bool,
+    pairable: bool,
+    pairable_timeout: u32,
+}
+
+impl Default for AdapterState {
+    fn default() -> Self {
+        Self {
+            discoverable: true,
+            connectable: true,
+            pairable: false,
+            pairable_timeout: 42,
+        }
+    }
+}
+
 #[derive(Clone)]
 struct AdapterData {
     calls: Arc<Mutex<Calls>>,
     behavior: Arc<AtomicU8>,
+    state: Arc<Mutex<AdapterState>>,
 }
 
 struct FakeBluez {
     calls: Arc<Mutex<Calls>>,
     behavior: Arc<AtomicU8>,
+    state: Arc<Mutex<AdapterState>>,
     signals: mpsc::Sender<(&'static str, PropMap)>,
     stop: Arc<AtomicBool>,
     thread: Option<thread::JoinHandle<()>>,
@@ -75,11 +96,13 @@ impl FakeBluez {
     fn start(address: &str) -> Self {
         let calls = Arc::new(Mutex::new(Calls::default()));
         let behavior = Arc::new(AtomicU8::new(Behavior::Accept as u8));
+        let state = Arc::new(Mutex::new(AdapterState::default()));
         let stop = Arc::new(AtomicBool::new(false));
         let (ready_tx, ready_rx) = mpsc::channel();
         let (signals, received_signals) = mpsc::channel::<(&'static str, PropMap)>();
         let thread_calls = calls.clone();
         let thread_behavior = behavior.clone();
+        let thread_state = state.clone();
         let thread_stop = stop.clone();
         let address = address.to_owned();
         let thread = thread::spawn(move || {
@@ -93,6 +116,42 @@ impl FakeBluez {
                 builder
                     .property::<String, _>("Alias")
                     .get(|_, _: &mut AdapterData| Ok("One-shot fake adapter".to_owned()));
+                builder
+                    .property::<bool, _>("Discoverable")
+                    .get(|_, data: &mut AdapterData| Ok(data.state.lock().unwrap().discoverable))
+                    .set(|_, data: &mut AdapterData, discoverable| {
+                        let mut state = data.state.lock().unwrap();
+                        state.discoverable = discoverable;
+                        // BlueZ can make an adapter non-connectable as a side effect of
+                        // disabling discoverability. The executable must restore both.
+                        if !discoverable {
+                            state.connectable = false;
+                        }
+                        Ok(Some(discoverable))
+                    });
+                builder
+                    .property::<bool, _>("Connectable")
+                    .get(|_, data: &mut AdapterData| Ok(data.state.lock().unwrap().connectable))
+                    .set(|_, data: &mut AdapterData, connectable| {
+                        data.state.lock().unwrap().connectable = connectable;
+                        Ok(Some(connectable))
+                    });
+                builder
+                    .property::<bool, _>("Pairable")
+                    .get(|_, data: &mut AdapterData| Ok(data.state.lock().unwrap().pairable))
+                    .set(|_, data: &mut AdapterData, pairable| {
+                        data.state.lock().unwrap().pairable = pairable;
+                        Ok(Some(pairable))
+                    });
+                builder
+                    .property::<u32, _>("PairableTimeout")
+                    .get(|_, data: &mut AdapterData| {
+                        Ok(data.state.lock().unwrap().pairable_timeout)
+                    })
+                    .set(|_, data: &mut AdapterData, pairable_timeout| {
+                        data.state.lock().unwrap().pairable_timeout = pairable_timeout;
+                        Ok(Some(pairable_timeout))
+                    });
             });
             let gatt = crossroads.register("org.bluez.GattManager1", |builder| {
                 builder.method(
@@ -157,6 +216,7 @@ impl FakeBluez {
             let data = AdapterData {
                 calls: thread_calls.clone(),
                 behavior: thread_behavior.clone(),
+                state: thread_state.clone(),
             };
             crossroads.insert("/org/bluez/hci0", &[adapter, gatt, advertising], data);
 
@@ -213,6 +273,7 @@ impl FakeBluez {
         Self {
             calls,
             behavior,
+            state,
             signals,
             stop,
             thread: Some(thread),
@@ -226,6 +287,10 @@ impl FakeBluez {
 
     fn snapshot(&self) -> Calls {
         self.calls.lock().unwrap().clone()
+    }
+
+    fn adapter_state(&self) -> AdapterState {
+        self.state.lock().unwrap().clone()
     }
 
     fn emit(&self, path: &'static str, properties: PropMap) {
@@ -389,6 +454,38 @@ fn assert_no_forbidden_methods(calls: &Calls) {
             .iter()
             .any(|method| FORBIDDEN.contains(&method.as_str())),
         "executable made a forbidden call: {calls:?}"
+    );
+}
+
+fn assert_hid_no_forbidden_methods(calls: &Calls) {
+    let mut calls = calls.clone();
+    calls.methods.retain(|method| method != "Set");
+    assert_no_forbidden_methods(&calls);
+}
+
+fn advertisement_is_discoverable(bus: &PrivateBus, calls: &Calls) -> bool {
+    let registration = calls.advertisements.last().unwrap();
+    let connection = Connection::new_address(&bus.address).unwrap();
+    let proxy = connection.with_proxy(
+        registration.owner.as_str(),
+        registration.path.clone(),
+        Duration::from_secs(1),
+    );
+    let (discoverable,): (Variant<bool>,) = proxy
+        .method_call(
+            "org.freedesktop.DBus.Properties",
+            "Get",
+            ("org.bluez.LEAdvertisement1", "Discoverable"),
+        )
+        .unwrap();
+    discoverable.0
+}
+
+fn assert_adapter_restored(fake: &FakeBluez, initial: &AdapterState) {
+    assert_eq!(
+        &fake.adapter_state(),
+        initial,
+        "adapter state was not restored"
     );
 }
 
@@ -1018,28 +1115,92 @@ fn link_lock_wait_rechecks_connection_and_shares_deadline() {
 }
 
 #[test]
-fn hid_server_waits_for_interrupt_and_releases_dbus_owners() {
+fn hid_server_exclusive_enrollment_restores_adapter_and_lock() {
     let bus = PrivateBus::start();
     let shim = compile_shim(&bus.directory);
-    let log = bus.directory.join("hci.log");
     let fake = FakeBluez::start(&bus.address);
-    let mut command = Command::new(env!("CARGO_BIN_EXE_bluetooth-auth-hid-server"));
-    command
-        .env("DBUS_SYSTEM_BUS_ADDRESS", &bus.address)
-        .env("LD_PRELOAD", shim)
-        .env("BT_AUTH_HCI_SCENARIO", "error")
-        .env("BT_AUTH_HCI_LOG", &log)
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped());
+    let lock_path = bus.directory.join("hci0.lock");
+    provision_lock(&bus.directory);
+    let initial = fake.adapter_state();
+    let server = || {
+        let mut command = Command::new(env!("CARGO_BIN_EXE_bluetooth-auth-hid-server"));
+        command
+            .env("DBUS_SYSTEM_BUS_ADDRESS", &bus.address)
+            .env("LD_PRELOAD", &shim)
+            .env("BT_AUTH_RUNTIME_DIR", &bus.directory)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped());
+        command
+    };
+
+    // The server takes the exclusive lock before changing BlueZ. A contender
+    // cannot register or change adapter state until the lock becomes available.
+    let held_lock = fs::File::open(&lock_path).unwrap();
+    held_lock.try_lock().unwrap();
+    let mut command = server();
+    let child = BoundedChild::spawn(&mut command);
+    thread::sleep(Duration::from_millis(100));
+    let calls = fake.snapshot();
+    assert_registration_counts(&calls, 0, 0);
+    assert!(!calls.methods.iter().any(|method| method == "Set"));
+    assert_adapter_restored(&fake, &initial);
+    drop(held_lock);
+    let calls = fake.wait_for_registrations();
+    assert!(advertisement_is_discoverable(&bus, &calls));
+    assert_eq!(
+        fake.adapter_state(),
+        AdapterState {
+            discoverable: false,
+            connectable: false,
+            pairable: true,
+            pairable_timeout: 0,
+        }
+    );
+    assert_eq!(unsafe { libc::kill(child.id() as i32, libc::SIGINT) }, 0);
+    let output = child.wait(Duration::from_secs(2));
+    assert!(output.status.success(), "{output:?}");
+    let calls = fake.snapshot();
+    assert_registration_counts(&calls, 1, 1);
+    assert_hid_no_forbidden_methods(&calls);
+    assert_owners_gone(&bus, &calls);
+    assert_adapter_restored(&fake, &initial);
+    let released_lock = fs::File::open(&lock_path).unwrap();
+    released_lock.try_lock().unwrap();
+    drop(released_lock);
+
+    // Either registration rejection restores the adapter and releases the lock.
+    for (behavior, advertisements) in [
+        (Behavior::RejectGatt, 0),
+        (Behavior::RejectAdvertisement, 1),
+    ] {
+        fake.reset(behavior);
+        let mut command = server();
+        let output = BoundedChild::spawn(&mut command).wait(Duration::from_secs(2));
+        assert_failed(&output, "HID registration failure should propagate");
+        let calls = fake.snapshot();
+        assert_registration_counts(&calls, 1, advertisements);
+        assert_hid_no_forbidden_methods(&calls);
+        assert_owners_gone(&bus, &calls);
+        assert_adapter_restored(&fake, &initial);
+        let released_lock = fs::File::open(&lock_path).unwrap();
+        released_lock.try_lock().unwrap();
+        drop(released_lock);
+    }
+
+    // An interrupt while advertising is blocked follows the same cleanup path.
+    fake.reset(Behavior::HangAdvertisement);
+    let mut command = server();
     let mut child = BoundedChild::spawn(&mut command);
     fake.wait_for_registrations();
     assert!(child.0.as_mut().unwrap().try_wait().unwrap().is_none());
-    assert_eq!(unsafe { libc::kill(child.id() as i32, libc::SIGINT) }, 0);
+    assert_eq!(unsafe { libc::kill(child.id() as i32, libc::SIGTERM) }, 0);
     let output = child.wait(Duration::from_secs(2));
-    assert_eq!(output.status.signal(), Some(libc::SIGINT), "{output:?}");
-    assert_eq!(query_count(&log), 0);
+    assert!(output.status.success(), "{output:?}");
     let calls = fake.snapshot();
     assert_registration_counts(&calls, 1, 1);
-    assert_no_forbidden_methods(&calls);
+    assert_hid_no_forbidden_methods(&calls);
     assert_owners_gone(&bus, &calls);
+    assert_adapter_restored(&fake, &initial);
+    let released_lock = fs::File::open(&lock_path).unwrap();
+    released_lock.try_lock().unwrap();
 }

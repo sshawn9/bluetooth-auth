@@ -17,7 +17,7 @@ use bluer::gatt::local::{
 };
 use tokio::{runtime::Builder, time};
 
-const LOCK_PATH: &str = "/run/bluetooth-auth/hci0.lock";
+pub const LOCK_PATH: &str = "/run/bluetooth-auth/hci0.lock";
 
 /// Use `None` for manual enrollment, or `Some(address)` to restrict HID access.
 pub async fn register_hid(target_address: Option<Address>) -> bluer::Result<ApplicationHandle> {

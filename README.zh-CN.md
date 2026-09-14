@@ -17,7 +17,7 @@
 - 未连接且允许等待：临时注册消费控制类 HID over GATT 服务和广播，等待已配对的 iPhone 连回并完成加密。
 - 本次尝试成功、失败或超时后，释放临时 HID 和广播；不主动断开已建立的连接。
 
-各进程复用同一把连接锁。等待其他进程释放锁、注册服务、广播和等待连接共用本次时间预算，不在一次尝试内重试连接。
+连接程序共用同一把锁。对于有时限的连接尝试，等待锁、注册服务、广播和等待连接共用本次时间预算，不在一次尝试内重试连接。
 
 HID 服务使用电脑原有蓝牙适配器和身份，可以与原有蓝牙能力共存；程序不发送按键报告，也不关闭音频服务。已完成的实机验证及其范围见 [iPhone BLE 实验归档](experiments/iphone_ble/README.md)，不能把短测结果当成所有设备和 iOS 版本的保证。
 
@@ -33,15 +33,21 @@ HID 服务使用电脑原有蓝牙适配器和身份，可以与原有蓝牙能�
 nix build .
 ```
 
-先在电脑的蓝牙管理工具中允许新配对、启用配对确认，再运行：
+先打开电脑的蓝牙管理工具，保持它可以处理配对确认。辅助程序要求共享锁文件已存在；如果 NixOS 模块尚未创建它，先准备锁文件，再运行：
 
 ```sh
+sudo mkdir -p /run/bluetooth-auth
+sudo touch /run/bluetooth-auth/hci0.lock
 sudo ./result/bin/bluetooth-auth-hid-server
 ```
 
-在 iPhone 的“设置 → 蓝牙”中选择电脑当前名称，按两端提示完成配对。如果旧配对只能用于音频，需要手动移除目标手机的旧配对后，在 HID 服务运行时重新配对。
+程序在修改蓝牙设置前等待共享锁，并持有到清理结束，防止后台连接任务同时注册另一份 HID 广播。它会临时关闭经典蓝牙的可发现性、开启不限时的可配对状态，并启动可发现的 HID LE 广播。音频服务继续保留。**运行期间不要重新开启电脑的“可被发现”开关。**
 
-配对完成后按 `Ctrl+C`。这个工具没有超时，不会在配对完成后自动退出，也不会替你接受配对。退出释放临时 HID 和广播，保留两端配对记录。
+在 iPhone 的“设置 → 蓝牙”中等待设备列表刷新，选择电脑当前名称，按两端提示完成配对。程序使用蓝牙管理工具已有的配对代理，不会替你接受配对。如果旧配对只能用于音频，需要手动移除目标手机的旧配对后，在 HID 服务运行时重新配对。
+
+配对完成后按 `Ctrl+C`。这个工具没有超时，不会在配对完成后自动退出。收到 `Ctrl+C`、`SIGTERM` 或启动准备出错时，程序先释放临时 HID 和广播，再尝试恢复原来的可发现、可连接、可配对开关及配对超时，最后释放锁。配对记录和共享锁文件保留。恢复成功会输出 `Original adapter settings restored; pairing records retained.`；恢复失败会写入 stderr，并以非零状态退出。
+
+恢复的是设置值，不是原有发现或配对窗口的剩余时间；限时窗口会重新计时。`SIGKILL`（`kill -9`）和断电无法执行清理。
 
 从电脑的蓝牙管理工具取得手机配对后的身份地址，保存到一个只包含该身份地址的单行运行时文件中。后续配置指向这个文件；使用手机的身份地址，不使用电脑适配器地址或临时随机地址。
 
@@ -209,7 +215,7 @@ SOPS 文件中的指定顶层字符串保存**现有 login 钥匙串的密码**�
 | 命令 | 用途 |
 | --- | --- |
 | `bluetooth-auth-link` | 查询目标加密 LE 连接，可选择等待连接或通知后台。 |
-| `bluetooth-auth-hid-server` | 无参数手动配对辅助程序；提供 HID 和广播直到 `Ctrl+C`。 |
+| `bluetooth-auth-hid-server` | 无参数手动配对辅助程序；持有共享锁，临时隐藏经典蓝牙发现入口，提供 HID LE 广播直到退出。 |
 | `bluetooth-auth-noctalia-auto-lock` | 在 Noctalia 用户会话中持续检查、按需连接和锁屏。 |
 | `bluetooth-auth-keyring-unlock` | 按需通过 SOPS 解锁 GNOME login 钥匙串。 |
 | `bluetooth-auth-power-monitor` | 监听 `hci0` 蓝牙开启事件并直接尝试连接。 |
@@ -232,7 +238,7 @@ bluetooth-auth-link --address-file /run/secrets/bluetooth_address --connect -1
 
 不指定 `--connect` 时默认 `15000`。负数的绝对值不控制超时，后台使用 Nix 的 `connection.timeoutMs`。无连接和普通超时保持安静，运行错误写入 stderr；参数格式错误退出 `2`。
 
-同步连接使用 `/run/bluetooth-auth/hci0.lock`。模块在启用自动连接或任一认证/用户服务集成时创建它；不要删除或替换正在使用的锁文件。异步模式另外要求 `/run/bluetooth-auth/connect.sock`，该 socket 随 sudo、polkit、locker、greetd、Noctalia 自动锁屏或 Keyring 集成启用，单独启用 `autoConnect` 不创建它。
+同步连接和手动 HID 配对辅助程序使用 `/run/bluetooth-auth/hci0.lock`。模块在启用自动连接或任一认证/用户服务集成时创建它；仅打开模块总开关不会创建它。多次运行之间保留这个共享文件，不要删除或替换正在使用的锁文件。异步模式另外要求 `/run/bluetooth-auth/connect.sock`，该 socket 随 sudo、polkit、locker、greetd、Noctalia 自动锁屏或 Keyring 集成启用，单独启用 `autoConnect` 不创建它。
 
 不使用 NixOS 模块、只手动测试构建产物时，可以先准备锁文件，再以 root 运行一次连接：
 

@@ -17,7 +17,7 @@ The connection check reads Linux's current connection table and requires exactly
 - When disconnected and waiting is allowed, it temporarily registers a Consumer Control HID over GATT service and advertises it, waiting for the paired iPhone to reconnect and encrypt the link.
 - After an attempt succeeds, fails, or times out, it releases the temporary HID service and advertisement. It does not request a Bluetooth disconnect.
 
-Processes share one connection lock. Waiting for another process to release it, service registration, advertising, and waiting for a connection all consume the same attempt budget; an attempt does not retry internally.
+Connection helpers share one lock. For a timed connection attempt, waiting for the lock, service registration, advertising, and waiting for a connection all consume the same attempt budget; an attempt does not retry internally.
 
 The HID service uses the computer's existing Bluetooth adapter and identity and can coexist with other Bluetooth capabilities. It sends no key reports and does not stop audio services. Completed hardware validation and its limits are recorded in the [iPhone BLE experiment archive](experiments/iphone_ble/README.md); a short test is not a guarantee for every device or iOS version.
 
@@ -33,15 +33,21 @@ Build the tools in the repository:
 nix build .
 ```
 
-Allow new pairing and enable pairing confirmation in the computer's Bluetooth manager, then run:
+Open the computer's Bluetooth manager first and keep it available to confirm pairing. The helper requires the shared lock file to exist. Prepare it if the NixOS module has not already done so, then run:
 
 ```sh
+sudo mkdir -p /run/bluetooth-auth
+sudo touch /run/bluetooth-auth/hci0.lock
 sudo ./result/bin/bluetooth-auth-hid-server
 ```
 
-In iPhone **Settings → Bluetooth**, select the computer's current name and confirm pairing on both sides. If an old pairing only works for audio, remove that phone's old pairing manually and pair again while the HID service is running.
+The helper waits for the shared lock before changing Bluetooth settings and holds it until cleanup finishes, preventing background connection tasks from registering another HID advertisement at the same time. It temporarily disables Classic Bluetooth discoverability, enables pairing without a timeout, and starts a discoverable HID LE advertisement. Audio services remain registered. **Do not re-enable the computer's discoverability switch while the helper is running.**
 
-Press `Ctrl+C` after pairing. This tool has no timeout, does not exit automatically after pairing, and does not accept pairing for you. Exiting releases the temporary HID service and advertisement while preserving the pairing on both devices.
+In iPhone **Settings → Bluetooth**, let the device list refresh, select the computer's current name, and confirm pairing on both sides. The helper uses the Bluetooth manager's existing pairing agent; it does not accept pairing for you. If an old pairing only works for audio, remove that phone's old pairing manually and pair again while the HID service is running.
+
+Press `Ctrl+C` after pairing. This tool has no timeout and does not exit automatically after pairing. On `Ctrl+C`, `SIGTERM`, or a setup error, it releases temporary HID and advertising resources, attempts to restore the original discoverable, connectable, pairable, and pairing-timeout settings, then releases the lock. Pairing records and the shared lock file are retained. Successful restoration prints `Original adapter settings restored; pairing records retained.`; restoration failures are reported on stderr and produce a nonzero exit status.
+
+Restoration recovers the setting values, not the remaining time of an existing discoverability or pairing window; timed windows restart. `SIGKILL` (`kill -9`) and power loss prevent cleanup from running.
 
 Obtain the phone's identity address from the computer's Bluetooth manager after pairing. Put exactly one identity address in a runtime file, on one line, and point later configuration at that file. Use the phone identity address, not the computer adapter address or a temporary random address.
 
@@ -209,7 +215,7 @@ When the module is enabled, all five commands are directly available. Their buil
 | Command | Purpose |
 | --- | --- |
 | `bluetooth-auth-link` | Query the target encrypted LE connection, optionally wait for a connection, or notify the background service. |
-| `bluetooth-auth-hid-server` | Argument-free manual pairing helper; provides HID and advertising until `Ctrl+C`. |
+| `bluetooth-auth-hid-server` | Argument-free manual pairing helper; holds the shared lock, temporarily hides Classic discovery, and provides HID LE advertising until stopped. |
 | `bluetooth-auth-noctalia-auto-lock` | Continuously check, connect as needed, and lock in a Noctalia user session. |
 | `bluetooth-auth-keyring-unlock` | Unlock a GNOME login keyring through SOPS when needed. |
 | `bluetooth-auth-power-monitor` | Listen for `hci0` Bluetooth power-on events and attempt a connection directly. |
@@ -232,7 +238,7 @@ bluetooth-auth-link --address-file /run/secrets/bluetooth_address --connect -1
 
 Without `--connect`, the default is `15000`. A negative magnitude does not set a timeout; the background service uses Nix's `connection.timeoutMs`. No connection and an ordinary timeout are silent, runtime errors go to stderr, and invalid arguments exit `2`.
 
-Synchronous connections use `/run/bluetooth-auth/hci0.lock`. The module creates it when automatic connection or any authentication/user-service integration is enabled; do not delete or replace a lock file in use. Asynchronous mode also requires `/run/bluetooth-auth/connect.sock`. The socket is enabled by sudo, polkit, locker, greetd, Noctalia automatic locking, or Keyring integration; `autoConnect` alone does not create it.
+Synchronous connections and the manual HID pairing helper use `/run/bluetooth-auth/hci0.lock`. The module creates it when automatic connection or any authentication/user-service integration is enabled; enabling only the main module switch does not create it. Keep the shared file between runs and never delete or replace it while in use. Asynchronous mode also requires `/run/bluetooth-auth/connect.sock`. The socket is enabled by sudo, polkit, locker, greetd, Noctalia automatic locking, or Keyring integration; `autoConnect` alone does not create it.
 
 When testing build outputs manually without the NixOS module, prepare the lock file and run one connection attempt as root:
 
