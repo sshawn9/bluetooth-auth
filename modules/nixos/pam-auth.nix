@@ -15,7 +15,9 @@ in
   "${name}-user" = {
     order = order - 2;
     # These guards leave password authentication available for other users.
-    control = if allowRuser then "[success=1 default=ignore]" else "[success=ignore default=1]";
+    # pam_setcred's PAM_IGNORE must not enter the numeric skip branch.
+    control =
+      if allowRuser then "[success=1 default=ignore]" else "[success=ignore ignore=ignore default=1]";
     modulePath = "${pam}/pam_succeed_if.so";
     args = [
       "quiet"
@@ -44,7 +46,7 @@ in
   "${name}-ruser" = {
     order = order - 1;
     # sudo may authenticate root on behalf of the trusted requesting user.
-    control = "[success=ignore default=1]";
+    control = "[success=ignore ignore=ignore default=1]";
     modulePath = "${pam}/pam_succeed_if.so";
     args = [
       "quiet"

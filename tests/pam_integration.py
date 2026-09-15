@@ -7,6 +7,7 @@ import sys
 
 
 PAM_SUCCESS = 0
+PAM_ESTABLISH_CRED = 2
 PAM_RUSER = 8
 
 
@@ -77,6 +78,31 @@ def authenticate(
         libpam.pam_end(handle, result)
 
 
+def establish_credentials(libpam, confdir: pathlib.Path, service: str, user: str) -> None:
+    """Exercise session setup without a preceding pam_authenticate call."""
+    ble_mark = confdir / f"{service}-setcred-ble"
+    handle = ctypes.c_void_p()
+    conversation = PamConv(None, None)
+    result = libpam.pam_start_confdir(
+        service.encode(),
+        user.encode(),
+        ctypes.byref(conversation),
+        str(confdir).encode(),
+        ctypes.byref(handle),
+    )
+    require(result == PAM_SUCCESS, f"pam_start_confdir({service}): {result}")
+    try:
+        result = libpam.pam_putenv(handle, f"BLE_MARK={ble_mark}".encode())
+        require(result == PAM_SUCCESS, f"pam_putenv(BLE_MARK): {result}")
+        result = libpam.pam_acct_mgmt(handle, 0)
+        require(result == PAM_SUCCESS, f"pam_acct_mgmt({service}): {result}")
+        result = libpam.pam_setcred(handle, PAM_ESTABLISH_CRED)
+        require(result == PAM_SUCCESS, f"pam_setcred({service}): {result}")
+        require(not ble_mark.exists(), f"{service}: setcred ran the Bluetooth helper")
+    finally:
+        libpam.pam_end(handle, result)
+
+
 def main() -> None:
     confdir = pathlib.Path(sys.argv[1])
     libpam = ctypes.CDLL(sys.argv[2])
@@ -90,7 +116,14 @@ def main() -> None:
     libpam.pam_set_item.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p]
     libpam.pam_putenv.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
     libpam.pam_authenticate.argtypes = [ctypes.c_void_p, ctypes.c_int]
+    libpam.pam_acct_mgmt.argtypes = [ctypes.c_void_p, ctypes.c_int]
+    libpam.pam_setcred.argtypes = [ctypes.c_void_p, ctypes.c_int]
     libpam.pam_end.argtypes = [ctypes.c_void_p, ctypes.c_int]
+
+    # greetd starts its greeter without authenticating, using a login substack.
+    establish_credentials(libpam, confdir, "greeter", "greeter")
+    # Credential setup must also tolerate sudo's separate PAM_RUSER guard.
+    establish_credentials(libpam, confdir, "sudo-credentials", "root")
 
     # Trusted PAM_USER and sudo's trusted PAM_RUSER both may take the BLE success path.
     authenticate(libpam, confdir, "sudo", "nobody", None, 0, 1, True, True, False)

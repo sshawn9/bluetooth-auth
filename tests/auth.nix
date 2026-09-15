@@ -29,6 +29,10 @@ let
       )
       {
         networking.useDHCP = false;
+        services.greetd = {
+          enable = true;
+          settings.default_session.command = "${pkgs.coreutils}/bin/true";
+        };
         my.security.bluetoothAuth = {
           enable = true;
           trustedUser = "nobody";
@@ -76,6 +80,11 @@ let
   sudoPam = lib.concatStringsSep "\n" (bluetoothLines "sudo");
   lockerPam = lib.concatStringsSep "\n" (bluetoothLines "login");
   greetdPam = lib.concatStringsSep "\n" (bluetoothLines "greetd");
+  greeterPam = lib.concatStringsSep "\n" (
+    lib.filter (line: lib.hasPrefix "auth " line || lib.hasPrefix "account " line) (
+      lib.splitString "\n" system.config.security.pam.services.greetd.text
+    )
+  );
   polkitRules = pkgs.writeText "bluetooth-auth-polkit.rules" system.config.security.polkit.extraConfig;
 in
 pkgs.runCommand "bluetooth-auth-integration-tests"
@@ -114,6 +123,20 @@ pkgs.runCommand "bluetooth-auth-integration-tests"
     auth required ${pkgs.linux-pam}/lib/security/pam_exec.so quiet ${failedAuth}
     ${lockerPam}
     auth required ${pkgs.linux-pam}/lib/security/pam_exec.so quiet ${nextAuth}
+    EOF
+      cat > pam/login <<'EOF'
+    account required ${pkgs.linux-pam}/lib/security/pam_permit.so
+    auth required ${pkgs.linux-pam}/lib/security/pam_permit.so
+    ${lockerPam}
+    auth required ${pkgs.linux-pam}/lib/security/pam_permit.so
+    EOF
+      cat > pam/greeter <<'EOF'
+    ${greeterPam}
+    EOF
+      cat > pam/sudo-credentials <<'EOF'
+    account required ${pkgs.linux-pam}/lib/security/pam_permit.so
+    auth required ${pkgs.linux-pam}/lib/security/pam_permit.so
+    ${sudoPam}
     EOF
       ${pkgs.python3}/bin/python ${./pam_integration.py} "$PWD/pam" ${pkgs.linux-pam}/lib/libpam.so.0
       ${pkgs.nodejs}/bin/node ${./polkit.js} ${polkitRules}
