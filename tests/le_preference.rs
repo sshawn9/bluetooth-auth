@@ -250,6 +250,8 @@ fn child() {
     prepare(Outcome::Ok, &[(0x0014, 0), (0x001b, 0x0f)], false);
     // Already-disconnected and already-unpaired are successful no-ops.
     prepare(Outcome::Ok, &[(0x0014, 0x02), (0x001b, 0x06)], true);
+    // MGMT_STATUS_DISCONNECTED is also an idempotent Disconnect result.
+    prepare(Outcome::Ok, &[(0x0014, 0x0e), (0x001b, 0)], true);
 }
 
 #[test]

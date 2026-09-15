@@ -38,14 +38,14 @@ pub fn prepare_le(target: Address) -> bool {
 
 /// Disconnect only the target's BR/EDR link on hci0; already disconnected is success.
 pub fn disconnect_classic(target: Address) -> Result<(), Box<dyn Error>> {
-    classic_request(target, 0x0014, 0x02) // Disconnect / Not Connected
+    classic_request(target, 0x0014, &[0x02, 0x0e]) // Not Connected / Disconnected
 }
 
 /// Remove only the target's BR/EDR bond on hci0.
 /// Disconnect BR/EDR first: BlueZ may otherwise also disconnect an existing LE link.
 /// Already unpaired is success. Bluetoothd must be running to persist the kernel's unpair event.
 pub fn remove_classic_pairing(target: Address) -> Result<(), Box<dyn Error>> {
-    classic_request(target, 0x001b, 0x06) // Unpair Device / Not Paired
+    classic_request(target, 0x001b, &[0x06]) // Unpair Device / Not Paired
 }
 
 /// Prefer LE for an existing target on hci0; an absent device is skipped successfully.
@@ -79,7 +79,11 @@ pub fn prefer_le(target: Address) -> Result<(), Box<dyn Error>> {
 
 // One request per control socket. The kernel routes its reply to this socket;
 // bluetoothd receives the separate unpair event and updates its stored LinkKey.
-fn classic_request(target: Address, opcode: u16, absent_status: u8) -> Result<(), Box<dyn Error>> {
+fn classic_request(
+    target: Address,
+    opcode: u16,
+    absent_statuses: &[u8],
+) -> Result<(), Box<dyn Error>> {
     // SAFETY: Create an HCI control socket; OwnedFd below owns it on every subsequent path.
     let fd = unsafe {
         libc::socket(
@@ -185,7 +189,7 @@ fn classic_request(target: Address, opcode: u16, absent_status: u8) -> Result<()
             continue;
         }
         let status = reply[8];
-        if status == absent_status {
+        if absent_statuses.contains(&status) {
             return Ok(());
         }
         if status != 0 {

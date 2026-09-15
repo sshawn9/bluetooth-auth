@@ -229,6 +229,7 @@ assert !(builtins.hasAttr "bluetooth-auth-power-monitor" disabledSystem.config.s
 assert !(builtins.hasAttr "bluetooth-auth-prepare-le" disabledSystem.config.security.wrappers);
 assert builtins.hasAttr "bluetooth-auth-connect" autoLockSystem.config.systemd.sockets;
 assert builtins.hasAttr "bluetooth-auth-connect" autoLockSystem.config.systemd.services;
+assert autoLockSystem.config.hardware.bluetooth.settings.General.Experimental;
 assert
   autoLockSystem.config.security.wrappers.bluetooth-auth-prepare-le.source
   == "${fakeBle}/bin/bluetooth-auth-prepare-le";
@@ -287,6 +288,7 @@ assert pkgs.lib.hasInfix "\"--locked-disconnected-interval-ms\" \"4400\""
   autoLockSystem.config.systemd.user.services.bluetooth-auth-auto-lock.serviceConfig.ExecStart;
 assert !(builtins.hasAttr "bluetooth-auth-connect" autoConnectOnlySystem.config.systemd.sockets);
 assert builtins.hasAttr "bluetooth-auth-connect" autoConnectOnlySystem.config.systemd.services;
+assert autoConnectOnlySystem.config.hardware.bluetooth.settings.General.Experimental;
 assert builtins.hasAttr "bluetooth-auth-prepare-le" autoConnectOnlySystem.config.security.wrappers;
 assert
   autoConnectOnlySystem.config.systemd.services.bluetooth-auth-power-monitor.serviceConfig.Type

@@ -196,6 +196,14 @@ fn classic_operations_are_scoped_idempotent_and_bounded() {
         truncated.pop();
         exercise(opcode, vec![truncated], false);
     }
+    // A disconnected link may be reported as MGMT_STATUS_DISCONNECTED (0x0e).
+    exercise(0x0014, vec![response(1, 0x0014, 0x0e, &WIRE_ADDRESS)], true);
+    // That status is not an idempotent Unpair result.
+    exercise(
+        0x001b,
+        vec![response(1, 0x001b, 0x0e, &WIRE_ADDRESS)],
+        false,
+    );
     // A lone successful Command Status is not completion; the wait must end.
     exercise(0x0014, vec![response(2, 0x0014, 0, &[])], false);
 

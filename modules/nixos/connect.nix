@@ -29,6 +29,9 @@ in
   };
 
   config = lib.mkIf (socketEnabled || autoConnectEnabled) {
+    # PreferredBearer is exposed only through BlueZ's experimental D-Bus API.
+    hardware.bluetooth.settings.General.Experimental = lib.mkDefault true;
+
     security.wrappers.bluetooth-auth-prepare-le = {
       source = "${cfg.package}/bin/bluetooth-auth-prepare-le";
       owner = "root";
