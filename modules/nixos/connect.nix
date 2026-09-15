@@ -25,10 +25,18 @@ in
     type = lib.types.ints.between 1 2147483647;
     default = 7000;
     example = 5000;
-    description = "Maximum duration of one HID connection attempt, in milliseconds, shared by authentication helpers and background services.";
+    description = "Maximum duration of one HID connection attempt and LE preparation, in milliseconds, shared by authentication helpers and background services.";
   };
 
   config = lib.mkIf (socketEnabled || autoConnectEnabled) {
+    security.wrappers.bluetooth-auth-prepare-le = {
+      source = "${cfg.package}/bin/bluetooth-auth-prepare-le";
+      owner = "root";
+      group = cfg.accessGroup;
+      permissions = "u+rx,g+x,o-rwx";
+      capabilities = "cap_net_admin+ep";
+    };
+
     systemd.tmpfiles.rules = [
       "d /run/bluetooth-auth 0750 root ${cfg.accessGroup} -"
       "f /run/bluetooth-auth/hci0.lock 0660 root ${cfg.accessGroup} -"

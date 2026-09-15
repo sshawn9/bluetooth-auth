@@ -71,6 +71,13 @@ let
         while test -e /run/bluetooth-auth-connect-hold; do ${pkgs.coreutils}/bin/sleep 0.05; done
         test ! -e /run/bluetooth-auth-connect-fail
       '')
+      (pkgs.writeShellScriptBin "bluetooth-auth-prepare-le" ''
+        set -eu
+        read -r address
+        test "$address" = 02:00:00:00:00:01
+        id -u
+        grep '^CapEff:' /proc/self/status
+      '')
       (pkgs.writeShellScriptBin "bluetooth-auth-noctalia-auto-lock" ''
         set -eu
         test "$(id -u)" -ne 0
@@ -116,7 +123,10 @@ let
         )
       ];
       networking.useDHCP = false;
-      environment.systemPackages = [ pkgs.socat ];
+      environment.systemPackages = [
+        pkgs.socat
+        pkgs.libcap
+      ];
       services.dbus.enable = true;
       services.dbus.packages = [
         (pkgs.writeTextDir "share/dbus-1/system.d/bluetooth-auth-fake-bluez.conf" ''
@@ -216,8 +226,20 @@ let
 in
 assert !(builtins.hasAttr "bluetooth-auth-connect" disabledSystem.config.systemd.sockets);
 assert !(builtins.hasAttr "bluetooth-auth-power-monitor" disabledSystem.config.systemd.services);
+assert !(builtins.hasAttr "bluetooth-auth-prepare-le" disabledSystem.config.security.wrappers);
 assert builtins.hasAttr "bluetooth-auth-connect" autoLockSystem.config.systemd.sockets;
 assert builtins.hasAttr "bluetooth-auth-connect" autoLockSystem.config.systemd.services;
+assert
+  autoLockSystem.config.security.wrappers.bluetooth-auth-prepare-le.source
+  == "${fakeBle}/bin/bluetooth-auth-prepare-le";
+assert autoLockSystem.config.security.wrappers.bluetooth-auth-prepare-le.owner == "root";
+assert
+  autoLockSystem.config.security.wrappers.bluetooth-auth-prepare-le.group == "test-bluetooth-auth";
+assert
+  autoLockSystem.config.security.wrappers.bluetooth-auth-prepare-le.permissions == "u+rx,g+x,o-rwx";
+assert
+  autoLockSystem.config.security.wrappers.bluetooth-auth-prepare-le.capabilities
+  == "cap_net_admin+ep";
 assert !(builtins.hasAttr "bluetooth-auth-power-monitor" autoLockSystem.config.systemd.services);
 assert pkgs.lib.any (
   rule: pkgs.lib.hasInfix "/run/bluetooth-auth/hci0.lock" rule
@@ -265,6 +287,7 @@ assert pkgs.lib.hasInfix "\"--locked-disconnected-interval-ms\" \"4400\""
   autoLockSystem.config.systemd.user.services.bluetooth-auth-auto-lock.serviceConfig.ExecStart;
 assert !(builtins.hasAttr "bluetooth-auth-connect" autoConnectOnlySystem.config.systemd.sockets);
 assert builtins.hasAttr "bluetooth-auth-connect" autoConnectOnlySystem.config.systemd.services;
+assert builtins.hasAttr "bluetooth-auth-prepare-le" autoConnectOnlySystem.config.security.wrappers;
 assert
   autoConnectOnlySystem.config.systemd.services.bluetooth-auth-power-monitor.serviceConfig.Type
   == "dbus";
@@ -408,6 +431,13 @@ pkgs.testers.runNixOSTest {
     machine.succeed("stat -c %i /run/bluetooth-auth/hci0.lock > /run/lock-inode; stat -c %i /run/bluetooth-auth/connect.sock > /run/socket-inode")
     machine.succeed("test $(id -nG trusted | tr ' ' '\\n' | grep -x test-bluetooth-auth)")
     machine.succeed("test $(id -nG polkituser | tr ' ' '\\n' | grep -x test-bluetooth-auth)")
+    machine.succeed("test $(stat -c '%a:%U:%G' /run/wrappers/bin/bluetooth-auth-prepare-le) = 510:root:test-bluetooth-auth")
+    machine.succeed("getcap /run/wrappers/bin/bluetooth-auth-prepare-le | grep -E 'cap_setpcap,cap_net_admin=ep|cap_net_admin,cap_setpcap=ep'")
+    machine.fail("getcap /run/wrappers/bin/bluetooth-auth-prepare-le | grep cap_sys_admin")
+    machine.succeed("echo 02:00:00:00:00:01 | runuser -u trusted -- /run/wrappers/bin/bluetooth-auth-prepare-le > /run/bluetooth-auth-prepare-le-capabilities")
+    machine.succeed("test $(sed -n '1p' /run/bluetooth-auth-prepare-le-capabilities) = $(id -u trusted)")
+    machine.succeed("test $(sed -n '2p' /run/bluetooth-auth-prepare-le-capabilities | cut -f2) = 0000000000001000")
+    machine.fail("echo 02:00:00:00:00:01 | runuser -u other -- /run/wrappers/bin/bluetooth-auth-prepare-le")
     machine.fail("printf x | runuser -u other -- socat -u - UNIX-SENDTO:/run/bluetooth-auth/connect.sock")
 
     machine.succeed("touch /run/bluetooth-auth-connect-hold")

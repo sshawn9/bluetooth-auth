@@ -1,8 +1,10 @@
 #define _GNU_SOURCE
 
 #include <errno.h>
+#include <dlfcn.h>
 #include <fcntl.h>
 #include <stdarg.h>
+#include <spawn.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,6 +31,8 @@ static const char *redirect_runtime_path(const char *path) {
     name = "hci0.lock";
   else if (strcmp(path, "/run/bluetooth-auth/connect.sock") == 0)
     name = "connect.sock";
+  else if (strcmp(path, "/run/wrappers/bin/bluetooth-auth-prepare-le") == 0)
+    name = "prepare-le";
   if (name == NULL)
     return path;
   if (snprintf(redirected, sizeof(redirected), "%s/%s", directory, name) >=
@@ -37,6 +41,26 @@ static const char *redirect_runtime_path(const char *path) {
     return NULL;
   }
   return redirected;
+}
+
+/* Redirect only the capability helper to a harmless test program. */
+int execvp(const char *file, char *const argv[]) {
+  int (*original)(const char *, char *const[]) = dlsym(RTLD_NEXT, "execvp");
+  const char *redirected = redirect_runtime_path(file);
+  return redirected == NULL ? -1 : original(redirected, argv);
+}
+
+int posix_spawnp(pid_t *pid, const char *file,
+                 const posix_spawn_file_actions_t *actions,
+                 const posix_spawnattr_t *attributes,
+                 char *const argv[], char *const envp[]) {
+  int (*original)(pid_t *, const char *, const posix_spawn_file_actions_t *,
+                  const posix_spawnattr_t *, char *const[], char *const[]) =
+      dlsym(RTLD_NEXT, "posix_spawnp");
+  const char *redirected = redirect_runtime_path(file);
+  return redirected == NULL ? errno
+                            : original(pid, redirected, actions, attributes,
+                                       argv, envp);
 }
 
 int open(const char *path, int flags, ...) {

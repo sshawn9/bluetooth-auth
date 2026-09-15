@@ -2,16 +2,24 @@
 
 let
   inherit (pkgs) lib;
-  fakeBle = pkgs.writeShellScriptBin "bluetooth-auth-link" ''
-    set -eu
-    test "$#" -eq 4
-    test "$1" = --address-file
-    test "$2" = /private/test-address
-    test "$3" = --connect
-    test "$4" = -1
-    test -z "''${BLE_MARK:-}" || : > "$BLE_MARK"
-    exit "''${BLE_RESULT:-1}"
-  '';
+  fakeBle = pkgs.symlinkJoin {
+    name = "fake-bluetooth-auth";
+    paths = [
+      (pkgs.writeShellScriptBin "bluetooth-auth-link" ''
+        set -eu
+        test "$#" -eq 4
+        test "$1" = --address-file
+        test "$2" = /private/test-address
+        test "$3" = --connect
+        test "$4" = -1
+        test -z "''${BLE_MARK:-}" || : > "$BLE_MARK"
+        exit "''${BLE_RESULT:-1}"
+      '')
+      (pkgs.writeShellScriptBin "bluetooth-auth-prepare-le" ''
+        read -r _address
+      '')
+    ];
+  };
   nextAuth = pkgs.writeShellScript "pam-next-auth" ''
     test -z "''${NEXT_MARK:-}" || : > "$NEXT_MARK"
     exit "''${NEXT_RESULT:-1}"
@@ -87,6 +95,9 @@ let
   );
   polkitRules = pkgs.writeText "bluetooth-auth-polkit.rules" system.config.security.polkit.extraConfig;
 in
+assert
+  system.config.security.wrappers.bluetooth-auth-prepare-le.source
+  == "${fakeBle}/bin/bluetooth-auth-prepare-le";
 pkgs.runCommand "bluetooth-auth-integration-tests"
   {
     nativeBuildInputs = [

@@ -218,6 +218,9 @@ let
     no_sops_or_hci
   '';
 in
+assert
+  system.config.security.wrappers.bluetooth-auth-prepare-le.source
+  == "${package}/bin/bluetooth-auth-prepare-le";
 assert unit.wantedBy == [ "graphical-session.target" ];
 assert unit.after == [ "graphical-session.target" ];
 assert unit.partOf == [ "graphical-session.target" ];

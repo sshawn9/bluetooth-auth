@@ -337,6 +337,35 @@ fn compile_shim(directory: &Path) -> PathBuf {
         "failed to compile HCI shim:\n{}",
         String::from_utf8_lossy(&output.stderr)
     );
+    let executable = |name: &str| {
+        std::env::split_paths(&std::env::var_os("PATH").unwrap())
+            .map(|path| path.join(name))
+            .find(|path| path.is_file())
+            .unwrap()
+    };
+    let helper = directory.join("prepare-le");
+    fs::write(
+        &helper,
+        format!(
+            r#"#!{}
+set -eu
+test "$#" -eq 0
+IFS= read -r target
+test "$target" = {TARGET}
+printf '%s\n' "$$" >> "$BT_AUTH_RUNTIME_DIR/prepare.log"
+case "${{BT_AUTH_PREPARE_MODE:-ok}}" in
+  fail) echo 'simulated LE preparation failure' >&2; exit 1 ;;
+  hang) exec {} 10 ;;
+  delay) {} 0.6 ;;
+esac
+"#,
+            executable("sh").display(),
+            executable("sleep").display(),
+            executable("sleep").display(),
+        ),
+    )
+    .unwrap();
+    fs::set_permissions(helper, fs::Permissions::from_mode(0o700)).unwrap();
     shim
 }
 
@@ -918,6 +947,7 @@ fn link_query_notify_and_sync_contracts() {
         assert_eq!(query_count(&log), 1, "{scenario}");
         assert!(fake.snapshot().methods.is_empty(), "{scenario}");
     }
+    assert!(!bus.directory.join("prepare.log").exists());
 
     let connect_socket = bus.directory.join("connect.sock");
     let receiver = UnixDatagram::bind(&connect_socket).unwrap();
@@ -947,6 +977,7 @@ fn link_query_notify_and_sync_contracts() {
         assert!(fake.snapshot().methods.is_empty());
     }
     drop(receiver);
+    assert!(!bus.directory.join("prepare.log").exists());
 
     // Waiting for a busy lock expires as a normal failure without registering anything.
     let lock_path = bus.directory.join("hci0.lock");
@@ -967,6 +998,7 @@ fn link_query_notify_and_sync_contracts() {
         "busy lock: {output:?}"
     );
     assert!(fake.snapshot().methods.is_empty());
+    assert!(!bus.directory.join("prepare.log").exists());
     fake.reset(Behavior::Accept);
     let mut command = link_command(&bus, &shim, &phone, &log, "encrypted", 1000);
     let output = BoundedChild::spawn(&mut command).wait(Duration::from_secs(2));
@@ -1090,6 +1122,7 @@ fn link_lock_wait_rechecks_connection_and_shares_deadline() {
         thread::sleep(Duration::from_millis(1200));
         assert!(child.0.as_mut().unwrap().try_wait().unwrap().is_none());
         assert!(fake.snapshot().methods.is_empty());
+        assert!(!bus.directory.join("prepare.log").exists());
         if connected {
             fs::write(&ready, b"").unwrap();
         }
@@ -1112,6 +1145,91 @@ fn link_lock_wait_rechecks_connection_and_shares_deadline() {
         let released_lock = fs::File::open(bus.directory.join("hci0.lock")).unwrap();
         released_lock.try_lock().unwrap();
     }
+}
+
+#[test]
+fn preparation_failure_continues_and_timeout_reaps_under_the_lock() {
+    let bus = PrivateBus::start();
+    let shim = compile_shim(&bus.directory);
+    let phone = bus.directory.join("phone");
+    let log = bus.directory.join("hci.log");
+    let ready = bus.directory.join("connected");
+    let preparation_log = bus.directory.join("prepare.log");
+    fs::write(&phone, format!("{TARGET}\n")).unwrap();
+    let fake = FakeBluez::start(&bus.address);
+
+    // A preparation error is diagnostic; encrypted LE established through HID still succeeds.
+    let mut command = link_command(&bus, &shim, &phone, &log, "external", 1500);
+    command
+        .env("BT_AUTH_PREPARE_MODE", "fail")
+        .env("BT_AUTH_HCI_READY_FILE", &ready);
+    let child = BoundedChild::spawn(&mut command);
+    fake.wait_for_registrations();
+    fs::write(&ready, b"").unwrap();
+    let output = child.wait(Duration::from_secs(2));
+    assert!(output.status.success(), "{output:?}");
+    assert_eq!(
+        String::from_utf8_lossy(&output.stderr)
+            .matches("simulated LE preparation failure")
+            .count(),
+        1
+    );
+    assert_eq!(query_count(&preparation_log), 1);
+    assert_owners_gone(&bus, &fake.snapshot());
+    fs::remove_file(&ready).unwrap();
+
+    // A helper that consumes the budget is killed and reaped while the lock is held.
+    fake.reset(Behavior::Accept);
+    fs::write(&preparation_log, b"").unwrap();
+    let mut command = link_command(&bus, &shim, &phone, &log, "disconnected", 700);
+    command.env("BT_AUTH_PREPARE_MODE", "hang");
+    let started = Instant::now();
+    let child = BoundedChild::spawn(&mut command);
+    while query_count(&preparation_log) == 0 {
+        assert!(started.elapsed() < Duration::from_secs(2));
+        thread::sleep(Duration::from_millis(5));
+    }
+    let helper_pid: u32 = fs::read_to_string(&preparation_log)
+        .unwrap()
+        .trim()
+        .parse()
+        .unwrap();
+    let lock = fs::File::open(bus.directory.join("hci0.lock")).unwrap();
+    assert!(matches!(lock.try_lock(), Err(fs::TryLockError::WouldBlock)));
+    assert!(fake.snapshot().methods.is_empty());
+    let output = child.wait(Duration::from_secs(2));
+    assert_eq!(output.status.code(), Some(1), "{output:?}");
+    assert!(started.elapsed() < Duration::from_millis(1400));
+    assert!(
+        !Path::new(&format!("/proc/{helper_pid}")).exists(),
+        "preparation helper was not reaped"
+    );
+    lock.try_lock().unwrap();
+    drop(lock);
+
+    // Preparation and HID use the same budget; the latter does not start a fresh timeout.
+    fake.reset(Behavior::Accept);
+    let mut command = link_command(&bus, &shim, &phone, &log, "disconnected", 1000);
+    command.env("BT_AUTH_PREPARE_MODE", "delay");
+    let started = Instant::now();
+    let output = BoundedChild::spawn(&mut command).wait(Duration::from_secs(2));
+    assert_eq!(output.status.code(), Some(1), "{output:?}");
+    assert!(started.elapsed() < Duration::from_millis(1400));
+    assert_registration_counts(&fake.snapshot(), 1, 1);
+    assert_owners_gone(&bus, &fake.snapshot());
+
+    // A missing wrapper also leaves the HID path available.
+    fake.reset(Behavior::Accept);
+    fs::remove_file(bus.directory.join("prepare-le")).unwrap();
+    let mut command = link_command(&bus, &shim, &phone, &log, "external", 1500);
+    command.env("BT_AUTH_HCI_READY_FILE", &ready);
+    let child = BoundedChild::spawn(&mut command);
+    fake.wait_for_registrations();
+    fs::write(&ready, b"").unwrap();
+    let output = child.wait(Duration::from_secs(2));
+    assert!(output.status.success(), "{output:?}");
+    assert!(String::from_utf8_lossy(&output.stderr).contains("Cannot start LE preparation"));
+    assert_owners_gone(&bus, &fake.snapshot());
 }
 
 #[test]

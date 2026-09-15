@@ -11,9 +11,10 @@ const SOCKET_PATH: &str = "/run/bluetooth-auth/connect.sock";
     about = "Check the target's encrypted LE connection and optionally connect once",
     after_help = "Requires an existing HID/LE pairing on hci0.\n\
                   Synchronous attempts require the pre-created lock /run/bluetooth-auth/hci0.lock.\n\
-                  Waiting for another attempt and connecting share the synchronous timeout.\n\
+                  Waiting for another attempt, LE preparation and connecting share the synchronous timeout.\n\
                   Asynchronous requests require /run/bluetooth-auth/connect.sock.\n\
-                  Temporary HID and advertising are released on exit; no disconnect is sent.\n\
+                  LE preparation may disconnect BR/EDR and remove its pairing.\n\
+                  Temporary HID and advertising are released on exit; established LE connections are kept.\n\
                   Exit status: 0 = ready, 1 = not ready or operation failed, 2 = invalid arguments."
 )]
 struct Args {
