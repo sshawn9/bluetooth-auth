@@ -78,7 +78,9 @@ def authenticate(
         libpam.pam_end(handle, result)
 
 
-def establish_credentials(libpam, confdir: pathlib.Path, service: str, user: str) -> None:
+def establish_credentials(
+    libpam, confdir: pathlib.Path, service: str, user: str
+) -> None:
     """Exercise session setup without a preceding pam_authenticate call."""
     ble_mark = confdir / f"{service}-setcred-ble"
     handle = ctypes.c_void_p()
