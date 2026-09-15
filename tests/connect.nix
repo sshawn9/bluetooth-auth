@@ -368,9 +368,16 @@ pkgs.testers.runNixOSTest {
     machine.wait_for_unit("bluetooth.service", timeout=15)
     machine.wait_until_succeeds("test $(wc -l < /run/bluetooth-auth-connect-test.log) = 1 && test $(systemctl show -p ActiveState --value bluetooth-auth-connect.service) = inactive", timeout=15)
 
-    # BlueZ restarts trigger a connection without waiting for that connection to finish.
+    # Keep intentionally held mock connections alive on slow, software-emulated VMs.
+    # Restore the production timeout before checking the timeout behavior below.
+    connection_timeout_override = "/run/systemd/system/bluetooth-auth-connect.service.d/test-hold.conf"
+    machine.succeed(f"mkdir -p $(dirname {connection_timeout_override}); printf '[Service]\\nTimeoutStartSec=infinity\\n' > {connection_timeout_override}; systemctl daemon-reload")
+    machine.succeed("test $(systemctl show -p TimeoutStartUSec --value bluetooth-auth-connect.service) = infinity")
+
+    # BlueZ must finish restarting while the triggered connection remains held.
     machine.succeed("touch /run/bluetooth-auth-connect-hold")
-    machine.succeed("timeout 2 systemctl restart bluetooth.service")
+    machine.succeed("timeout 30 systemctl restart bluetooth.service")
+    machine.succeed("systemctl is-active --quiet bluetooth.service")
     machine.wait_until_succeeds("test $(wc -l < /run/bluetooth-auth-connect-test.log) = 2")
     machine.succeed("test $(systemctl show -p ActiveState --value bluetooth-auth-connect.service) = activating")
     machine.succeed("rm /run/bluetooth-auth-connect-hold")
@@ -465,6 +472,8 @@ pkgs.testers.runNixOSTest {
     machine.succeed("test -S /run/bluetooth-auth/connect.sock && test -f /run/bluetooth-auth/hci0.lock")
     machine.succeed("test $(stat -c %i /run/bluetooth-auth/hci0.lock) = $(cat /run/lock-inode); test $(stat -c %i /run/bluetooth-auth/connect.sock) = $(cat /run/socket-inode)")
 
+    machine.succeed(f"rm {connection_timeout_override}; systemctl daemon-reload")
+    machine.succeed("test $(systemctl show -p TimeoutStartUSec --value bluetooth-auth-connect.service) = 6s")
     machine.succeed("touch /run/bluetooth-auth-connect-hold")
     machine.succeed("printf x | runuser -u trusted -- socat -u - UNIX-SENDTO:/run/bluetooth-auth/connect.sock")
     machine.wait_until_succeeds("test $(wc -l < /run/bluetooth-auth-connect-test.log) = 12")
