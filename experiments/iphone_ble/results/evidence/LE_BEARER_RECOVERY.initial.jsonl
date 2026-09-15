@@ -1,0 +1,114 @@
+{"record_id": "A0001", "time": "2026-09-15T18:44:49.978+08:00", "event": "initial", "trusted": true, "paired": true, "bonded": true, "links": [{"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": true}]}
+{"record_id": "A0002", "time": "2026-09-15T18:44:49.979+08:00", "event": "kernel_target_links", "links": [{"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": true}]}
+{"record_id": "A0003", "time": "2026-09-15T18:44:50.980+08:00", "event": "recording_ready"}
+{"record_id": "A0004", "time": "2026-09-15T18:44:50.981+08:00", "event": "dbus_set_trusted", "sender": "<CALLER_01>", "value": false}
+{"record_id": "A0005", "time": "2026-09-15T18:44:50.986+08:00", "event": "dbus_target_properties", "properties": {"Trusted": false}}
+{"record_id": "A0006", "time": "2026-09-15T18:44:50.986+08:00", "event": "trusted_changed_by_probe", "value": false}
+{"record_id": "A0007", "time": "2026-09-15T18:44:50.986+08:00", "event": "phase", "name": "disconnect_target_only"}
+{"record_id": "A0008", "time": "2026-09-15T18:44:50.988+08:00", "event": "dbus_target_call", "member": "Disconnect", "sender": "<CALLER_02>", "cookie": 2}
+{"record_id": "A0009", "time": "2026-09-15T18:44:53.708+08:00", "event": "hci_host_disconnect", "handle": 256, "reason": "0x13"}
+{"record_id": "A0010", "time": "2026-09-15T18:44:53.817+08:00", "event": "hci_disconnect_complete", "handle": 256, "status": "0x0", "reason": "0x16", "meaning": "local_host_terminated"}
+{"record_id": "A0011", "time": "2026-09-15T18:44:53.817+08:00", "event": "dbus_target_properties", "properties": {"Connected": false}}
+{"record_id": "A0012", "time": "2026-09-15T18:44:53.817+08:00", "event": "phase", "name": "restore_le", "timeout_ms": 15000}
+{"record_id": "A0013", "time": "2026-09-15T18:44:53.830+08:00", "event": "dbus_hid_resource_call", "interface": "org.bluez.GattManager1", "member": "RegisterApplication", "sender": "<CALLER_03>"}
+{"record_id": "A0014", "time": "2026-09-15T18:44:53.844+08:00", "event": "dbus_hid_resource_call", "interface": "org.bluez.LEAdvertisingManager1", "member": "RegisterAdvertisement", "sender": "<CALLER_04>"}
+{"record_id": "A0015", "time": "2026-09-15T18:44:53.845+08:00", "event": "hci_advertising_command", "opcode": "0x2036"}
+{"record_id": "A0016", "time": "2026-09-15T18:44:53.846+08:00", "event": "hci_advertising_command", "opcode": "0x2037"}
+{"record_id": "A0017", "time": "2026-09-15T18:44:53.849+08:00", "event": "hci_advertising_command", "opcode": "0x2038"}
+{"record_id": "A0018", "time": "2026-09-15T18:44:53.851+08:00", "event": "hci_advertising_command", "opcode": "0x2039", "enabled": true}
+{"record_id": "A0019", "time": "2026-09-15T18:44:53.990+08:00", "event": "kernel_target_links", "links": []}
+{"record_id": "A0020", "time": "2026-09-15T18:45:08.830+08:00", "event": "link_result", "returncode": 1, "message": "", "links": []}
+{"record_id": "A0021", "time": "2026-09-15T18:45:08.830+08:00", "event": "result", "outcome": "le_restore_failed"}
+{"record_id": "A0022", "time": "2026-09-15T18:45:08.832+08:00", "event": "dbus_set_trusted", "sender": "<CALLER_05>", "value": true}
+{"record_id": "A0023", "time": "2026-09-15T18:45:08.832+08:00", "event": "dbus_target_properties", "properties": {"Trusted": true}}
+{"record_id": "A0024", "time": "2026-09-15T18:45:08.834+08:00", "event": "trusted_restored", "value": true}
+{"record_id": "A0025", "time": "2026-09-15T18:45:08.926+08:00", "event": "hci_advertising_command", "opcode": "0x2039", "enabled": false}
+{"record_id": "A0026", "time": "2026-09-15T18:45:09.836+08:00", "event": "closed", "links": []}
+{"record_id": "A0027", "time": "2026-09-15T18:46:17.515+08:00", "event": "initial", "trusted": true, "paired": true, "bonded": true, "links": []}
+{"record_id": "A0028", "time": "2026-09-15T18:46:17.515+08:00", "event": "kernel_target_links", "links": []}
+{"record_id": "A0029", "time": "2026-09-15T18:46:18.516+08:00", "event": "recording_ready"}
+{"record_id": "A0030", "time": "2026-09-15T18:46:18.516+08:00", "event": "phase", "name": "restore_le", "timeout_ms": 15000}
+{"record_id": "A0031", "time": "2026-09-15T18:46:18.518+08:00", "event": "dbus_hid_resource_call", "interface": "org.bluez.GattManager1", "member": "RegisterApplication", "sender": "<CALLER_06>"}
+{"record_id": "A0032", "time": "2026-09-15T18:46:18.540+08:00", "event": "dbus_hid_resource_call", "interface": "org.bluez.LEAdvertisingManager1", "member": "RegisterAdvertisement", "sender": "<CALLER_07>"}
+{"record_id": "A0033", "time": "2026-09-15T18:46:18.635+08:00", "event": "hci_advertising_command", "opcode": "0x2036"}
+{"record_id": "A0034", "time": "2026-09-15T18:46:18.636+08:00", "event": "hci_advertising_command", "opcode": "0x2037"}
+{"record_id": "A0035", "time": "2026-09-15T18:46:18.639+08:00", "event": "hci_advertising_command", "opcode": "0x2038"}
+{"record_id": "A0036", "time": "2026-09-15T18:46:18.642+08:00", "event": "hci_advertising_command", "opcode": "0x2039", "enabled": true}
+{"record_id": "A0037", "time": "2026-09-15T18:46:33.519+08:00", "event": "link_result", "returncode": 1, "message": "", "links": []}
+{"record_id": "A0038", "time": "2026-09-15T18:46:33.519+08:00", "event": "result", "outcome": "le_restore_failed"}
+{"record_id": "A0039", "time": "2026-09-15T18:46:33.521+08:00", "event": "hci_advertising_command", "opcode": "0x2039", "enabled": false}
+{"record_id": "A0040", "time": "2026-09-15T18:46:33.521+08:00", "event": "dbus_set_trusted", "sender": "<CALLER_08>", "value": true}
+{"record_id": "A0041", "time": "2026-09-15T18:46:33.521+08:00", "event": "trusted_restored", "value": true}
+{"record_id": "A0042", "time": "2026-09-15T18:46:34.524+08:00", "event": "closed", "links": []}
+{"record_id": "A0043", "time": "2026-09-15T18:48:41.360+08:00", "event": "persistent_session_start", "trusted": true, "links": []}
+{"record_id": "A0044", "time": "2026-09-15T18:48:41.361+08:00", "event": "kernel_target_links", "links": []}
+{"record_id": "A0045", "time": "2026-09-15T18:48:42.361+08:00", "event": "persistent_session_ready", "limit_seconds": 900}
+{"record_id": "A0046", "time": "2026-09-15T18:48:42.361+08:00", "event": "action", "name": "inspect_bond"}
+{"record_id": "A0047", "time": "2026-09-15T18:48:42.365+08:00", "event": "bond_metadata", "sections": ["IdentityResolvingKey", "PeripheralLongTermKey", "SlaveLongTermKey", "LinkKey", "General", "DeviceID", "ServiceChanged"], "general": {"SupportedTechnologies": "BR/EDR;LE;", "AddressType": "public", "Trusted": "true", "PreferredBearer": "last-used", "LastUsedBearer": "bredr"}, "encryption_sizes": {"PeripheralLongTermKey": "16", "SlaveLongTermKey": "16"}}
+{"record_id": "A0048", "time": "2026-09-15T18:48:42.365+08:00", "event": "action_finished", "name": "inspect_bond"}
+{"record_id": "A0049", "time": "2026-09-15T18:49:34.251+08:00", "event": "action", "name": "connect"}
+{"record_id": "A0050", "time": "2026-09-15T18:49:34.253+08:00", "event": "dbus_hid_resource_call", "interface": "org.bluez.GattManager1", "member": "RegisterApplication", "sender": "<CALLER_09>"}
+{"record_id": "A0051", "time": "2026-09-15T18:49:34.274+08:00", "event": "dbus_hid_resource_call", "interface": "org.bluez.LEAdvertisingManager1", "member": "RegisterAdvertisement", "sender": "<CALLER_10>"}
+{"record_id": "A0052", "time": "2026-09-15T18:49:34.370+08:00", "event": "hci_advertising_command", "opcode": "0x2036"}
+{"record_id": "A0053", "time": "2026-09-15T18:49:34.371+08:00", "event": "hci_advertising_command", "opcode": "0x2037"}
+{"record_id": "A0054", "time": "2026-09-15T18:49:34.375+08:00", "event": "hci_advertising_command", "opcode": "0x2038"}
+{"record_id": "A0055", "time": "2026-09-15T18:49:34.379+08:00", "event": "hci_advertising_command", "opcode": "0x2039", "enabled": true}
+{"record_id": "A0056", "time": "2026-09-15T18:50:02.466+08:00", "event": "hci_classic_connection_command", "opcode": "0x409"}
+{"record_id": "A0057", "time": "2026-09-15T18:50:02.651+08:00", "event": "kernel_target_links", "links": [{"handle": 3840, "transport": "BR/EDR", "connected": false, "encrypted": false}]}
+{"record_id": "A0058", "time": "2026-09-15T18:50:02.792+08:00", "event": "hci_classic_connection_complete", "status": "0x0", "handle": 256}
+{"record_id": "A0059", "time": "2026-09-15T18:50:02.838+08:00", "event": "dbus_target_properties", "properties": {"Connected": true}}
+{"record_id": "A0060", "time": "2026-09-15T18:50:02.852+08:00", "event": "kernel_target_links", "links": [{"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": false}]}
+{"record_id": "A0061", "time": "2026-09-15T18:50:03.621+08:00", "event": "hci_encryption_change", "handle": 256, "status": "0x0", "enabled": true}
+{"record_id": "A0062", "time": "2026-09-15T18:50:03.654+08:00", "event": "kernel_target_links", "links": [{"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": true}]}
+{"record_id": "A0063", "time": "2026-09-15T18:50:03.726+08:00", "event": "dbus_target_properties", "properties": {"Connected": true}}
+{"record_id": "A0064", "time": "2026-09-15T18:51:34.252+08:00", "event": "link_result", "returncode": 1, "message": "", "links": [{"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": true}]}
+{"record_id": "A0065", "time": "2026-09-15T18:51:34.252+08:00", "event": "action_finished", "name": "connect"}
+{"record_id": "A0066", "time": "2026-09-15T18:51:34.253+08:00", "event": "hci_advertising_command", "opcode": "0x2039", "enabled": false}
+{"record_id": "A0067", "time": "2026-09-15T18:52:50.160+08:00", "event": "action", "name": "connect"}
+{"record_id": "A0068", "time": "2026-09-15T18:52:50.162+08:00", "event": "dbus_hid_resource_call", "interface": "org.bluez.GattManager1", "member": "RegisterApplication", "sender": "<CALLER_11>"}
+{"record_id": "A0069", "time": "2026-09-15T18:52:50.185+08:00", "event": "dbus_hid_resource_call", "interface": "org.bluez.LEAdvertisingManager1", "member": "RegisterAdvertisement", "sender": "<CALLER_12>"}
+{"record_id": "A0070", "time": "2026-09-15T18:52:50.187+08:00", "event": "hci_advertising_command", "opcode": "0x2036"}
+{"record_id": "A0071", "time": "2026-09-15T18:52:50.188+08:00", "event": "hci_advertising_command", "opcode": "0x2037"}
+{"record_id": "A0072", "time": "2026-09-15T18:52:50.192+08:00", "event": "hci_advertising_command", "opcode": "0x2038"}
+{"record_id": "A0073", "time": "2026-09-15T18:52:50.195+08:00", "event": "hci_advertising_command", "opcode": "0x2039", "enabled": true}
+{"record_id": "A0074", "time": "2026-09-15T18:53:12.682+08:00", "event": "dbus_target_properties", "properties": {"Connected": false}}
+{"record_id": "A0075", "time": "2026-09-15T18:53:12.946+08:00", "event": "hci_disconnect_complete", "handle": 256, "status": "0x0", "reason": "0x13", "meaning": "remote_user_terminated"}
+{"record_id": "A0076", "time": "2026-09-15T18:53:12.947+08:00", "event": "dbus_target_properties", "properties": {"Connected": false}}
+{"record_id": "A0077", "time": "2026-09-15T18:53:12.964+08:00", "event": "kernel_target_links", "links": []}
+{"record_id": "A0078", "time": "2026-09-15T18:53:22.541+08:00", "event": "hci_le_connection_complete", "status": "0x0", "handle": 2048, "role": "peripheral", "target_identity_match": false}
+{"record_id": "A0079", "time": "2026-09-15T18:53:22.553+08:00", "event": "dbus_target_properties", "properties": {"Connected": true}}
+{"record_id": "A0080", "time": "2026-09-15T18:53:22.609+08:00", "event": "kernel_target_links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": false}]}
+{"record_id": "A0081", "time": "2026-09-15T18:53:22.977+08:00", "event": "hci_encryption_command", "opcode": "0x201a", "handle": 2048}
+{"record_id": "A0082", "time": "2026-09-15T18:53:23.066+08:00", "event": "hci_encryption_change", "handle": 2048, "status": "0x0", "enabled": true}
+{"record_id": "A0083", "time": "2026-09-15T18:53:23.074+08:00", "event": "link_result", "returncode": 0, "message": "", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
+{"record_id": "A0084", "time": "2026-09-15T18:53:23.074+08:00", "event": "action_finished", "name": "connect"}
+{"record_id": "A0085", "time": "2026-09-15T18:53:23.211+08:00", "event": "kernel_target_links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
+{"record_id": "A0086", "time": "2026-09-15T18:53:23.623+08:00", "event": "dbus_target_properties", "properties": {"ServicesResolved": true}}
+{"record_id": "A0087", "time": "2026-09-15T18:53:58.017+08:00", "event": "action", "name": "trusted"}
+{"record_id": "A0088", "time": "2026-09-15T18:53:58.019+08:00", "event": "dbus_set_trusted", "sender": "<CALLER_13>", "value": false}
+{"record_id": "A0089", "time": "2026-09-15T18:53:58.019+08:00", "event": "dbus_target_properties", "properties": {"Trusted": false}}
+{"record_id": "A0090", "time": "2026-09-15T18:53:58.019+08:00", "event": "action_finished", "name": "trusted"}
+{"record_id": "A0091", "time": "2026-09-15T18:54:52.038+08:00", "event": "action", "name": "trusted"}
+{"record_id": "A0092", "time": "2026-09-15T18:54:52.040+08:00", "event": "dbus_set_trusted", "sender": "<CALLER_14>", "value": true}
+{"record_id": "A0093", "time": "2026-09-15T18:54:52.040+08:00", "event": "dbus_target_properties", "properties": {"Trusted": true}}
+{"record_id": "A0094", "time": "2026-09-15T18:54:52.041+08:00", "event": "action_finished", "name": "trusted"}
+{"record_id": "A0095", "time": "2026-09-15T18:55:45.459+08:00", "event": "action", "name": "snapshot"}
+{"record_id": "A0096", "time": "2026-09-15T18:55:45.462+08:00", "event": "snapshot", "properties": {"Trusted": true, "Connected": true, "Paired": true, "Bonded": true, "ServicesResolved": true}, "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
+{"record_id": "A0097", "time": "2026-09-15T18:55:45.462+08:00", "event": "action_finished", "name": "snapshot"}
+{"record_id": "A0098", "time": "2026-09-15T18:56:00.825+08:00", "event": "action", "name": "classic_connect"}
+{"record_id": "A0099", "time": "2026-09-15T18:56:00.826+08:00", "event": "dbus_target_call", "member": "Connect", "sender": "<CALLER_15>", "cookie": 2}
+{"record_id": "A0100", "time": "2026-09-15T18:56:00.827+08:00", "event": "hci_classic_connection_command", "opcode": "0x405"}
+{"record_id": "A0101", "time": "2026-09-15T18:56:00.837+08:00", "event": "kernel_target_links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}, {"handle": 3840, "transport": "BR/EDR", "connected": false, "encrypted": false}]}
+{"record_id": "A0102", "time": "2026-09-15T18:56:04.452+08:00", "event": "hci_classic_connection_complete", "status": "0x0", "handle": 256}
+{"record_id": "A0103", "time": "2026-09-15T18:56:04.648+08:00", "event": "kernel_target_links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}, {"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": false}]}
+{"record_id": "A0104", "time": "2026-09-15T18:56:05.084+08:00", "event": "hci_encryption_change", "handle": 256, "status": "0x0", "enabled": true}
+{"record_id": "A0105", "time": "2026-09-15T18:56:05.249+08:00", "event": "kernel_target_links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}, {"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": true}]}
+{"record_id": "A0106", "time": "2026-09-15T18:56:05.840+08:00", "event": "action_finished", "name": "classic_connect"}
+{"record_id": "A0107", "time": "2026-09-15T18:56:06.002+08:00", "event": "dbus_target_properties", "properties": {"Connected": true}}
+{"record_id": "A0108", "time": "2026-09-15T18:57:09.197+08:00", "event": "action", "name": "snapshot"}
+{"record_id": "A0109", "time": "2026-09-15T18:57:09.201+08:00", "event": "snapshot", "properties": {"Trusted": true, "Connected": true, "Paired": true, "Bonded": true, "ServicesResolved": true}, "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}, {"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": true}]}
+{"record_id": "A0110", "time": "2026-09-15T18:57:09.201+08:00", "event": "action_finished", "name": "snapshot"}
+{"record_id": "A0111", "time": "2026-09-15T18:59:22.975+08:00", "event": "action", "name": "stop"}
+{"record_id": "A0112", "time": "2026-09-15T18:59:22.976+08:00", "event": "dbus_set_trusted", "sender": "<CALLER_16>", "value": true}
+{"record_id": "A0113", "time": "2026-09-15T18:59:22.977+08:00", "event": "trusted_restored", "value": true}
+{"record_id": "A0114", "time": "2026-09-15T18:59:23.978+08:00", "event": "persistent_session_closed", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}, {"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": true}]}

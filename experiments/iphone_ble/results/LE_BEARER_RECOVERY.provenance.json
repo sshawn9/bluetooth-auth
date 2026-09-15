@@ -1,0 +1,306 @@
+{
+  "schema_version": 1,
+  "compiled_on": "2026-09-15",
+  "timezone": "Asia/Shanghai",
+  "scope": "2026-09-15 双模设备LE恢复故障：背景、全部留存采集、人工确认、源码依据、场景结论和复核工具；与早期archive-manifest.json分开维护。",
+  "capture_segments": [
+    {
+      "id": "A",
+      "path": "results/evidence/LE_BEARER_RECOVERY.initial.jsonl",
+      "records": 114,
+      "first_record": "A0001",
+      "last_record": "A0114",
+      "start": "2026-09-15T18:44:49.978+08:00",
+      "end": "2026-09-15T18:59:23.978+08:00",
+      "origin": "当轮临时诊断脚本留存的全部结构化JSONL，逐条脱敏后归档；不是原始btmon文件。",
+      "coverage": "输入文件条目完整保留，但采集器覆盖缺陷仍在，不是完整协议记录。"
+    },
+    {
+      "id": "B",
+      "path": "results/evidence/LE_BEARER_RECOVERY.lifecycle.jsonl",
+      "records": 537,
+      "first_record": "B0001",
+      "last_record": "B0537",
+      "start": "2026-09-15T19:14:11.842+08:00",
+      "end": "2026-09-15T20:36:45.582+08:00",
+      "origin": "当轮临时诊断脚本留存的全部结构化JSONL，逐条脱敏后归档；不是原始btmon文件。",
+      "coverage": "输入文件条目完整保留，但采集器覆盖缺陷仍在，不是完整协议记录。"
+    }
+  ],
+  "excerpt": {
+    "path": "results/evidence/LE_BEARER_RECOVERY.jsonl",
+    "records": 60,
+    "origin": "后半程关键事件摘选，部分字段精简；60条均能按time/event对应B段，不是额外60次观测。",
+    "matching_record_ids": [
+      "B0352",
+      "B0353",
+      "B0354",
+      "B0356",
+      "B0360",
+      "B0363",
+      "B0377",
+      "B0379",
+      "B0381",
+      "B0383",
+      "B0386",
+      "B0387",
+      "B0388",
+      "B0389",
+      "B0392",
+      "B0394",
+      "B0397",
+      "B0410",
+      "B0411",
+      "B0412",
+      "B0413",
+      "B0416",
+      "B0418",
+      "B0420",
+      "B0422",
+      "B0423",
+      "B0424",
+      "B0425",
+      "B0428",
+      "B0430",
+      "B0433",
+      "B0435",
+      "B0438",
+      "B0439",
+      "B0441",
+      "B0443",
+      "B0447",
+      "B0460",
+      "B0461",
+      "B0462",
+      "B0464",
+      "B0466",
+      "B0467",
+      "B0468",
+      "B0470",
+      "B0471",
+      "B0474",
+      "B0479",
+      "B0499",
+      "B0500",
+      "B0501",
+      "B0502",
+      "B0503",
+      "B0506",
+      "B0508",
+      "B0513",
+      "B0514",
+      "B0534",
+      "B0536",
+      "B0537"
+    ]
+  },
+  "notes": {
+    "path": "results/evidence/LE_BEARER_RECOVERY.notes.json",
+    "records": 17,
+    "origin": "用户实际确认及当时工具输出/源码核查摘要。没有补造原始journal、命令stdout或精确用户操作时间。"
+  },
+  "completeness": [
+    "A/B共651条，包含开始/停止、错误和受干扰阶段；数量不是成功率分母。",
+    "采集始于原始失联之后；无法确定最初经典发起者、LE断开原因和二者先后。",
+    "A及B早期部分属性无interface；BlueZ owner变化覆盖不可靠；B末尾长度错误。缺少方法记录不能证明未发生调用。",
+    "旧HCI部分建链事件缺少独立目标匹配标记，须结合按目标筛选的连接快照；handle可复用。",
+    "R12/R13/R17不满足原控制条件；保留干扰，不计有效成功。R16及部分人工操作没有独立采集文件，notes明确标为摘要。",
+    "公开记录是筛选后的协议元数据，不包括全部系统journal、空口抓包或完整第三方源码。"
+  ],
+  "privacy_transformations": [
+    "真实地址、地址编码的设备路径及原电脑名称替换为无身份的角色标记；工具通过地址文件输入，示例只用环境变量。",
+    "个人目录、本地Nix store执行路径及临时诊断目录替换为占位符，不发布私有文件路径。",
+    "unique D-Bus sender在每段内分别编号为CALLER标签；段间同标签不代表同进程。",
+    "移除历史monotonic字段，保留原墙钟时间和顺序，追加A/B record_id；不回填缺失interface或目标匹配信息。",
+    "保留opcode、handle、方向、长度和Service Changed句柄范围；不保留ATT应用内容或配对密钥。",
+    "LE密钥比对只保留是否变化，不发布密钥及指纹；私有原始输入哈希及私人附件标识不公开。",
+    "这里的SHA-256只对应公开源码和脱敏产物；完整性校验不是历史推论正确性的证明。"
+  ],
+  "software_baseline": {
+    "repository_commit": "44ee2973e3c87f87916e081b678f37c89c644c57",
+    "relationship": "归档时源码基线。历史使用已安装程序和临时脚本；未对已安装二进制与此提交作可重复构建等同性证明。",
+    "repository_files": [
+      {
+        "path": "Cargo.toml",
+        "sha256": "f52c45caa4c4d687d3de5fb75d0d3f6ca650cc412f8dce17f2b8cb9773a063a9"
+      },
+      {
+        "path": "Cargo.lock",
+        "sha256": "32e5f548265bba7b1b5655bf6fe27f3b7d58dc77acbce60ebe1095798b697ae7"
+      },
+      {
+        "path": "src/lib.rs",
+        "sha256": "8e2496299caff8eb2ebe9e324eca30b1c4f13eebbc314ebf234c43410cb34bf4"
+      },
+      {
+        "path": "src/bin/bluetooth-auth-link.rs",
+        "sha256": "917e8efaff446b939841a2b287d0b9fca1887bf6a3ff593d4af0a448ee1f70f8"
+      },
+      {
+        "path": "src/bin/bluetooth-auth-noctalia-auto-lock.rs",
+        "sha256": "c998f0f31d2a477682aab8bb4c7923a7e93cabc4caba5d73939c2438e42f0567"
+      },
+      {
+        "path": "modules/nixos/connect.nix",
+        "sha256": "9db0417031093d04c32d530866fae6bd6e6c1b0ba0eb3da4b36e3e39fbce12d5"
+      },
+      {
+        "path": "modules/nixos/pam-auth.nix",
+        "sha256": "9d8a04e6df7ba402b476806db570f0b779d13fd22f18abe9ed08e65ccc8690fd"
+      }
+    ],
+    "bluez": "5.87",
+    "runtime_kernel": "7.2.4-cachyos-lto",
+    "reviewed_kernel_reference": "Linux v7.2；不是下游全部补丁逐字审计",
+    "noctalia": "5.1.0",
+    "noctalia_revision": "c7b9197af77ff22bfb9a83c52a95643a1d90ca86",
+    "bluer": "0.17.4",
+    "iphone_model": null,
+    "ios_version": null,
+    "references": "docs/le-bearer-recovery/REFERENCES.md"
+  },
+  "tool_provenance": [
+    {
+      "paths": [
+        "diagnostics/le_bearer_probe.py",
+        "diagnostics/le_bearer_control.py"
+      ],
+      "status": "归档时参数化重写，非历史脚本逐字快照，仅离线验证。",
+      "differences": [
+        "地址文件输入，allowlist输出，错误避免回显私有路径。",
+        "HCI与D-Bus独立读取，保留接口和调用者信息，处理大行/EOF；这些能力不补入旧记录。",
+        "MGMT明确选择目标/地址类型；经典配对删除需显式子命令及私有备份，核对全部已存在LE密钥组。",
+        "新D-Bus控制等待10秒，历史R14等待8秒；不是完全同参数重放。"
+      ],
+      "limits": [
+        "不归属未解析RPA，不解析Enhanced Complete v2，不重组ATT分片。",
+        "时间是本机读取时间；未对新工具作实机时序精度验证。"
+      ]
+    },
+    {
+      "paths": [
+        "diagnostics/hid-holder/Cargo.toml",
+        "diagnostics/hid-holder/Cargo.lock",
+        "diagnostics/hid-holder/src/main.rs"
+      ],
+      "status": "保留原持有器的生命周期目的，改为地址文件参数和try_lock；编译/help通过，未重新注册真实HID。",
+      "dependency_note": "外部crate由Cargo.lock固定；项目库仍为路径依赖，历史复核须使用上面提交/哈希对应的库。"
+    },
+    {
+      "paths": [
+        "diagnostics/verify_bearer_archive.py"
+      ],
+      "status": "只验证公开产物哈希、事件ID/数量及隐私模式，不检查蓝牙。"
+    }
+  ],
+  "validation": {
+    "hardware_replayed_during_archiving": false,
+    "offline_tests": {
+      "command": "python3 -B -m unittest discover -s experiments/iphone_ble/tests -p 'test_le_bearer_*.py'",
+      "tests": 21,
+      "result": "passed",
+      "scope": "合成协议包、假socket/DBus和临时元数据；不读真实地址/密钥，不操作蓝牙。"
+    },
+    "hid_holder_build": {
+      "command": "nix develop --offline --no-write-lock-file --command cargo build --offline --manifest-path experiments/iphone_ble/diagnostics/hid-holder/Cargo.toml",
+      "result": "passed",
+      "toolchain": "rustc 1.97.1"
+    },
+    "format_and_static_checks": {
+      "python": "ruff 0.16.6 format/check F；通过",
+      "rust": "cargo fmt --manifest-path experiments/iphone_ble/diagnostics/hid-holder/Cargo.toml -- --check；通过"
+    },
+    "privacy_scope": "单独扫描清单中的专题产物。整仓另有既存合成测试地址/示例路径发现，未扩充白名单或改无关文件；不能宣称整仓零发现。",
+    "archive_check_command": "python3 -B experiments/iphone_ble/diagnostics/verify_bearer_archive.py"
+  },
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "2a0a15d781e92f5e1290e9ba360a05394ebfd0687ce1c2eb5d6b947650c378e6"
+    },
+    {
+      "path": "RESULTS.md",
+      "sha256": "7e1379f5f1f968ab5fe6c233c0bc74289069ba624763e7abf5128e41d7f9f340"
+    },
+    {
+      "path": "check_public_privacy.py",
+      "sha256": "0d55c24b118b97963041182a7f7222019547d613b42781e42679b54e6bbe308b"
+    },
+    {
+      "path": "diagnostics/hid-holder/.gitignore",
+      "sha256": "306fd52e74fca6746e12acc750f232de15e71da917756a1270d74c91f5eb7368"
+    },
+    {
+      "path": "diagnostics/hid-holder/Cargo.lock",
+      "sha256": "87143303266d7697a5c415b33d0eb132bbe1102a4747889500477dc5807fde75"
+    },
+    {
+      "path": "diagnostics/hid-holder/Cargo.toml",
+      "sha256": "b71b12b39bff81618f217250342fcf5c792bd262d1976758177f2219d6801c88"
+    },
+    {
+      "path": "diagnostics/hid-holder/src/main.rs",
+      "sha256": "008abcc831350648adf3bf9de07ced611e1925f906304c3290ebf6b549be519f"
+    },
+    {
+      "path": "diagnostics/le_bearer_control.py",
+      "sha256": "a1fe61f82dc5a25dc240c3f3db598528e7665accae5e1347b676922e4518af63"
+    },
+    {
+      "path": "diagnostics/le_bearer_probe.py",
+      "sha256": "8ca46a3665436c89473dde00154448348d2fe9d34a33d7e6cf474cb6bb4f7b6b"
+    },
+    {
+      "path": "diagnostics/verify_bearer_archive.py",
+      "sha256": "d6e7fc063db9f811cfa334a8b1c23ad26b9793961edb1966056d158064aee546"
+    },
+    {
+      "path": "docs/le-bearer-recovery/REFERENCES.md",
+      "sha256": "6dfdb9cdde665307baab476b3a7af0a4a41296f1f83dfd261c82b3dd8834ebc2"
+    },
+    {
+      "path": "docs/le-bearer-recovery/REPRODUCE.md",
+      "sha256": "0ecf779b71e1eba10ec730b82ad71f628dc42ae3a1c55bd8582621eb689f754e"
+    },
+    {
+      "path": "results/LE_BEARER_RECOVERY.zh-CN.md",
+      "sha256": "4063ea17998a87c266d3b6226b02407a85d72f5f2bb91bc11284acbbadb4603a"
+    },
+    {
+      "path": "results/README.md",
+      "sha256": "e0b16306c150ff7960db13ba5bfa6eb06c810cb8274e03c16f94a5f194335990"
+    },
+    {
+      "path": "results/evidence/LE_BEARER_RECOVERY.initial.jsonl",
+      "sha256": "d54c0fdb2e4acb9c59aa73de869be0279fee15ba290ff537ff5370bc0f50c966"
+    },
+    {
+      "path": "results/evidence/LE_BEARER_RECOVERY.jsonl",
+      "sha256": "5ed848c80208abd84c047ac1884cb6a496caea366ded15494999beac68529b71"
+    },
+    {
+      "path": "results/evidence/LE_BEARER_RECOVERY.lifecycle.jsonl",
+      "sha256": "82c790dc5081bf0ff189d4095bf42c1b4b30d3bc3c8ed4f6d437546a5f35c947"
+    },
+    {
+      "path": "results/evidence/LE_BEARER_RECOVERY.notes.json",
+      "sha256": "a1e037511359cacd7139acf970ae409596c4c27584b75c151722ac1d7e7dfe94"
+    },
+    {
+      "path": "tests/test_le_bearer_control.py",
+      "sha256": "3b0c619cdbab4acde9ed733287fb4cf1cd8d080a8d9df146adbf91cc657fbacb"
+    },
+    {
+      "path": "tests/test_le_bearer_probe.py",
+      "sha256": "45afcf6d8b950905c230c2c7831032f4c26970146ca78c1f63a549f059f53ea3"
+    }
+  ],
+  "excluded": [
+    "本清单自身（避免循环哈希）",
+    "私有输入/配对备份",
+    "原始HCI包/完整系统journal",
+    "编译target/、虚拟环境及Python缓存",
+    "Git索引/状态",
+    "早期archive-manifest.json（保留原历史快照）"
+  ]
+}

@@ -2,6 +2,10 @@
 
 本目录收录实测日志、结构化结果和代码校验清单。设备地址和电脑名称已替换为角色占位符，具体证据来源和完整性分别注明。
 
+新增 [LE 恢复故障专题](LE_BEARER_RECOVERY.zh-CN.md)归档 2026-09-15 的背景、27 个阶段和按场景列出的结论。两段全部留存结构化采集为 [A / 114 条](evidence/LE_BEARER_RECOVERY.initial.jsonl)、[B / 537 条](evidence/LE_BEARER_RECOVERY.lifecycle.jsonl)，另有[关键摘选](evidence/LE_BEARER_RECOVERY.jsonl)、[人工确认](evidence/LE_BEARER_RECOVERY.notes.json)和[来源/校验清单](LE_BEARER_RECOVERY.provenance.json)。它们不改写下表 16 项旧实验的次数或结果。
+
+`archive-manifest.json` 保留早期整理时的历史哈希；后续格式化、文档或源码变化会使它与当前文件不同。本轮使用独立的 provenance 清单校验专题材料，没有刷新旧哈希或把当前工具冒充早期版本。
+
 | 文件                                           | 内容与证据等级                                                                                                                         |
 | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | [observations.json](observations.json)         | 16 项实测、失败、前提不成立、观测不足、恢复及历史记录；保留字段、参数、人工观察和限制                                                  |

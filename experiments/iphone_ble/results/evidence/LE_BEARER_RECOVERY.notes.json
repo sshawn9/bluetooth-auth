@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-15",
+  "scope": "人工确认与当时核查摘要；不是事后生成的原始系统日志，未补造精确时间。",
+  "records": [
+    {
+      "id": "U01",
+      "source": "user_report",
+      "time": null,
+      "statement": "用户确认此前在 HID server 下完成配对，本次启动 greetd 曾免密通过。",
+      "limit": "不据此补造初次 LE 建链角色/时间。"
+    },
+    {
+      "id": "U02",
+      "source": "user_report",
+      "time": null,
+      "statement": "桌面显示蓝牙已连接时，Noctalia 锁屏按回车不能免密，且多次自动锁屏；曾打开目标 Auto reconnect，操作与 LE 失联的先后顺序未知。"
+    },
+    {
+      "id": "U03",
+      "source": "user_report_and_instruction",
+      "time": null,
+      "statement": "用户停止 bluetooth-auth-auto-lock.service，并要求诊断期间保持停止。"
+    },
+    {
+      "id": "J01",
+      "source": "prior_investigation_summary",
+      "time": null,
+      "statement": "当时核查启动日志：连接程序约17:47:02成功，之后出现解锁/自动锁屏失败；到采集开始时仅经典连接。",
+      "limit": "本专题没有对应时段的原始 journal 文件，没有最初的 HCI/D-Bus 事件。不能据此确定原始断线时刻、原因、调用者或两个 bearer 的变化顺序。"
+    },
+    {
+      "id": "U04",
+      "source": "user_confirmation",
+      "related_run": "R04",
+      "time": null,
+      "instruction": "HID 广播窗口内点击 iPhone 原配对的电脑条目，不忽略设备、不重新配对。",
+      "reply": "显示已连接",
+      "limit": "连接类型来自 A 段 HCI，不来自用户对界面类型的判断。"
+    },
+    {
+      "id": "U05",
+      "source": "user_confirmation",
+      "related_run": "R05",
+      "time": null,
+      "instruction": "在 iPhone 设置中关闭蓝牙，等约3秒再打开，锁屏，不点击电脑条目。",
+      "reply": "已关闭再打开，并锁屏",
+      "limit": "该动作也会短暂断开手机其他蓝牙连接。"
+    },
+    {
+      "id": "U06",
+      "source": "user_authorization",
+      "related_run": "R23",
+      "time": null,
+      "reply": "允许移除目标手机的经典配对部分",
+      "scope": "仅电脑保存的目标经典配对密钥，保留 LE 和其他设备配对；未来经典音频需要重新配对。"
+    },
+    {
+      "id": "U07",
+      "source": "user_confirmation",
+      "related_run": "R26",
+      "time": null,
+      "instruction": "实际手动锁屏，不输入密码，直接按回车。",
+      "reply": "已免密解锁"
+    },
+    {
+      "id": "N01",
+      "source": "operator_command_and_source_summary",
+      "related_run": "R13",
+      "statement": "运行时 mask 未有效替代 NixOS 中已有单元定义；BlueZ 重启仍带起原连接服务，不能声称实验 API 单独恢复成功。"
+    },
+    {
+      "id": "N02",
+      "source": "operator_command_summary",
+      "related_run": "R16",
+      "statement": "通过 D-Bus 把目标偏好改为 bredr 后断 LE；随后单独执行已安装的原 HID 按需连接程序成功。",
+      "limit": "设置调用与客户端退出结果未全部写入 B 段；不能把不存在的对应事件补成原始采集。"
+    },
+    {
+      "id": "N03",
+      "source": "operator_output_and_journal_summary",
+      "related_run": "R17",
+      "statement": "20:00:43 开始的连接试验被20:00:52诊断期限清理和 BlueZ 重启打断；客户端退出1不算有效对照。清理在启动 socket 时遇到连接服务已经运行的错误，中断了后续恢复；20:06补回 Trusted 和 socket。",
+      "limit": "没有把补充 journal 摘要伪装成 B 段原始事件。"
+    },
+    {
+      "id": "N04",
+      "source": "operator_script_summary",
+      "related_run": "R19",
+      "statement": "停止连接 socket/服务/电源监听，通过临时 ConditionPathExists 指向不存在的诊断条件文件抑制自动单元；Trusted=false；临时启用 experimental 后等待5秒，再写 le 偏好。未启动 HID 提供器。",
+      "limit": "这些控制操作有脚本/执行记录支持，不以不完整的 D-Bus 日志未看到调用作为唯一证据。"
+    },
+    {
+      "id": "N05",
+      "source": "operator_command_summary",
+      "related_run": "R21",
+      "statement": "先把 PreferredBearer 改回 last-used，再断开并重新建立经典连接，确保新的经典建链发生于默认策略下；随后按类型断 LE 并调用原程序15秒。",
+      "limit": "设置 last-used 的命令返回成功来自执行输出，不是 B 段中的属性事件。"
+    },
+    {
+      "id": "N06",
+      "source": "operator_output_summary",
+      "related_run": "R26",
+      "statement": "以实际用户调用 login PAM，回调提供空密码：pam_start=0、pam_authenticate=0、pam_acct_mgmt=0；没有打开 PAM session。另查本地 HID 不存在、广播实例0、正常服务已恢复、自动锁屏未启动、诊断进程最终为0。",
+      "limit": "PAM 与资源输出是工具结果摘要；用户实际界面确认另列 U07。"
+    },
+    {
+      "id": "N07",
+      "source": "preparation_and_cleanup_summary",
+      "statement": "准备临时 Rust HID 持有器时，直接 Cargo 构建缺少 D-Bus 编译环境，改用项目 Nix 开发环境后成功。PAM 核查首次找不到 libpam，定位实际安装库后通过。最终诊断器析构阶段有事件循环已关闭提示，随后进程核验为0；不以诊断器退出码代替连接判据。"
+    },
+    {
+      "id": "N08",
+      "source": "source_review_summary",
+      "statement": "考虑并放弃全设备 Blocked、MGMT type0 BlockDevice、WirePlumber profile 开关作为目标经典链路阻断方法；也检查 Privacy/RPA、GATT 经 BR 的可能性。没有执行阻止设备或修改音频全局角色。具体依据与否定边界见 REFERENCES.md。"
+    },
+    {
+      "id": "N09",
+      "source": "archive_boundary",
+      "statement": "本次归档只读取已保留文件、公开资料并做离线检查，没有再执行蓝牙扫描、连接、广播、配对或服务操作。新的通用复核工具不是历史采集器的逐字源码快照。"
+    }
+  ]
+}

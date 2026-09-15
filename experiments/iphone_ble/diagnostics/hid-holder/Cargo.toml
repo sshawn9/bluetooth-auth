@@ -1,0 +1,10 @@
+[package]
+name = "hid-lifetime-probe"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+bluetooth-auth = { path = "../../../.." }
+clap = { version = "4", features = ["derive"] }
+tokio = { version = "1", features = ["rt", "signal"] }

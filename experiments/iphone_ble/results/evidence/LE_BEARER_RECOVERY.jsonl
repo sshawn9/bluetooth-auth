@@ -1,0 +1,60 @@
+{"time": "2026-09-15T20:11:19.513+08:00", "event": "native_le_baseline", "preferred_bearer": "last-used", "links": []}
+{"time": "2026-09-15T20:11:24.519+08:00", "event": "native_le_preference_set"}
+{"time": "2026-09-15T20:11:26.899+08:00", "event": "le_connect_command", "opcode": "0x2043"}
+{"time": "2026-09-15T20:11:27.177+08:00", "event": "le_connection_complete", "status": "0x0", "handle": 2048, "role": "central"}
+{"time": "2026-09-15T20:11:28.031+08:00", "event": "encryption", "handle": 2048, "status": "0x0", "value": "0x1"}
+{"time": "2026-09-15T20:11:28.130+08:00", "event": "native_le_result", "connected": true, "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
+{"time": "2026-09-15T20:12:01.602+08:00", "event": "classic_connect_command", "opcode": "0x405"}
+{"time": "2026-09-15T20:12:02.403+08:00", "event": "classic_connection_complete", "status": "0x0", "handle": 256}
+{"time": "2026-09-15T20:12:03.101+08:00", "event": "encryption", "handle": 256, "status": "0x0", "value": "0x2"}
+{"time": "2026-09-15T20:12:03.888+08:00", "event": "action", "name": "snapshot"}
+{"time": "2026-09-15T20:12:26.084+08:00", "event": "action", "name": "disconnect_le"}
+{"time": "2026-09-15T20:12:26.086+08:00", "event": "host_disconnect", "handle": 2048, "reason": "0x13"}
+{"time": "2026-09-15T20:12:26.124+08:00", "event": "disconnected", "handle": 2048, "status": "0x0", "value": "0x16"}
+{"time": "2026-09-15T20:12:26.133+08:00", "event": "typed_disconnect_complete", "transport": "LE", "count": 1}
+{"time": "2026-09-15T20:12:26.627+08:00", "event": "le_connect_command", "opcode": "0x2043"}
+{"time": "2026-09-15T20:12:26.895+08:00", "event": "le_connection_complete", "status": "0x0", "handle": 2048, "role": "central"}
+{"time": "2026-09-15T20:12:27.744+08:00", "event": "encryption", "handle": 2048, "status": "0x0", "value": "0x1"}
+{"time": "2026-09-15T20:13:31.095+08:00", "event": "action", "name": "disconnect_classic"}
+{"time": "2026-09-15T20:13:31.095+08:00", "event": "host_disconnect", "handle": 256, "reason": "0x13"}
+{"time": "2026-09-15T20:13:31.843+08:00", "event": "disconnected", "handle": 256, "status": "0x0", "value": "0x16"}
+{"time": "2026-09-15T20:13:31.860+08:00", "event": "typed_disconnect_complete", "transport": "BR/EDR", "count": 1}
+{"time": "2026-09-15T20:13:33.011+08:00", "event": "classic_connect_command", "opcode": "0x405"}
+{"time": "2026-09-15T20:13:35.764+08:00", "event": "classic_connection_complete", "status": "0x0", "handle": 256}
+{"time": "2026-09-15T20:13:36.113+08:00", "event": "encryption", "handle": 256, "status": "0x0", "value": "0x2"}
+{"time": "2026-09-15T20:13:54.557+08:00", "event": "action", "name": "disconnect_le"}
+{"time": "2026-09-15T20:13:54.558+08:00", "event": "host_disconnect", "handle": 2048, "reason": "0x13"}
+{"time": "2026-09-15T20:13:54.590+08:00", "event": "disconnected", "handle": 2048, "status": "0x0", "value": "0x16"}
+{"time": "2026-09-15T20:13:54.598+08:00", "event": "typed_disconnect_complete", "transport": "LE", "count": 1}
+{"time": "2026-09-15T20:13:56.508+08:00", "event": "action", "name": "connect"}
+{"time": "2026-09-15T20:14:11.510+08:00", "event": "link_result", "returncode": 1, "message": "", "links": [{"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": true}]}
+{"time": "2026-09-15T20:15:08.605+08:00", "event": "le_connect_command", "opcode": "0x2043"}
+{"time": "2026-09-15T20:15:09.429+08:00", "event": "le_connection_complete", "status": "0x0", "handle": 2048, "role": "central"}
+{"time": "2026-09-15T20:15:11.526+08:00", "event": "host_disconnect", "handle": 2048, "reason": "0x13"}
+{"time": "2026-09-15T20:15:11.539+08:00", "event": "disconnected", "handle": 2048, "status": "0x0", "value": "0x16"}
+{"time": "2026-09-15T20:15:11.944+08:00", "event": "le_connect_command", "opcode": "0x2043"}
+{"time": "2026-09-15T20:15:12.221+08:00", "event": "le_connection_complete", "status": "0x0", "handle": 2048, "role": "central"}
+{"time": "2026-09-15T20:15:13.069+08:00", "event": "encryption", "handle": 2048, "status": "0x0", "value": "0x1"}
+{"time": "2026-09-15T20:16:02.887+08:00", "event": "action", "name": "disconnect_classic"}
+{"time": "2026-09-15T20:16:02.888+08:00", "event": "host_disconnect", "handle": 256, "reason": "0x13"}
+{"time": "2026-09-15T20:16:03.299+08:00", "event": "disconnected", "handle": 256, "status": "0x0", "value": "0x16"}
+{"time": "2026-09-15T20:16:03.308+08:00", "event": "typed_disconnect_complete", "transport": "BR/EDR", "count": 1}
+{"time": "2026-09-15T20:27:12.949+08:00", "event": "classic_pairing_removed", "classic_key_absent": true, "le_keys_unchanged": true, "bearers": {"LE": {"Paired": true, "Bonded": true, "Connected": true}, "BREDR": {"Paired": false, "Bonded": true, "Connected": false}}, "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
+{"time": "2026-09-15T20:27:12.949+08:00", "event": "private_backup_removed"}
+{"time": "2026-09-15T20:28:45.962+08:00", "event": "normal_configuration_restart"}
+{"time": "2026-09-15T20:28:45.971+08:00", "event": "host_disconnect", "handle": 2048, "reason": "0x15"}
+{"time": "2026-09-15T20:28:45.988+08:00", "event": "disconnected", "handle": 2048, "status": "0x0", "value": "0x16"}
+{"time": "2026-09-15T20:28:46.234+08:00", "event": "le_connection_complete", "status": "0x0", "handle": 2048, "role": "peripheral"}
+{"time": "2026-09-15T20:28:46.979+08:00", "event": "encryption", "handle": 2048, "status": "0x0", "value": "0x1"}
+{"time": "2026-09-15T20:28:52.075+08:00", "event": "normal_configuration_verification", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
+{"time": "2026-09-15T20:29:58.230+08:00", "event": "action", "name": "disconnect_le"}
+{"time": "2026-09-15T20:29:58.232+08:00", "event": "host_disconnect", "handle": 2048, "reason": "0x13"}
+{"time": "2026-09-15T20:29:58.933+08:00", "event": "disconnected", "handle": 2048, "status": "0x0", "value": "0x16"}
+{"time": "2026-09-15T20:29:58.945+08:00", "event": "typed_disconnect_complete", "transport": "LE", "count": 1}
+{"time": "2026-09-15T20:30:00.252+08:00", "event": "action", "name": "connect"}
+{"time": "2026-09-15T20:30:00.307+08:00", "event": "le_connection_complete", "status": "0x0", "handle": 2048, "role": "peripheral"}
+{"time": "2026-09-15T20:30:00.899+08:00", "event": "encryption", "handle": 2048, "status": "0x0", "value": "0x1"}
+{"time": "2026-09-15T20:30:00.905+08:00", "event": "link_result", "returncode": 0, "message": "", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
+{"time": "2026-09-15T20:34:28.610+08:00", "event": "final_pairing_audit", "classic_key_present": false, "le_key_sections": ["PeripheralLongTermKey", "SlaveLongTermKey", "IdentityResolvingKey"], "preferred_bearer": "le", "trusted": true, "diagnostic_overrides": [], "private_key_backup_present": false, "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
+{"time": "2026-09-15T20:36:45.581+08:00", "event": "monitor_error", "message": "Separator is not found, and chunk exceed the limit"}
+{"time": "2026-09-15T20:36:45.582+08:00", "event": "closed", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}

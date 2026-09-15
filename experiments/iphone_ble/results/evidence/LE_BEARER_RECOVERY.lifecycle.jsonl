@@ -1,0 +1,537 @@
+{"record_id": "B0001", "time": "2026-09-15T19:14:11.842+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}, {"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": true}]}
+{"record_id": "B0002", "time": "2026-09-15T19:14:12.843+08:00", "event": "ready", "limit_seconds": 1200}
+{"record_id": "B0003", "time": "2026-09-15T19:15:16.913+08:00", "event": "action", "name": "disconnect_classic"}
+{"record_id": "B0004", "time": "2026-09-15T19:15:16.917+08:00", "event": "host_disconnect", "handle": 256, "reason": "0x13"}
+{"record_id": "B0005", "time": "2026-09-15T19:15:17.459+08:00", "event": "disconnected", "handle": 256, "status": "0x0", "value": "0x16"}
+{"record_id": "B0006", "time": "2026-09-15T19:15:17.460+08:00", "event": "device_properties", "properties": {"ServicesResolved": false}}
+{"record_id": "B0007", "time": "2026-09-15T19:15:17.467+08:00", "event": "typed_disconnect_complete", "transport": "BR/EDR", "count": 1}
+{"record_id": "B0008", "time": "2026-09-15T19:15:17.467+08:00", "event": "action_finished", "name": "disconnect_classic"}
+{"record_id": "B0009", "time": "2026-09-15T19:15:17.479+08:00", "event": "device_properties", "properties": {"Connected": false}}
+{"record_id": "B0010", "time": "2026-09-15T19:15:17.511+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
+{"record_id": "B0011", "time": "2026-09-15T19:17:24.705+08:00", "event": "action", "name": "start_hid"}
+{"record_id": "B0012", "time": "2026-09-15T19:17:24.710+08:00", "event": "resource_call", "member": "RegisterApplication", "sender": "<CALLER_01>"}
+{"record_id": "B0013", "time": "2026-09-15T19:17:24.723+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [402, 404]}
+{"record_id": "B0014", "time": "2026-09-15T19:17:24.724+08:00", "event": "resource_call", "member": "RegisterAdvertisement", "sender": "<CALLER_02>"}
+{"record_id": "B0015", "time": "2026-09-15T19:17:24.733+08:00", "event": "advertising_command", "enabled": true}
+{"record_id": "B0016", "time": "2026-09-15T19:17:24.736+08:00", "event": "hid_holder_ready"}
+{"record_id": "B0017", "time": "2026-09-15T19:17:24.736+08:00", "event": "action_finished", "name": "start_hid"}
+{"record_id": "B0018", "time": "2026-09-15T19:17:24.757+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0019", "time": "2026-09-15T19:17:24.757+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [402, 404]}
+{"record_id": "B0020", "time": "2026-09-15T19:17:24.817+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0021", "time": "2026-09-15T19:17:24.817+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [405, 408]}
+{"record_id": "B0022", "time": "2026-09-15T19:17:24.878+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0023", "time": "2026-09-15T19:17:24.878+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [405, 408]}
+{"record_id": "B0024", "time": "2026-09-15T19:17:24.937+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0025", "time": "2026-09-15T19:17:24.937+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [409, 419]}
+{"record_id": "B0026", "time": "2026-09-15T19:17:24.998+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0027", "time": "2026-09-15T19:17:24.998+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [409, 419]}
+{"record_id": "B0028", "time": "2026-09-15T19:17:25.057+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0029", "time": "2026-09-15T19:17:25.237+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x8", "length": 7, "attribute": 402}
+{"record_id": "B0030", "time": "2026-09-15T19:17:25.297+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0xa", "length": 3, "attribute": 404}
+{"record_id": "B0031", "time": "2026-09-15T19:17:25.357+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x8", "length": 7, "attribute": 409}
+{"record_id": "B0032", "time": "2026-09-15T19:17:25.417+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x8", "length": 7, "attribute": 418}
+{"record_id": "B0033", "time": "2026-09-15T19:17:25.477+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0xa", "length": 3, "attribute": 411}
+{"record_id": "B0034", "time": "2026-09-15T19:17:25.537+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0xa", "length": 3, "attribute": 413}
+{"record_id": "B0035", "time": "2026-09-15T19:17:25.657+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0xa", "length": 3, "attribute": 419}
+{"record_id": "B0036", "time": "2026-09-15T19:17:25.716+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x12", "length": 5, "attribute": 418}
+{"record_id": "B0037", "time": "2026-09-15T19:17:25.807+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x8", "length": 7, "attribute": 405}
+{"record_id": "B0038", "time": "2026-09-15T19:17:25.927+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x12", "length": 5, "attribute": 408}
+{"record_id": "B0039", "time": "2026-09-15T19:17:25.987+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0xa", "length": 3, "attribute": 407}
+{"record_id": "B0040", "time": "2026-09-15T19:20:06.351+08:00", "event": "action", "name": "disconnect_le"}
+{"record_id": "B0041", "time": "2026-09-15T19:20:06.352+08:00", "event": "host_disconnect", "handle": 2048, "reason": "0x13"}
+{"record_id": "B0042", "time": "2026-09-15T19:20:06.369+08:00", "event": "disconnected", "handle": 2048, "status": "0x0", "value": "0x16"}
+{"record_id": "B0043", "time": "2026-09-15T19:20:06.377+08:00", "event": "device_properties", "properties": {"Connected": false}}
+{"record_id": "B0044", "time": "2026-09-15T19:20:06.385+08:00", "event": "typed_disconnect_complete", "transport": "LE", "count": 1}
+{"record_id": "B0045", "time": "2026-09-15T19:20:06.385+08:00", "event": "action_finished", "name": "disconnect_le"}
+{"record_id": "B0046", "time": "2026-09-15T19:20:06.412+08:00", "event": "le_connection_complete", "status": "0x0", "handle": 2049, "role": "peripheral"}
+{"record_id": "B0047", "time": "2026-09-15T19:20:06.422+08:00", "event": "device_properties", "properties": {"Connected": true}}
+{"record_id": "B0048", "time": "2026-09-15T19:20:06.493+08:00", "event": "att_metadata", "handle": 2049, "direction": "phone_to_host", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [10, 65535]}
+{"record_id": "B0049", "time": "2026-09-15T19:20:06.493+08:00", "event": "att_metadata", "handle": 2049, "direction": "host_to_phone", "opcode": "0x1e", "length": 1}
+{"record_id": "B0050", "time": "2026-09-15T19:20:06.524+08:00", "event": "links", "links": [{"handle": 2049, "transport": "LE", "connected": true, "encrypted": false}]}
+{"record_id": "B0051", "time": "2026-09-15T19:20:07.000+08:00", "event": "encryption", "handle": 2049, "status": "0x0", "value": "0x1"}
+{"record_id": "B0052", "time": "2026-09-15T19:20:07.062+08:00", "event": "att_metadata", "handle": 2049, "direction": "phone_to_host", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [10, 65535]}
+{"record_id": "B0053", "time": "2026-09-15T19:20:07.062+08:00", "event": "att_metadata", "handle": 2049, "direction": "phone_to_host", "opcode": "0x12", "length": 5, "attribute": 9}
+{"record_id": "B0054", "time": "2026-09-15T19:20:07.062+08:00", "event": "att_metadata", "handle": 2049, "direction": "host_to_phone", "opcode": "0x1e", "length": 1}
+{"record_id": "B0055", "time": "2026-09-15T19:20:07.062+08:00", "event": "att_metadata", "handle": 2049, "direction": "host_to_phone", "opcode": "0xa", "length": 3, "attribute": 27}
+{"record_id": "B0056", "time": "2026-09-15T19:20:07.127+08:00", "event": "links", "links": [{"handle": 2049, "transport": "LE", "connected": true, "encrypted": true}]}
+{"record_id": "B0057", "time": "2026-09-15T19:20:07.153+08:00", "event": "att_metadata", "handle": 2049, "direction": "phone_to_host", "opcode": "0x8", "length": 7, "attribute": 16}
+{"record_id": "B0058", "time": "2026-09-15T19:20:07.153+08:00", "event": "att_metadata", "handle": 2049, "direction": "host_to_phone", "opcode": "0x8", "length": 7, "attribute": 1}
+{"record_id": "B0059", "time": "2026-09-15T19:20:07.212+08:00", "event": "att_metadata", "handle": 2049, "direction": "phone_to_host", "opcode": "0xa", "length": 3, "attribute": 404}
+{"record_id": "B0060", "time": "2026-09-15T19:20:07.273+08:00", "event": "att_metadata", "handle": 2049, "direction": "phone_to_host", "opcode": "0xa", "length": 3, "attribute": 404}
+{"record_id": "B0061", "time": "2026-09-15T19:20:07.273+08:00", "event": "att_metadata", "handle": 2049, "direction": "host_to_phone", "opcode": "0x12", "length": 5, "attribute": 28}
+{"record_id": "B0062", "time": "2026-09-15T19:20:07.333+08:00", "event": "att_metadata", "handle": 2049, "direction": "phone_to_host", "opcode": "0xa", "length": 3, "attribute": 18}
+{"record_id": "B0063", "time": "2026-09-15T19:20:07.393+08:00", "event": "att_metadata", "handle": 2049, "direction": "phone_to_host", "opcode": "0xa", "length": 3, "attribute": 18}
+{"record_id": "B0064", "time": "2026-09-15T19:20:07.454+08:00", "event": "att_metadata", "handle": 2049, "direction": "phone_to_host", "opcode": "0x12", "length": 5, "attribute": 418}
+{"record_id": "B0065", "time": "2026-09-15T19:20:07.543+08:00", "event": "att_metadata", "handle": 2049, "direction": "phone_to_host", "opcode": "0x12", "length": 5, "attribute": 418}
+{"record_id": "B0066", "time": "2026-09-15T19:20:07.608+08:00", "event": "att_metadata", "handle": 2049, "direction": "phone_to_host", "opcode": "0x8", "length": 7, "attribute": 405}
+{"record_id": "B0067", "time": "2026-09-15T19:20:07.623+08:00", "event": "att_metadata", "handle": 2049, "direction": "host_to_phone", "opcode": "0x12", "length": 5, "attribute": 9}
+{"record_id": "B0068", "time": "2026-09-15T19:20:07.623+08:00", "event": "device_properties", "properties": {"ServicesResolved": true}}
+{"record_id": "B0069", "time": "2026-09-15T19:20:07.663+08:00", "event": "att_metadata", "handle": 2049, "direction": "phone_to_host", "opcode": "0x8", "length": 7, "attribute": 405}
+{"record_id": "B0070", "time": "2026-09-15T19:20:07.737+08:00", "event": "att_metadata", "handle": 2049, "direction": "phone_to_host", "opcode": "0x12", "length": 5, "attribute": 408}
+{"record_id": "B0071", "time": "2026-09-15T19:20:07.766+08:00", "event": "att_metadata", "handle": 2049, "direction": "phone_to_host", "opcode": "0xa", "length": 3, "attribute": 407}
+{"record_id": "B0072", "time": "2026-09-15T19:20:07.796+08:00", "event": "att_metadata", "handle": 2049, "direction": "phone_to_host", "opcode": "0x12", "length": 5, "attribute": 408}
+{"record_id": "B0073", "time": "2026-09-15T19:20:07.826+08:00", "event": "att_metadata", "handle": 2049, "direction": "phone_to_host", "opcode": "0xa", "length": 3, "attribute": 407}
+{"record_id": "B0074", "time": "2026-09-15T19:20:09.162+08:00", "event": "att_metadata", "handle": 2049, "direction": "phone_to_host", "opcode": "0x8", "length": 7, "attribute": 1}
+{"record_id": "B0075", "time": "2026-09-15T19:20:49.777+08:00", "event": "action", "name": "stop_hid"}
+{"record_id": "B0076", "time": "2026-09-15T19:20:49.778+08:00", "event": "hid_holder_stopped", "returncode": 0, "message": "HID_CLOSED"}
+{"record_id": "B0077", "time": "2026-09-15T19:20:49.779+08:00", "event": "action_finished", "name": "stop_hid"}
+{"record_id": "B0078", "time": "2026-09-15T19:20:49.780+08:00", "event": "att_metadata", "handle": 2049, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [402, 404]}
+{"record_id": "B0079", "time": "2026-09-15T19:20:49.812+08:00", "event": "att_metadata", "handle": 2049, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0080", "time": "2026-09-15T19:20:49.812+08:00", "event": "att_metadata", "handle": 2049, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [402, 404]}
+{"record_id": "B0081", "time": "2026-09-15T19:20:49.842+08:00", "event": "att_metadata", "handle": 2049, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0082", "time": "2026-09-15T19:20:49.842+08:00", "event": "att_metadata", "handle": 2049, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [405, 408]}
+{"record_id": "B0083", "time": "2026-09-15T19:20:49.872+08:00", "event": "att_metadata", "handle": 2049, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0084", "time": "2026-09-15T19:20:49.872+08:00", "event": "att_metadata", "handle": 2049, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [405, 408]}
+{"record_id": "B0085", "time": "2026-09-15T19:20:49.902+08:00", "event": "att_metadata", "handle": 2049, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0086", "time": "2026-09-15T19:20:49.902+08:00", "event": "att_metadata", "handle": 2049, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [409, 419]}
+{"record_id": "B0087", "time": "2026-09-15T19:20:49.932+08:00", "event": "att_metadata", "handle": 2049, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0088", "time": "2026-09-15T19:20:49.932+08:00", "event": "att_metadata", "handle": 2049, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [409, 419]}
+{"record_id": "B0089", "time": "2026-09-15T19:20:49.962+08:00", "event": "att_metadata", "handle": 2049, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0090", "time": "2026-09-15T19:21:35.338+08:00", "event": "action", "name": "disconnect_le"}
+{"record_id": "B0091", "time": "2026-09-15T19:21:35.339+08:00", "event": "host_disconnect", "handle": 2049, "reason": "0x13"}
+{"record_id": "B0092", "time": "2026-09-15T19:21:35.367+08:00", "event": "disconnected", "handle": 2049, "status": "0x0", "value": "0x16"}
+{"record_id": "B0093", "time": "2026-09-15T19:21:35.367+08:00", "event": "device_properties", "properties": {"ServicesResolved": false}}
+{"record_id": "B0094", "time": "2026-09-15T19:21:35.367+08:00", "event": "device_properties", "properties": {"Connected": false}}
+{"record_id": "B0095", "time": "2026-09-15T19:21:35.425+08:00", "event": "typed_disconnect_complete", "transport": "LE", "count": 1}
+{"record_id": "B0096", "time": "2026-09-15T19:21:35.425+08:00", "event": "action_finished", "name": "disconnect_le"}
+{"record_id": "B0097", "time": "2026-09-15T19:21:35.526+08:00", "event": "action", "name": "connect"}
+{"record_id": "B0098", "time": "2026-09-15T19:21:35.534+08:00", "event": "resource_call", "member": "RegisterApplication", "sender": "<CALLER_03>"}
+{"record_id": "B0099", "time": "2026-09-15T19:21:35.547+08:00", "event": "links", "links": []}
+{"record_id": "B0100", "time": "2026-09-15T19:21:35.581+08:00", "event": "resource_call", "member": "RegisterAdvertisement", "sender": "<CALLER_04>"}
+{"record_id": "B0101", "time": "2026-09-15T19:21:35.588+08:00", "event": "advertising_command", "enabled": true}
+{"record_id": "B0102", "time": "2026-09-15T19:21:35.594+08:00", "event": "le_connection_complete", "status": "0x0", "handle": 2048, "role": "peripheral"}
+{"record_id": "B0103", "time": "2026-09-15T19:21:35.602+08:00", "event": "device_properties", "properties": {"Connected": true}}
+{"record_id": "B0104", "time": "2026-09-15T19:21:35.685+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [10, 65535]}
+{"record_id": "B0105", "time": "2026-09-15T19:21:35.685+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1e", "length": 1}
+{"record_id": "B0106", "time": "2026-09-15T19:21:35.685+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [420, 437]}
+{"record_id": "B0107", "time": "2026-09-15T19:21:35.748+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": false}]}
+{"record_id": "B0108", "time": "2026-09-15T19:21:36.223+08:00", "event": "encryption", "handle": 2048, "status": "0x0", "value": "0x1"}
+{"record_id": "B0109", "time": "2026-09-15T19:21:36.228+08:00", "event": "link_result", "returncode": 0, "message": "", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
+{"record_id": "B0110", "time": "2026-09-15T19:21:36.228+08:00", "event": "action_finished", "name": "connect"}
+{"record_id": "B0111", "time": "2026-09-15T19:21:36.284+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [10, 65535]}
+{"record_id": "B0112", "time": "2026-09-15T19:21:36.284+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0113", "time": "2026-09-15T19:21:36.284+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1e", "length": 1}
+{"record_id": "B0114", "time": "2026-09-15T19:21:36.284+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0xa", "length": 3, "attribute": 27}
+{"record_id": "B0115", "time": "2026-09-15T19:21:36.284+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [420, 430]}
+{"record_id": "B0116", "time": "2026-09-15T19:21:36.344+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0117", "time": "2026-09-15T19:21:36.344+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x8", "length": 7, "attribute": 1}
+{"record_id": "B0118", "time": "2026-09-15T19:21:36.344+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [420, 430]}
+{"record_id": "B0119", "time": "2026-09-15T19:21:36.350+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
+{"record_id": "B0120", "time": "2026-09-15T19:21:36.404+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0121", "time": "2026-09-15T19:21:36.404+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [431, 433]}
+{"record_id": "B0122", "time": "2026-09-15T19:21:36.464+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x12", "length": 5, "attribute": 9}
+{"record_id": "B0123", "time": "2026-09-15T19:21:36.464+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0124", "time": "2026-09-15T19:21:36.464+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x12", "length": 5, "attribute": 28}
+{"record_id": "B0125", "time": "2026-09-15T19:21:36.464+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [431, 433]}
+{"record_id": "B0126", "time": "2026-09-15T19:21:36.525+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x8", "length": 7, "attribute": 16}
+{"record_id": "B0127", "time": "2026-09-15T19:21:36.525+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0128", "time": "2026-09-15T19:21:36.525+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [434, 437]}
+{"record_id": "B0129", "time": "2026-09-15T19:21:36.584+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0130", "time": "2026-09-15T19:21:36.584+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [434, 437]}
+{"record_id": "B0131", "time": "2026-09-15T19:21:36.645+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0132", "time": "2026-09-15T19:21:36.766+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0xa", "length": 3, "attribute": 18}
+{"record_id": "B0133", "time": "2026-09-15T19:21:36.872+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x12", "length": 5, "attribute": 9}
+{"record_id": "B0134", "time": "2026-09-15T19:21:36.872+08:00", "event": "device_properties", "properties": {"ServicesResolved": true}}
+{"record_id": "B0135", "time": "2026-09-15T19:21:38.357+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x8", "length": 7, "attribute": 1}
+{"record_id": "B0136", "time": "2026-09-15T19:23:03.213+08:00", "event": "action", "name": "disconnect_le"}
+{"record_id": "B0137", "time": "2026-09-15T19:23:03.214+08:00", "event": "host_disconnect", "handle": 2048, "reason": "0x13"}
+{"record_id": "B0138", "time": "2026-09-15T19:23:03.255+08:00", "event": "disconnected", "handle": 2048, "status": "0x0", "value": "0x16"}
+{"record_id": "B0139", "time": "2026-09-15T19:23:03.255+08:00", "event": "device_properties", "properties": {"ServicesResolved": false}}
+{"record_id": "B0140", "time": "2026-09-15T19:23:03.259+08:00", "event": "device_properties", "properties": {"Connected": false}}
+{"record_id": "B0141", "time": "2026-09-15T19:23:03.263+08:00", "event": "typed_disconnect_complete", "transport": "LE", "count": 1}
+{"record_id": "B0142", "time": "2026-09-15T19:23:03.263+08:00", "event": "action_finished", "name": "disconnect_le"}
+{"record_id": "B0143", "time": "2026-09-15T19:23:03.304+08:00", "event": "links", "links": []}
+{"record_id": "B0144", "time": "2026-09-15T19:23:09.929+08:00", "event": "links", "links": [{"handle": 3840, "transport": "LE", "connected": false, "encrypted": false}]}
+{"record_id": "B0145", "time": "2026-09-15T19:23:10.028+08:00", "event": "le_connection_complete", "status": "0x0", "handle": 2048, "role": "central"}
+{"record_id": "B0146", "time": "2026-09-15T19:23:10.033+08:00", "event": "device_properties", "properties": {"Connected": true}}
+{"record_id": "B0147", "time": "2026-09-15T19:23:10.062+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [10, 65535]}
+{"record_id": "B0148", "time": "2026-09-15T19:23:10.130+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": false}]}
+{"record_id": "B0149", "time": "2026-09-15T19:23:10.870+08:00", "event": "encryption", "handle": 2048, "status": "0x0", "value": "0x1"}
+{"record_id": "B0150", "time": "2026-09-15T19:23:10.870+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1e", "length": 1}
+{"record_id": "B0151", "time": "2026-09-15T19:23:10.934+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
+{"record_id": "B0152", "time": "2026-09-15T19:23:11.014+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [10, 65535]}
+{"record_id": "B0153", "time": "2026-09-15T19:23:11.014+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x12", "length": 5, "attribute": 9}
+{"record_id": "B0154", "time": "2026-09-15T19:23:11.014+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1e", "length": 1}
+{"record_id": "B0155", "time": "2026-09-15T19:23:11.014+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0xa", "length": 3, "attribute": 27}
+{"record_id": "B0156", "time": "2026-09-15T19:23:11.097+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x8", "length": 7, "attribute": 16}
+{"record_id": "B0157", "time": "2026-09-15T19:23:11.097+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x8", "length": 7, "attribute": 1}
+{"record_id": "B0158", "time": "2026-09-15T19:23:11.192+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0xa", "length": 3, "attribute": 18}
+{"record_id": "B0159", "time": "2026-09-15T19:23:11.277+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x12", "length": 5, "attribute": 28}
+{"record_id": "B0160", "time": "2026-09-15T19:23:11.774+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x12", "length": 5, "attribute": 9}
+{"record_id": "B0161", "time": "2026-09-15T19:23:11.777+08:00", "event": "device_properties", "properties": {"ServicesResolved": true}}
+{"record_id": "B0162", "time": "2026-09-15T19:23:13.037+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x8", "length": 7, "attribute": 1}
+{"record_id": "B0163", "time": "2026-09-15T19:24:21.668+08:00", "event": "action", "name": "connect"}
+{"record_id": "B0164", "time": "2026-09-15T19:24:21.670+08:00", "event": "link_result", "returncode": 0, "message": "", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
+{"record_id": "B0165", "time": "2026-09-15T19:24:21.670+08:00", "event": "action_finished", "name": "connect"}
+{"record_id": "B0166", "time": "2026-09-15T19:28:40.553+08:00", "event": "dbus_device_call", "member": "Connect", "sender": "<CALLER_05>"}
+{"record_id": "B0167", "time": "2026-09-15T19:34:11.924+08:00", "event": "closed", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
+{"record_id": "B0168", "time": "2026-09-15T19:40:51.494+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
+{"record_id": "B0169", "time": "2026-09-15T19:40:51.495+08:00", "event": "device_properties", "interface": "org.bluez.Device1", "properties": {"Trusted": false}}
+{"record_id": "B0170", "time": "2026-09-15T19:40:52.133+08:00", "event": "experimental_restart_begin"}
+{"record_id": "B0171", "time": "2026-09-15T19:40:52.142+08:00", "event": "advertising_command", "enabled": false}
+{"record_id": "B0172", "time": "2026-09-15T19:40:52.146+08:00", "event": "host_disconnect", "handle": 2048, "reason": "0x15"}
+{"record_id": "B0173", "time": "2026-09-15T19:40:52.204+08:00", "event": "device_properties", "interface": "org.bluez.Device1", "properties": {"ServicesResolved": false}}
+{"record_id": "B0174", "time": "2026-09-15T19:40:52.204+08:00", "event": "device_properties", "interface": "org.bluez.Device1", "properties": {"Connected": false}}
+{"record_id": "B0175", "time": "2026-09-15T19:40:52.259+08:00", "event": "resource_call", "member": "RegisterApplication", "sender": "<CALLER_06>"}
+{"record_id": "B0176", "time": "2026-09-15T19:40:52.280+08:00", "event": "resource_call", "member": "RegisterApplication", "sender": "<CALLER_07>"}
+{"record_id": "B0177", "time": "2026-09-15T19:40:52.280+08:00", "event": "resource_call", "member": "RegisterApplication", "sender": "<CALLER_07>"}
+{"record_id": "B0178", "time": "2026-09-15T19:40:52.297+08:00", "event": "links", "links": []}
+{"record_id": "B0179", "time": "2026-09-15T19:40:52.303+08:00", "event": "experimental_ready", "preferred_bearer": "last-used", "links": []}
+{"record_id": "B0180", "time": "2026-09-15T19:40:52.321+08:00", "event": "resource_call", "member": "RegisterAdvertisement", "sender": "<CALLER_08>"}
+{"record_id": "B0181", "time": "2026-09-15T19:40:52.492+08:00", "event": "advertising_command", "enabled": true}
+{"record_id": "B0182", "time": "2026-09-15T19:40:52.498+08:00", "event": "le_connection_complete", "status": "0x0", "handle": 2048, "role": "peripheral"}
+{"record_id": "B0183", "time": "2026-09-15T19:40:52.504+08:00", "event": "device_properties", "interface": "org.bluez.Device1", "properties": {"Connected": true}}
+{"record_id": "B0184", "time": "2026-09-15T19:40:52.504+08:00", "event": "device_properties", "interface": "org.bluez.Bearer.LE1", "properties": {"Connected": true}}
+{"record_id": "B0185", "time": "2026-09-15T19:40:52.574+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [10, 65535]}
+{"record_id": "B0186", "time": "2026-09-15T19:40:52.574+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1e", "length": 1}
+{"record_id": "B0187", "time": "2026-09-15T19:40:52.574+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 10, "indication_value_u16": [1, 65535]}
+{"record_id": "B0188", "time": "2026-09-15T19:40:52.698+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": false}]}
+{"record_id": "B0189", "time": "2026-09-15T19:40:53.112+08:00", "event": "encryption", "handle": 2048, "status": "0x0", "value": "0x1"}
+{"record_id": "B0190", "time": "2026-09-15T19:40:53.173+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [10, 65535]}
+{"record_id": "B0191", "time": "2026-09-15T19:40:53.173+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0192", "time": "2026-09-15T19:40:53.173+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x12", "length": 5, "attribute": 9}
+{"record_id": "B0193", "time": "2026-09-15T19:40:53.173+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1e", "length": 1}
+{"record_id": "B0194", "time": "2026-09-15T19:40:53.173+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0xa", "length": 3, "attribute": 27}
+{"record_id": "B0195", "time": "2026-09-15T19:40:53.173+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 10, "indication_value_u16": [143, 153]}
+{"record_id": "B0196", "time": "2026-09-15T19:40:53.263+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x8", "length": 7, "attribute": 16}
+{"record_id": "B0197", "time": "2026-09-15T19:40:53.263+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0198", "time": "2026-09-15T19:40:53.263+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0xa", "length": 3, "attribute": 3}
+{"record_id": "B0199", "time": "2026-09-15T19:40:53.263+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 10, "indication_value_u16": [143, 153]}
+{"record_id": "B0200", "time": "2026-09-15T19:40:53.300+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
+{"record_id": "B0201", "time": "2026-09-15T19:40:53.323+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0202", "time": "2026-09-15T19:40:53.323+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0xa", "length": 3, "attribute": 18}
+{"record_id": "B0203", "time": "2026-09-15T19:40:53.323+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x8", "length": 7, "attribute": 1}
+{"record_id": "B0204", "time": "2026-09-15T19:40:53.323+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 10, "indication_value_u16": [154, 156]}
+{"record_id": "B0205", "time": "2026-09-15T19:40:53.383+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0206", "time": "2026-09-15T19:40:53.383+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 10, "indication_value_u16": [154, 156]}
+{"record_id": "B0207", "time": "2026-09-15T19:40:53.444+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0208", "time": "2026-09-15T19:40:53.444+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x12", "length": 5, "attribute": 28}
+{"record_id": "B0209", "time": "2026-09-15T19:40:53.444+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 10, "indication_value_u16": [157, 160]}
+{"record_id": "B0210", "time": "2026-09-15T19:40:53.503+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0211", "time": "2026-09-15T19:40:53.503+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 10, "indication_value_u16": [157, 160]}
+{"record_id": "B0212", "time": "2026-09-15T19:40:53.563+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0213", "time": "2026-09-15T19:40:53.759+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x12", "length": 5, "attribute": 9}
+{"record_id": "B0214", "time": "2026-09-15T19:40:53.760+08:00", "event": "device_properties", "interface": "org.bluez.Device1", "properties": {"ServicesResolved": true}}
+{"record_id": "B0215", "time": "2026-09-15T19:40:55.273+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x8", "length": 7, "attribute": 1}
+{"record_id": "B0216", "time": "2026-09-15T19:43:58.022+08:00", "event": "experimental_action", "name": "disconnect_le"}
+{"record_id": "B0217", "time": "2026-09-15T19:43:58.031+08:00", "event": "host_disconnect", "handle": 2048, "reason": "0x13"}
+{"record_id": "B0218", "time": "2026-09-15T19:43:58.090+08:00", "event": "disconnected", "handle": 2048, "status": "0x0", "value": "0x16"}
+{"record_id": "B0219", "time": "2026-09-15T19:43:58.090+08:00", "event": "device_properties", "interface": "org.bluez.Device1", "properties": {"ServicesResolved": false}}
+{"record_id": "B0220", "time": "2026-09-15T19:43:58.090+08:00", "event": "device_properties", "interface": "org.bluez.Bearer.LE1", "properties": {"Connected": false}}
+{"record_id": "B0221", "time": "2026-09-15T19:43:58.100+08:00", "event": "device_properties", "interface": "org.bluez.Device1", "properties": {"Connected": false}}
+{"record_id": "B0222", "time": "2026-09-15T19:43:58.108+08:00", "event": "links", "links": []}
+{"record_id": "B0223", "time": "2026-09-15T19:43:58.108+08:00", "event": "typed_disconnect_complete", "transport": "LE", "count": 1}
+{"record_id": "B0224", "time": "2026-09-15T19:43:58.108+08:00", "event": "experimental_action_finished", "name": "disconnect_le"}
+{"record_id": "B0225", "time": "2026-09-15T19:43:58.209+08:00", "event": "experimental_action", "name": "connect_le"}
+{"record_id": "B0226", "time": "2026-09-15T19:43:58.211+08:00", "event": "dbus_device_call", "member": "Connect", "sender": "<CALLER_09>"}
+{"record_id": "B0227", "time": "2026-09-15T19:43:58.309+08:00", "event": "links", "links": [{"handle": 3840, "transport": "LE", "connected": false, "encrypted": false}]}
+{"record_id": "B0228", "time": "2026-09-15T19:44:06.218+08:00", "event": "experimental_action_error", "name": "connect_le", "message": "Call failed: Connection timed out"}
+{"record_id": "B0229", "time": "2026-09-15T19:44:40.486+08:00", "event": "device_properties", "interface": "org.bluez.Bearer.LE1", "properties": {"Connected": false}}
+{"record_id": "B0230", "time": "2026-09-15T19:44:40.685+08:00", "event": "links", "links": []}
+{"record_id": "B0231", "time": "2026-09-15T19:50:22.128+08:00", "event": "experimental_action", "name": "prefer_le"}
+{"record_id": "B0232", "time": "2026-09-15T19:50:22.130+08:00", "event": "experimental_action_finished", "name": "prefer_le"}
+{"record_id": "B0233", "time": "2026-09-15T19:50:23.287+08:00", "event": "le_connect_command", "opcode": "0x2043"}
+{"record_id": "B0234", "time": "2026-09-15T19:50:23.321+08:00", "event": "links", "links": [{"handle": 3840, "transport": "LE", "connected": false, "encrypted": false}]}
+{"record_id": "B0235", "time": "2026-09-15T19:50:23.557+08:00", "event": "le_connection_complete", "status": "0x0", "handle": 2048, "role": "central"}
+{"record_id": "B0236", "time": "2026-09-15T19:50:23.558+08:00", "event": "device_properties", "interface": "org.bluez.Device1", "properties": {"Connected": true}}
+{"record_id": "B0237", "time": "2026-09-15T19:50:23.558+08:00", "event": "device_properties", "interface": "org.bluez.Bearer.LE1", "properties": {"Connected": true}}
+{"record_id": "B0238", "time": "2026-09-15T19:50:23.618+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [10, 65535]}
+{"record_id": "B0239", "time": "2026-09-15T19:50:23.618+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1e", "length": 1}
+{"record_id": "B0240", "time": "2026-09-15T19:50:23.723+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": false}]}
+{"record_id": "B0241", "time": "2026-09-15T19:50:23.752+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [10, 65535]}
+{"record_id": "B0242", "time": "2026-09-15T19:50:23.752+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1e", "length": 1}
+{"record_id": "B0243", "time": "2026-09-15T19:50:24.335+08:00", "event": "encryption", "handle": 2048, "status": "0x0", "value": "0x1"}
+{"record_id": "B0244", "time": "2026-09-15T19:50:24.517+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x12", "length": 5, "attribute": 9}
+{"record_id": "B0245", "time": "2026-09-15T19:50:24.517+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0xa", "length": 3, "attribute": 27}
+{"record_id": "B0246", "time": "2026-09-15T19:50:24.527+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
+{"record_id": "B0247", "time": "2026-09-15T19:50:24.607+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x8", "length": 7, "attribute": 16}
+{"record_id": "B0248", "time": "2026-09-15T19:50:24.607+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x8", "length": 7, "attribute": 1}
+{"record_id": "B0249", "time": "2026-09-15T19:50:24.699+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0xa", "length": 3, "attribute": 18}
+{"record_id": "B0250", "time": "2026-09-15T19:50:24.787+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x12", "length": 5, "attribute": 28}
+{"record_id": "B0251", "time": "2026-09-15T19:50:25.298+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x12", "length": 5, "attribute": 9}
+{"record_id": "B0252", "time": "2026-09-15T19:50:25.299+08:00", "event": "device_properties", "interface": "org.bluez.Device1", "properties": {"ServicesResolved": true}}
+{"record_id": "B0253", "time": "2026-09-15T19:50:26.587+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x8", "length": 7, "attribute": 1}
+{"record_id": "B0254", "time": "2026-09-15T19:54:26.267+08:00", "event": "experimental_action", "name": "disconnect_le"}
+{"record_id": "B0255", "time": "2026-09-15T19:54:26.267+08:00", "event": "host_disconnect", "handle": 2048, "reason": "0x13"}
+{"record_id": "B0256", "time": "2026-09-15T19:54:26.303+08:00", "event": "disconnected", "handle": 2048, "status": "0x0", "value": "0x16"}
+{"record_id": "B0257", "time": "2026-09-15T19:54:26.304+08:00", "event": "device_properties", "interface": "org.bluez.Device1", "properties": {"ServicesResolved": false}}
+{"record_id": "B0258", "time": "2026-09-15T19:54:26.304+08:00", "event": "device_properties", "interface": "org.bluez.Bearer.LE1", "properties": {"Connected": false}}
+{"record_id": "B0259", "time": "2026-09-15T19:54:26.307+08:00", "event": "device_properties", "interface": "org.bluez.Device1", "properties": {"Connected": false}}
+{"record_id": "B0260", "time": "2026-09-15T19:54:26.311+08:00", "event": "typed_disconnect_complete", "transport": "LE", "count": 1}
+{"record_id": "B0261", "time": "2026-09-15T19:54:26.311+08:00", "event": "experimental_action_finished", "name": "disconnect_le"}
+{"record_id": "B0262", "time": "2026-09-15T19:54:26.399+08:00", "event": "links", "links": []}
+{"record_id": "B0263", "time": "2026-09-15T19:56:16.489+08:00", "event": "resource_call", "member": "RegisterApplication", "sender": "<CALLER_10>"}
+{"record_id": "B0264", "time": "2026-09-15T19:56:16.511+08:00", "event": "resource_call", "member": "RegisterAdvertisement", "sender": "<CALLER_11>"}
+{"record_id": "B0265", "time": "2026-09-15T19:56:16.612+08:00", "event": "advertising_command", "enabled": true}
+{"record_id": "B0266", "time": "2026-09-15T19:56:16.637+08:00", "event": "le_connection_complete", "status": "0x0", "handle": 2048, "role": "peripheral"}
+{"record_id": "B0267", "time": "2026-09-15T19:56:16.642+08:00", "event": "device_properties", "interface": "org.bluez.Device1", "properties": {"Connected": true}}
+{"record_id": "B0268", "time": "2026-09-15T19:56:16.642+08:00", "event": "device_properties", "interface": "org.bluez.Bearer.LE1", "properties": {"Connected": true}}
+{"record_id": "B0269", "time": "2026-09-15T19:56:16.662+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": false, "encrypted": false}]}
+{"record_id": "B0270", "time": "2026-09-15T19:56:16.726+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [10, 65535]}
+{"record_id": "B0271", "time": "2026-09-15T19:56:16.726+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1e", "length": 1}
+{"record_id": "B0272", "time": "2026-09-15T19:56:16.726+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 10, "indication_value_u16": [166, 183]}
+{"record_id": "B0273", "time": "2026-09-15T19:56:16.863+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": false}]}
+{"record_id": "B0274", "time": "2026-09-15T19:56:17.238+08:00", "event": "encryption", "handle": 2048, "status": "0x0", "value": "0x1"}
+{"record_id": "B0275", "time": "2026-09-15T19:56:17.265+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
+{"record_id": "B0276", "time": "2026-09-15T19:56:17.295+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [10, 65535]}
+{"record_id": "B0277", "time": "2026-09-15T19:56:17.295+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0278", "time": "2026-09-15T19:56:17.295+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x12", "length": 5, "attribute": 9}
+{"record_id": "B0279", "time": "2026-09-15T19:56:17.295+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1e", "length": 1}
+{"record_id": "B0280", "time": "2026-09-15T19:56:17.295+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0xa", "length": 3, "attribute": 27}
+{"record_id": "B0281", "time": "2026-09-15T19:56:17.295+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 10, "indication_value_u16": [166, 168]}
+{"record_id": "B0282", "time": "2026-09-15T19:56:17.355+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x8", "length": 7, "attribute": 16}
+{"record_id": "B0283", "time": "2026-09-15T19:56:17.355+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0284", "time": "2026-09-15T19:56:17.355+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x8", "length": 7, "attribute": 1}
+{"record_id": "B0285", "time": "2026-09-15T19:56:17.355+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 10, "indication_value_u16": [166, 168]}
+{"record_id": "B0286", "time": "2026-09-15T19:56:17.415+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0287", "time": "2026-09-15T19:56:17.415+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0xa", "length": 3, "attribute": 18}
+{"record_id": "B0288", "time": "2026-09-15T19:56:17.415+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 10, "indication_value_u16": [169, 172]}
+{"record_id": "B0289", "time": "2026-09-15T19:56:17.475+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0290", "time": "2026-09-15T19:56:17.475+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x12", "length": 5, "attribute": 28}
+{"record_id": "B0291", "time": "2026-09-15T19:56:17.475+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 10, "indication_value_u16": [169, 172]}
+{"record_id": "B0292", "time": "2026-09-15T19:56:17.535+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0293", "time": "2026-09-15T19:56:17.535+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 10, "indication_value_u16": [173, 183]}
+{"record_id": "B0294", "time": "2026-09-15T19:56:17.595+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0295", "time": "2026-09-15T19:56:17.595+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 10, "indication_value_u16": [173, 183]}
+{"record_id": "B0296", "time": "2026-09-15T19:56:17.655+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0297", "time": "2026-09-15T19:56:17.791+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x12", "length": 5, "attribute": 9}
+{"record_id": "B0298", "time": "2026-09-15T19:56:17.792+08:00", "event": "device_properties", "interface": "org.bluez.Device1", "properties": {"ServicesResolved": true}}
+{"record_id": "B0299", "time": "2026-09-15T19:56:19.395+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x8", "length": 7, "attribute": 1}
+{"record_id": "B0300", "time": "2026-09-15T19:59:31.145+08:00", "event": "dbus_device_call", "member": "Connect", "sender": "<CALLER_12>"}
+{"record_id": "B0301", "time": "2026-09-15T19:59:31.145+08:00", "event": "classic_connect_command", "opcode": "0x405"}
+{"record_id": "B0302", "time": "2026-09-15T19:59:31.266+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}, {"handle": 3840, "transport": "BR/EDR", "connected": false, "encrypted": false}]}
+{"record_id": "B0303", "time": "2026-09-15T19:59:32.211+08:00", "event": "classic_connection_complete", "status": "0x0", "handle": 256}
+{"record_id": "B0304", "time": "2026-09-15T19:59:32.269+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}, {"handle": 256, "transport": "BR/EDR", "connected": false, "encrypted": false}]}
+{"record_id": "B0305", "time": "2026-09-15T19:59:32.370+08:00", "event": "device_properties", "interface": "org.bluez.Bearer.BREDR1", "properties": {"Connected": true}}
+{"record_id": "B0306", "time": "2026-09-15T19:59:32.470+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}, {"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": false}]}
+{"record_id": "B0307", "time": "2026-09-15T19:59:32.741+08:00", "event": "encryption", "handle": 256, "status": "0x0", "value": "0x2"}
+{"record_id": "B0308", "time": "2026-09-15T19:59:32.872+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}, {"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": true}]}
+{"record_id": "B0309", "time": "2026-09-15T19:59:33.678+08:00", "event": "experimental_action", "name": "snapshot"}
+{"record_id": "B0310", "time": "2026-09-15T19:59:33.682+08:00", "event": "experimental_snapshot", "properties": {"Connected": true, "Trusted": false, "Paired": true, "Bonded": true, "PreferredBearer": "bredr"}, "le": {"Connected": true, "Paired": true, "Bonded": true}, "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}, {"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": true}]}
+{"record_id": "B0311", "time": "2026-09-15T19:59:33.682+08:00", "event": "experimental_action_finished", "name": "snapshot"}
+{"record_id": "B0312", "time": "2026-09-15T19:59:33.705+08:00", "event": "device_properties", "interface": "org.bluez.MediaControl1", "properties": {"Connected": true}}
+{"record_id": "B0313", "time": "2026-09-15T20:00:42.616+08:00", "event": "experimental_action", "name": "disconnect_le"}
+{"record_id": "B0314", "time": "2026-09-15T20:00:42.617+08:00", "event": "host_disconnect", "handle": 2048, "reason": "0x13"}
+{"record_id": "B0315", "time": "2026-09-15T20:00:42.678+08:00", "event": "disconnected", "handle": 2048, "status": "0x0", "value": "0x16"}
+{"record_id": "B0316", "time": "2026-09-15T20:00:42.679+08:00", "event": "device_properties", "interface": "org.bluez.Device1", "properties": {"ServicesResolved": false}}
+{"record_id": "B0317", "time": "2026-09-15T20:00:42.679+08:00", "event": "device_properties", "interface": "org.bluez.Bearer.LE1", "properties": {"Connected": false}}
+{"record_id": "B0318", "time": "2026-09-15T20:00:42.686+08:00", "event": "typed_disconnect_complete", "transport": "LE", "count": 1}
+{"record_id": "B0319", "time": "2026-09-15T20:00:42.686+08:00", "event": "experimental_action_finished", "name": "disconnect_le"}
+{"record_id": "B0320", "time": "2026-09-15T20:00:42.785+08:00", "event": "links", "links": [{"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": true}]}
+{"record_id": "B0321", "time": "2026-09-15T20:00:43.625+08:00", "event": "resource_call", "member": "RegisterApplication", "sender": "<CALLER_13>"}
+{"record_id": "B0322", "time": "2026-09-15T20:00:43.647+08:00", "event": "resource_call", "member": "RegisterAdvertisement", "sender": "<CALLER_14>"}
+{"record_id": "B0323", "time": "2026-09-15T20:00:43.661+08:00", "event": "advertising_command", "enabled": true}
+{"record_id": "B0324", "time": "2026-09-15T20:00:52.919+08:00", "event": "advertising_command", "enabled": false}
+{"record_id": "B0325", "time": "2026-09-15T20:00:52.925+08:00", "event": "host_disconnect", "handle": 256, "reason": "0x15"}
+{"record_id": "B0326", "time": "2026-09-15T20:00:52.926+08:00", "event": "device_properties", "interface": "org.bluez.Bearer.BREDR1", "properties": {"Connected": false}}
+{"record_id": "B0327", "time": "2026-09-15T20:00:52.926+08:00", "event": "device_properties", "interface": "org.bluez.Device1", "properties": {"Connected": false}}
+{"record_id": "B0328", "time": "2026-09-15T20:00:52.951+08:00", "event": "device_properties", "interface": "org.bluez.MediaControl1", "properties": {"Connected": false}}
+{"record_id": "B0329", "time": "2026-09-15T20:00:53.017+08:00", "event": "resource_call", "member": "RegisterApplication", "sender": "<CALLER_07>"}
+{"record_id": "B0330", "time": "2026-09-15T20:00:53.017+08:00", "event": "resource_call", "member": "RegisterApplication", "sender": "<CALLER_07>"}
+{"record_id": "B0331", "time": "2026-09-15T20:00:53.018+08:00", "event": "resource_call", "member": "RegisterApplication", "sender": "<CALLER_07>"}
+{"record_id": "B0332", "time": "2026-09-15T20:00:53.019+08:00", "event": "resource_call", "member": "RegisterApplication", "sender": "<CALLER_07>"}
+{"record_id": "B0333", "time": "2026-09-15T20:00:53.022+08:00", "event": "links", "links": []}
+{"record_id": "B0334", "time": "2026-09-15T20:00:53.047+08:00", "event": "experimental_error", "message": "Job failed. See \"journalctl -xe\" for details."}
+{"record_id": "B0335", "time": "2026-09-15T20:06:43.063+08:00", "event": "previous_cleanup_completed", "socket_started": true, "trusted": true, "message": ""}
+{"record_id": "B0336", "time": "2026-09-15T20:06:43.064+08:00", "event": "links", "links": []}
+{"record_id": "B0337", "time": "2026-09-15T20:06:44.066+08:00", "event": "ready", "limit_seconds": 3600}
+{"record_id": "B0338", "time": "2026-09-15T20:07:30.056+08:00", "event": "action", "name": "start_hid"}
+{"record_id": "B0339", "time": "2026-09-15T20:07:30.089+08:00", "event": "resource_call", "member": "RegisterApplication", "sender": "<CALLER_15>"}
+{"record_id": "B0340", "time": "2026-09-15T20:07:30.107+08:00", "event": "resource_call", "member": "RegisterAdvertisement", "sender": "<CALLER_16>"}
+{"record_id": "B0341", "time": "2026-09-15T20:07:30.209+08:00", "event": "advertising_command", "enabled": true}
+{"record_id": "B0342", "time": "2026-09-15T20:07:30.210+08:00", "event": "hid_holder_ready"}
+{"record_id": "B0343", "time": "2026-09-15T20:07:30.210+08:00", "event": "action_finished", "name": "start_hid"}
+{"record_id": "B0344", "time": "2026-09-15T20:08:25.950+08:00", "event": "action", "name": "snapshot"}
+{"record_id": "B0345", "time": "2026-09-15T20:08:25.950+08:00", "event": "snapshot", "links": []}
+{"record_id": "B0346", "time": "2026-09-15T20:08:25.950+08:00", "event": "action_finished", "name": "snapshot"}
+{"record_id": "B0347", "time": "2026-09-15T20:09:54.328+08:00", "event": "action", "name": "stop_hid"}
+{"record_id": "B0348", "time": "2026-09-15T20:09:54.329+08:00", "event": "hid_holder_stopped", "returncode": 0, "message": "HID_CLOSED"}
+{"record_id": "B0349", "time": "2026-09-15T20:09:54.329+08:00", "event": "action_finished", "name": "stop_hid"}
+{"record_id": "B0350", "time": "2026-09-15T20:09:54.433+08:00", "event": "advertising_command", "enabled": false}
+{"record_id": "B0351", "time": "2026-09-15T20:11:19.399+08:00", "event": "advertising_command", "enabled": false}
+{"record_id": "B0352", "time": "2026-09-15T20:11:19.513+08:00", "event": "native_le_baseline", "preferred_bearer": "last-used", "links": []}
+{"record_id": "B0353", "time": "2026-09-15T20:11:24.519+08:00", "event": "native_le_preference_set"}
+{"record_id": "B0354", "time": "2026-09-15T20:11:26.899+08:00", "event": "le_connect_command", "opcode": "0x2043"}
+{"record_id": "B0355", "time": "2026-09-15T20:11:26.990+08:00", "event": "links", "links": [{"handle": 3842, "transport": "LE", "connected": false, "encrypted": false}]}
+{"record_id": "B0356", "time": "2026-09-15T20:11:27.177+08:00", "event": "le_connection_complete", "status": "0x0", "handle": 2048, "role": "central"}
+{"record_id": "B0357", "time": "2026-09-15T20:11:27.192+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": false, "encrypted": false}]}
+{"record_id": "B0358", "time": "2026-09-15T20:11:27.223+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [10, 65535]}
+{"record_id": "B0359", "time": "2026-09-15T20:11:27.393+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": false}]}
+{"record_id": "B0360", "time": "2026-09-15T20:11:28.031+08:00", "event": "encryption", "handle": 2048, "status": "0x0", "value": "0x1"}
+{"record_id": "B0361", "time": "2026-09-15T20:11:28.031+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1e", "length": 1}
+{"record_id": "B0362", "time": "2026-09-15T20:11:28.031+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 10, "indication_value_u16": [1, 65535]}
+{"record_id": "B0363", "time": "2026-09-15T20:11:28.130+08:00", "event": "native_le_result", "connected": true, "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
+{"record_id": "B0364", "time": "2026-09-15T20:11:28.167+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [10, 65535]}
+{"record_id": "B0365", "time": "2026-09-15T20:11:28.167+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0366", "time": "2026-09-15T20:11:28.167+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1e", "length": 1}
+{"record_id": "B0367", "time": "2026-09-15T20:11:28.167+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0xa", "length": 3, "attribute": 27}
+{"record_id": "B0368", "time": "2026-09-15T20:11:28.169+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x12", "length": 5, "attribute": 9}
+{"record_id": "B0369", "time": "2026-09-15T20:11:28.196+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
+{"record_id": "B0370", "time": "2026-09-15T20:11:28.257+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x8", "length": 7, "attribute": 16}
+{"record_id": "B0371", "time": "2026-09-15T20:11:28.257+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0xa", "length": 3, "attribute": 3}
+{"record_id": "B0372", "time": "2026-09-15T20:11:28.347+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0xa", "length": 3, "attribute": 18}
+{"record_id": "B0373", "time": "2026-09-15T20:11:28.347+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x8", "length": 7, "attribute": 1}
+{"record_id": "B0374", "time": "2026-09-15T20:11:28.527+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x12", "length": 5, "attribute": 28}
+{"record_id": "B0375", "time": "2026-09-15T20:11:29.038+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x12", "length": 5, "attribute": 9}
+{"record_id": "B0376", "time": "2026-09-15T20:11:30.237+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x8", "length": 7, "attribute": 1}
+{"record_id": "B0377", "time": "2026-09-15T20:12:01.602+08:00", "event": "classic_connect_command", "opcode": "0x405"}
+{"record_id": "B0378", "time": "2026-09-15T20:12:01.732+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}, {"handle": 3842, "transport": "BR/EDR", "connected": false, "encrypted": false}]}
+{"record_id": "B0379", "time": "2026-09-15T20:12:02.403+08:00", "event": "classic_connection_complete", "status": "0x0", "handle": 256}
+{"record_id": "B0380", "time": "2026-09-15T20:12:02.535+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}, {"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": false}]}
+{"record_id": "B0381", "time": "2026-09-15T20:12:03.101+08:00", "event": "encryption", "handle": 256, "status": "0x0", "value": "0x2"}
+{"record_id": "B0382", "time": "2026-09-15T20:12:03.137+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}, {"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": true}]}
+{"record_id": "B0383", "time": "2026-09-15T20:12:03.888+08:00", "event": "action", "name": "snapshot"}
+{"record_id": "B0384", "time": "2026-09-15T20:12:03.888+08:00", "event": "snapshot", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}, {"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": true}]}
+{"record_id": "B0385", "time": "2026-09-15T20:12:03.888+08:00", "event": "action_finished", "name": "snapshot"}
+{"record_id": "B0386", "time": "2026-09-15T20:12:26.084+08:00", "event": "action", "name": "disconnect_le"}
+{"record_id": "B0387", "time": "2026-09-15T20:12:26.086+08:00", "event": "host_disconnect", "handle": 2048, "reason": "0x13"}
+{"record_id": "B0388", "time": "2026-09-15T20:12:26.124+08:00", "event": "disconnected", "handle": 2048, "status": "0x0", "value": "0x16"}
+{"record_id": "B0389", "time": "2026-09-15T20:12:26.133+08:00", "event": "typed_disconnect_complete", "transport": "LE", "count": 1}
+{"record_id": "B0390", "time": "2026-09-15T20:12:26.133+08:00", "event": "action_finished", "name": "disconnect_le"}
+{"record_id": "B0391", "time": "2026-09-15T20:12:26.232+08:00", "event": "links", "links": [{"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": true}]}
+{"record_id": "B0392", "time": "2026-09-15T20:12:26.627+08:00", "event": "le_connect_command", "opcode": "0x2043"}
+{"record_id": "B0393", "time": "2026-09-15T20:12:26.634+08:00", "event": "links", "links": [{"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": true}, {"handle": 3840, "transport": "LE", "connected": false, "encrypted": false}]}
+{"record_id": "B0394", "time": "2026-09-15T20:12:26.895+08:00", "event": "le_connection_complete", "status": "0x0", "handle": 2048, "role": "central"}
+{"record_id": "B0395", "time": "2026-09-15T20:12:26.935+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [10, 65535]}
+{"record_id": "B0396", "time": "2026-09-15T20:12:27.035+08:00", "event": "links", "links": [{"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": true}, {"handle": 2048, "transport": "LE", "connected": true, "encrypted": false}]}
+{"record_id": "B0397", "time": "2026-09-15T20:12:27.744+08:00", "event": "encryption", "handle": 2048, "status": "0x0", "value": "0x1"}
+{"record_id": "B0398", "time": "2026-09-15T20:12:27.744+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1e", "length": 1}
+{"record_id": "B0399", "time": "2026-09-15T20:12:27.838+08:00", "event": "links", "links": [{"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": true}, {"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
+{"record_id": "B0400", "time": "2026-09-15T20:12:27.925+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [10, 65535]}
+{"record_id": "B0401", "time": "2026-09-15T20:12:27.925+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x12", "length": 5, "attribute": 9}
+{"record_id": "B0402", "time": "2026-09-15T20:12:27.925+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1e", "length": 1}
+{"record_id": "B0403", "time": "2026-09-15T20:12:27.925+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0xa", "length": 3, "attribute": 27}
+{"record_id": "B0404", "time": "2026-09-15T20:12:28.015+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x8", "length": 7, "attribute": 16}
+{"record_id": "B0405", "time": "2026-09-15T20:12:28.015+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x8", "length": 7, "attribute": 1}
+{"record_id": "B0406", "time": "2026-09-15T20:12:28.105+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0xa", "length": 3, "attribute": 18}
+{"record_id": "B0407", "time": "2026-09-15T20:12:28.240+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x12", "length": 5, "attribute": 28}
+{"record_id": "B0408", "time": "2026-09-15T20:12:28.699+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x12", "length": 5, "attribute": 9}
+{"record_id": "B0409", "time": "2026-09-15T20:12:29.950+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x8", "length": 7, "attribute": 1}
+{"record_id": "B0410", "time": "2026-09-15T20:13:31.095+08:00", "event": "action", "name": "disconnect_classic"}
+{"record_id": "B0411", "time": "2026-09-15T20:13:31.095+08:00", "event": "host_disconnect", "handle": 256, "reason": "0x13"}
+{"record_id": "B0412", "time": "2026-09-15T20:13:31.843+08:00", "event": "disconnected", "handle": 256, "status": "0x0", "value": "0x16"}
+{"record_id": "B0413", "time": "2026-09-15T20:13:31.860+08:00", "event": "typed_disconnect_complete", "transport": "BR/EDR", "count": 1}
+{"record_id": "B0414", "time": "2026-09-15T20:13:31.860+08:00", "event": "action_finished", "name": "disconnect_classic"}
+{"record_id": "B0415", "time": "2026-09-15T20:13:31.891+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
+{"record_id": "B0416", "time": "2026-09-15T20:13:33.011+08:00", "event": "classic_connect_command", "opcode": "0x405"}
+{"record_id": "B0417", "time": "2026-09-15T20:13:33.095+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}, {"handle": 3840, "transport": "BR/EDR", "connected": false, "encrypted": false}]}
+{"record_id": "B0418", "time": "2026-09-15T20:13:35.764+08:00", "event": "classic_connection_complete", "status": "0x0", "handle": 256}
+{"record_id": "B0419", "time": "2026-09-15T20:13:35.907+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}, {"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": false}]}
+{"record_id": "B0420", "time": "2026-09-15T20:13:36.113+08:00", "event": "encryption", "handle": 256, "status": "0x0", "value": "0x2"}
+{"record_id": "B0421", "time": "2026-09-15T20:13:36.308+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}, {"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": true}]}
+{"record_id": "B0422", "time": "2026-09-15T20:13:54.557+08:00", "event": "action", "name": "disconnect_le"}
+{"record_id": "B0423", "time": "2026-09-15T20:13:54.558+08:00", "event": "host_disconnect", "handle": 2048, "reason": "0x13"}
+{"record_id": "B0424", "time": "2026-09-15T20:13:54.590+08:00", "event": "disconnected", "handle": 2048, "status": "0x0", "value": "0x16"}
+{"record_id": "B0425", "time": "2026-09-15T20:13:54.598+08:00", "event": "typed_disconnect_complete", "transport": "LE", "count": 1}
+{"record_id": "B0426", "time": "2026-09-15T20:13:54.598+08:00", "event": "action_finished", "name": "disconnect_le"}
+{"record_id": "B0427", "time": "2026-09-15T20:13:54.782+08:00", "event": "links", "links": [{"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": true}]}
+{"record_id": "B0428", "time": "2026-09-15T20:13:56.508+08:00", "event": "action", "name": "connect"}
+{"record_id": "B0429", "time": "2026-09-15T20:13:56.541+08:00", "event": "advertising_command", "enabled": true}
+{"record_id": "B0430", "time": "2026-09-15T20:14:11.510+08:00", "event": "link_result", "returncode": 1, "message": "", "links": [{"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": true}]}
+{"record_id": "B0431", "time": "2026-09-15T20:14:11.510+08:00", "event": "action_finished", "name": "connect"}
+{"record_id": "B0432", "time": "2026-09-15T20:14:11.514+08:00", "event": "advertising_command", "enabled": false}
+{"record_id": "B0433", "time": "2026-09-15T20:15:08.605+08:00", "event": "le_connect_command", "opcode": "0x2043"}
+{"record_id": "B0434", "time": "2026-09-15T20:15:08.671+08:00", "event": "links", "links": [{"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": true}, {"handle": 3840, "transport": "LE", "connected": false, "encrypted": false}]}
+{"record_id": "B0435", "time": "2026-09-15T20:15:09.429+08:00", "event": "le_connection_complete", "status": "0x0", "handle": 2048, "role": "central"}
+{"record_id": "B0436", "time": "2026-09-15T20:15:09.475+08:00", "event": "links", "links": [{"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": true}, {"handle": 2048, "transport": "LE", "connected": true, "encrypted": false}]}
+{"record_id": "B0437", "time": "2026-09-15T20:15:09.920+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [10, 65535]}
+{"record_id": "B0438", "time": "2026-09-15T20:15:11.526+08:00", "event": "host_disconnect", "handle": 2048, "reason": "0x13"}
+{"record_id": "B0439", "time": "2026-09-15T20:15:11.539+08:00", "event": "disconnected", "handle": 2048, "status": "0x0", "value": "0x16"}
+{"record_id": "B0440", "time": "2026-09-15T20:15:11.685+08:00", "event": "links", "links": [{"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": true}]}
+{"record_id": "B0441", "time": "2026-09-15T20:15:11.944+08:00", "event": "le_connect_command", "opcode": "0x2043"}
+{"record_id": "B0442", "time": "2026-09-15T20:15:12.087+08:00", "event": "links", "links": [{"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": true}, {"handle": 3840, "transport": "LE", "connected": false, "encrypted": false}]}
+{"record_id": "B0443", "time": "2026-09-15T20:15:12.221+08:00", "event": "le_connection_complete", "status": "0x0", "handle": 2048, "role": "central"}
+{"record_id": "B0444", "time": "2026-09-15T20:15:12.260+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [10, 65535]}
+{"record_id": "B0445", "time": "2026-09-15T20:15:12.288+08:00", "event": "links", "links": [{"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": true}, {"handle": 2048, "transport": "LE", "connected": false, "encrypted": false}]}
+{"record_id": "B0446", "time": "2026-09-15T20:15:12.488+08:00", "event": "links", "links": [{"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": true}, {"handle": 2048, "transport": "LE", "connected": true, "encrypted": false}]}
+{"record_id": "B0447", "time": "2026-09-15T20:15:13.069+08:00", "event": "encryption", "handle": 2048, "status": "0x0", "value": "0x1"}
+{"record_id": "B0448", "time": "2026-09-15T20:15:13.069+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1e", "length": 1}
+{"record_id": "B0449", "time": "2026-09-15T20:15:13.091+08:00", "event": "links", "links": [{"handle": 256, "transport": "BR/EDR", "connected": true, "encrypted": true}, {"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
+{"record_id": "B0450", "time": "2026-09-15T20:15:13.205+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [10, 65535]}
+{"record_id": "B0451", "time": "2026-09-15T20:15:13.205+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x12", "length": 5, "attribute": 9}
+{"record_id": "B0452", "time": "2026-09-15T20:15:13.205+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1e", "length": 1}
+{"record_id": "B0453", "time": "2026-09-15T20:15:13.205+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0xa", "length": 3, "attribute": 27}
+{"record_id": "B0454", "time": "2026-09-15T20:15:13.294+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x8", "length": 7, "attribute": 16}
+{"record_id": "B0455", "time": "2026-09-15T20:15:13.294+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x8", "length": 7, "attribute": 1}
+{"record_id": "B0456", "time": "2026-09-15T20:15:13.386+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0xa", "length": 3, "attribute": 18}
+{"record_id": "B0457", "time": "2026-09-15T20:15:13.523+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x12", "length": 5, "attribute": 28}
+{"record_id": "B0458", "time": "2026-09-15T20:15:13.979+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x12", "length": 5, "attribute": 9}
+{"record_id": "B0459", "time": "2026-09-15T20:15:15.275+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x8", "length": 7, "attribute": 1}
+{"record_id": "B0460", "time": "2026-09-15T20:16:02.887+08:00", "event": "action", "name": "disconnect_classic"}
+{"record_id": "B0461", "time": "2026-09-15T20:16:02.888+08:00", "event": "host_disconnect", "handle": 256, "reason": "0x13"}
+{"record_id": "B0462", "time": "2026-09-15T20:16:03.299+08:00", "event": "disconnected", "handle": 256, "status": "0x0", "value": "0x16"}
+{"record_id": "B0463", "time": "2026-09-15T20:16:03.308+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
+{"record_id": "B0464", "time": "2026-09-15T20:16:03.308+08:00", "event": "typed_disconnect_complete", "transport": "BR/EDR", "count": 1}
+{"record_id": "B0465", "time": "2026-09-15T20:16:03.308+08:00", "event": "action_finished", "name": "disconnect_classic"}
+{"record_id": "B0466", "time": "2026-09-15T20:27:12.949+08:00", "event": "classic_pairing_removed", "classic_key_absent": true, "le_keys_unchanged": true, "bearers": {"LE": {"Paired": true, "Bonded": true, "Connected": true}, "BREDR": {"Paired": false, "Bonded": true, "Connected": false}}, "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
+{"record_id": "B0467", "time": "2026-09-15T20:27:12.949+08:00", "event": "private_backup_removed"}
+{"record_id": "B0468", "time": "2026-09-15T20:28:45.962+08:00", "event": "normal_configuration_restart"}
+{"record_id": "B0469", "time": "2026-09-15T20:28:45.966+08:00", "event": "advertising_command", "enabled": false}
+{"record_id": "B0470", "time": "2026-09-15T20:28:45.971+08:00", "event": "host_disconnect", "handle": 2048, "reason": "0x15"}
+{"record_id": "B0471", "time": "2026-09-15T20:28:45.988+08:00", "event": "disconnected", "handle": 2048, "status": "0x0", "value": "0x16"}
+{"record_id": "B0472", "time": "2026-09-15T20:28:46.149+08:00", "event": "links", "links": []}
+{"record_id": "B0473", "time": "2026-09-15T20:28:46.229+08:00", "event": "advertising_command", "enabled": true}
+{"record_id": "B0474", "time": "2026-09-15T20:28:46.234+08:00", "event": "le_connection_complete", "status": "0x0", "handle": 2048, "role": "peripheral"}
+{"record_id": "B0475", "time": "2026-09-15T20:28:46.349+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": false}]}
+{"record_id": "B0476", "time": "2026-09-15T20:28:46.351+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [10, 65535]}
+{"record_id": "B0477", "time": "2026-09-15T20:28:46.351+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1e", "length": 1}
+{"record_id": "B0478", "time": "2026-09-15T20:28:46.351+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 10, "indication_value_u16": [1, 65535]}
+{"record_id": "B0479", "time": "2026-09-15T20:28:46.979+08:00", "event": "encryption", "handle": 2048, "status": "0x0", "value": "0x1"}
+{"record_id": "B0480", "time": "2026-09-15T20:28:47.070+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [10, 65535]}
+{"record_id": "B0481", "time": "2026-09-15T20:28:47.070+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0482", "time": "2026-09-15T20:28:47.070+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1e", "length": 1}
+{"record_id": "B0483", "time": "2026-09-15T20:28:47.070+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0xa", "length": 3, "attribute": 27}
+{"record_id": "B0484", "time": "2026-09-15T20:28:47.070+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 10, "indication_value_u16": [21, 24]}
+{"record_id": "B0485", "time": "2026-09-15T20:28:47.072+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x12", "length": 5, "attribute": 9}
+{"record_id": "B0486", "time": "2026-09-15T20:28:47.153+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
+{"record_id": "B0487", "time": "2026-09-15T20:28:47.190+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0488", "time": "2026-09-15T20:28:47.190+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x8", "length": 7, "attribute": 16}
+{"record_id": "B0489", "time": "2026-09-15T20:28:47.190+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0xa", "length": 3, "attribute": 3}
+{"record_id": "B0490", "time": "2026-09-15T20:28:47.190+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 10, "indication_value_u16": [25, 35]}
+{"record_id": "B0491", "time": "2026-09-15T20:28:47.280+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0492", "time": "2026-09-15T20:28:47.280+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0xa", "length": 3, "attribute": 18}
+{"record_id": "B0493", "time": "2026-09-15T20:28:47.280+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x8", "length": 7, "attribute": 1}
+{"record_id": "B0494", "time": "2026-09-15T20:28:47.280+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 10, "indication_value_u16": [36, 38]}
+{"record_id": "B0495", "time": "2026-09-15T20:28:47.341+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0496", "time": "2026-09-15T20:28:47.431+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x12", "length": 5, "attribute": 28}
+{"record_id": "B0497", "time": "2026-09-15T20:28:47.771+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x12", "length": 5, "attribute": 9}
+{"record_id": "B0498", "time": "2026-09-15T20:28:49.140+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x8", "length": 7, "attribute": 1}
+{"record_id": "B0499", "time": "2026-09-15T20:28:52.075+08:00", "event": "normal_configuration_verification", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
+{"record_id": "B0500", "time": "2026-09-15T20:29:58.230+08:00", "event": "action", "name": "disconnect_le"}
+{"record_id": "B0501", "time": "2026-09-15T20:29:58.232+08:00", "event": "host_disconnect", "handle": 2048, "reason": "0x13"}
+{"record_id": "B0502", "time": "2026-09-15T20:29:58.933+08:00", "event": "disconnected", "handle": 2048, "status": "0x0", "value": "0x16"}
+{"record_id": "B0503", "time": "2026-09-15T20:29:58.945+08:00", "event": "typed_disconnect_complete", "transport": "LE", "count": 1}
+{"record_id": "B0504", "time": "2026-09-15T20:29:58.945+08:00", "event": "action_finished", "name": "disconnect_le"}
+{"record_id": "B0505", "time": "2026-09-15T20:29:59.021+08:00", "event": "links", "links": []}
+{"record_id": "B0506", "time": "2026-09-15T20:30:00.252+08:00", "event": "action", "name": "connect"}
+{"record_id": "B0507", "time": "2026-09-15T20:30:00.279+08:00", "event": "advertising_command", "enabled": true}
+{"record_id": "B0508", "time": "2026-09-15T20:30:00.307+08:00", "event": "le_connection_complete", "status": "0x0", "handle": 2048, "role": "peripheral"}
+{"record_id": "B0509", "time": "2026-09-15T20:30:00.391+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [10, 65535]}
+{"record_id": "B0510", "time": "2026-09-15T20:30:00.391+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1e", "length": 1}
+{"record_id": "B0511", "time": "2026-09-15T20:30:00.391+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 10, "indication_value_u16": [44, 61]}
+{"record_id": "B0512", "time": "2026-09-15T20:30:00.427+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": false}]}
+{"record_id": "B0513", "time": "2026-09-15T20:30:00.899+08:00", "event": "encryption", "handle": 2048, "status": "0x0", "value": "0x1"}
+{"record_id": "B0514", "time": "2026-09-15T20:30:00.905+08:00", "event": "link_result", "returncode": 0, "message": "", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
+{"record_id": "B0515", "time": "2026-09-15T20:30:00.905+08:00", "event": "action_finished", "name": "connect"}
+{"record_id": "B0516", "time": "2026-09-15T20:30:00.960+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1d", "length": 7, "attribute": 8, "indication_value_u16": [10, 65535]}
+{"record_id": "B0517", "time": "2026-09-15T20:30:00.960+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0518", "time": "2026-09-15T20:30:00.960+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x12", "length": 5, "attribute": 9}
+{"record_id": "B0519", "time": "2026-09-15T20:30:00.960+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1e", "length": 1}
+{"record_id": "B0520", "time": "2026-09-15T20:30:00.960+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0xa", "length": 3, "attribute": 27}
+{"record_id": "B0521", "time": "2026-09-15T20:30:00.960+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 10, "indication_value_u16": [44, 54]}
+{"record_id": "B0522", "time": "2026-09-15T20:30:01.020+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x8", "length": 7, "attribute": 16}
+{"record_id": "B0523", "time": "2026-09-15T20:30:01.020+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0524", "time": "2026-09-15T20:30:01.020+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x8", "length": 7, "attribute": 1}
+{"record_id": "B0525", "time": "2026-09-15T20:30:01.020+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 10, "indication_value_u16": [55, 57]}
+{"record_id": "B0526", "time": "2026-09-15T20:30:01.030+08:00", "event": "links", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
+{"record_id": "B0527", "time": "2026-09-15T20:30:01.080+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0528", "time": "2026-09-15T20:30:01.080+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0xa", "length": 3, "attribute": 18}
+{"record_id": "B0529", "time": "2026-09-15T20:30:01.080+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x1d", "length": 7, "attribute": 10, "indication_value_u16": [58, 61]}
+{"record_id": "B0530", "time": "2026-09-15T20:30:01.140+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x1e", "length": 1}
+{"record_id": "B0531", "time": "2026-09-15T20:30:01.140+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x12", "length": 5, "attribute": 28}
+{"record_id": "B0532", "time": "2026-09-15T20:30:01.482+08:00", "event": "att_metadata", "handle": 2048, "direction": "host_to_phone", "opcode": "0x12", "length": 5, "attribute": 9}
+{"record_id": "B0533", "time": "2026-09-15T20:30:03.060+08:00", "event": "att_metadata", "handle": 2048, "direction": "phone_to_host", "opcode": "0x8", "length": 7, "attribute": 1}
+{"record_id": "B0534", "time": "2026-09-15T20:34:28.610+08:00", "event": "final_pairing_audit", "classic_key_present": false, "le_key_sections": ["PeripheralLongTermKey", "SlaveLongTermKey", "IdentityResolvingKey"], "preferred_bearer": "le", "trusted": true, "diagnostic_overrides": [], "private_key_backup_present": false, "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
+{"record_id": "B0535", "time": "2026-09-15T20:36:45.581+08:00", "event": "action", "name": "stop"}
+{"record_id": "B0536", "time": "2026-09-15T20:36:45.581+08:00", "event": "monitor_error", "message": "Separator is not found, and chunk exceed the limit"}
+{"record_id": "B0537", "time": "2026-09-15T20:36:45.582+08:00", "event": "closed", "links": [{"handle": 2048, "transport": "LE", "connected": true, "encrypted": true}]}
