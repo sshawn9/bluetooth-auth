@@ -31,33 +31,36 @@ function evaluate(subject, actionId, fails = false) {
 }
 
 const trusted = { user: "nobody", local: true, active: true };
-check(
-  evaluate(trusted, "test.bluetooth-action") === "yes",
-  "eligible action was not authorized",
-);
-check(spawnCalls.length === 1, "eligible action did not invoke helper");
-check(
-  spawnCalls[0].length === 5 &&
-    spawnCalls[0][1] === "--address-file" &&
-    spawnCalls[0][2] === "/private/test-address" &&
-    spawnCalls[0][3] === "--connect" &&
-    spawnCalls[0][4] === "-1",
-  "helper arguments differ from the connect-notification contract",
-);
-check(
-  evaluate(trusted, "test.bluetooth-action", true) === "not-handled",
-  "helper error bypassed fallback",
-);
-check(spawnCalls.length === 1, "failing eligible helper was not called");
+for (const action of [
+  "org.freedesktop.systemd1.reload-daemon",
+  "org.freedesktop.policykit.exec",
+  "org.gtk.vfs.file-operations",
+  "test.other-action",
+]) {
+  check(evaluate(trusted, action) === "yes", `${action} was not authorized`);
+  check(spawnCalls.length === 1, "eligible request did not invoke helper");
+  check(
+    spawnCalls[0].length === 5 &&
+      spawnCalls[0][1] === "--address-file" &&
+      spawnCalls[0][2] === "/private/test-address" &&
+      spawnCalls[0][3] === "--connect" &&
+      spawnCalls[0][4] === "-1",
+    "helper arguments differ from the connect-notification contract",
+  );
+  check(
+    evaluate(trusted, action, true) === "not-handled",
+    `${action} helper error bypassed fallback`,
+  );
+  check(spawnCalls.length === 1, "failing eligible helper was not called");
+}
 
-for (const [subject, action] of [
-  [{ user: "other", local: true, active: true }, "test.bluetooth-action"],
-  [{ user: "nobody", local: false, active: true }, "test.bluetooth-action"],
-  [{ user: "nobody", local: true, active: false }, "test.bluetooth-action"],
-  [trusted, "test.other-action"],
+for (const subject of [
+  { user: "other", local: true, active: true },
+  { user: "nobody", local: false, active: true },
+  { user: "nobody", local: true, active: false },
 ]) {
   check(
-    evaluate(subject, action) === "not-handled",
+    evaluate(subject, "org.gtk.vfs.file-operations") === "not-handled",
     "ineligible request was handled",
   );
   check(spawnCalls.length === 0, "ineligible request invoked helper");

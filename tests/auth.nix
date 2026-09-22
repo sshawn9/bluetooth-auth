@@ -50,10 +50,7 @@ let
             enable = true;
             pamService = "login";
           };
-          auth.polkit = {
-            enable = true;
-            allowedActions = [ "test.bluetooth-action" ];
-          };
+          auth.polkit.enable = true;
           auth.greetd.enable = true;
         };
       }
