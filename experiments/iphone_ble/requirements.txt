@@ -1,5 +1,5 @@
 # Independent experiment environment; do not install into the project's .venv.
-bumble==0.0.234
+bumble==0.0.235
 dbus-fast==5.0.17
 cffi==2.1.1
 click==8.5.0
