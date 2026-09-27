@@ -44,8 +44,6 @@ jobs:
         include:
           - system: x86_64-linux
             runner: ubuntu-latest
-          - system: aarch64-linux
-            runner: ubuntu-24.04-arm
 
     steps:
       - name: Checkout repository
@@ -57,8 +55,16 @@ jobs:
           extra_nix_config: |
             experimental-features = nix-command flakes
 
+      - name: Set up Cachix
+        if: ${{ matrix.system == 'x86_64-linux' }}
+        uses: cachix/cachix-action@v17
+        with:
+          name: sshawn9
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          pathsToPush: result
+
       - name: Check flake
         run: nix flake check --print-build-logs
 
       - name: Build default package
-        run: nix build --no-link --print-build-logs .
+        run: nix build --print-build-logs .

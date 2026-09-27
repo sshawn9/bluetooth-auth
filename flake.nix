@@ -42,6 +42,10 @@
 
           devShells.default = pkgs.mkShell {
             inputsFrom = [ self'.packages.bluetooth-auth ];
+            packages = [
+              pkgs.clippy
+              pkgs.rustfmt
+            ];
           };
         };
 

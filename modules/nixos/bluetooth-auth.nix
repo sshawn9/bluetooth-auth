@@ -13,6 +13,7 @@ in
     ./keyring-unlock.nix
     ./connect.nix
     ./auto-connect.nix
+    ./gatt-query.nix
     ./noctalia-auto-lock.nix
     ./sudo-auth.nix
     ./polkit-auth.nix

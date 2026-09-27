@@ -4,13 +4,13 @@
 
 ## 工具与输入
 
-| 工具 | 用途 | 会改变什么 |
-| --- | --- | --- |
-| `diagnostics/le_bearer_probe.py` | 目标连接/资源快照；HCI 元数据、D-Bus 方法与属性监听 | 不主动连接、断开、扫描、配对或注册服务 |
-| `diagnostics/le_bearer_control.py` | 明确选择通用连接、LE 连接、偏好、Trusted、按类型断开；可选移除经典配对 | 只有指定子命令的动作；没有自动配对、重启或回退 |
-| `diagnostics/hid-holder/` | 保持与生产相同的目标限制 HID/广播，Ctrl+C 退出 | 临时注册 HID/广播；不修改适配器配对设置，不发送输入报告 |
-| `bluetooth-auth-link` | 本项目实际按需连接程序 | `--connect 0` 纯查询；正数为毫秒预算内的 HID 连接尝试 |
-| `check_public_privacy.py` | 检查待归档工作树文本 | 只读文件/Git；不是实机检查 |
+| 工具                               | 用途                                                                   | 会改变什么                                              |
+| ---------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------- |
+| `diagnostics/le_bearer_probe.py`   | 目标连接/资源快照；HCI 元数据、D-Bus 方法与属性监听                    | 不主动连接、断开、扫描、配对或注册服务                  |
+| `diagnostics/le_bearer_control.py` | 明确选择通用连接、LE 连接、偏好、Trusted、按类型断开；可选移除经典配对 | 只有指定子命令的动作；没有自动配对、重启或回退          |
+| `diagnostics/hid-holder/`          | 保持与生产相同的目标限制 HID/广播，Ctrl+C 退出                         | 临时注册 HID/广播；不修改适配器配对设置，不发送输入报告 |
+| `bluetooth-auth-link`              | 本项目实际按需连接程序                                                 | `--connect 0` 纯查询；正数为毫秒预算内的 HID 连接尝试   |
+| `check_public_privacy.py`          | 检查待归档工作树文本                                                   | 只读文件/Git；不是实机检查                              |
 
 从项目根目录运行。准备 Python 3.10+、系统 `busctl`、正在运行的 BlueZ，以及本项目 Rust 程序/连接锁文件。Python 观察和控制工具只用标准库；打开 HCI monitor/MGMT 或读配对元数据通常需要 root。首次编译 Rust 工具需要 Cargo 依赖和系统 D-Bus 编译依赖，项目 Nix 开发环境已提供后者。
 

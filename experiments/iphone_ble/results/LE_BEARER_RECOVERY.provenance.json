@@ -187,9 +187,7 @@
       "dependency_note": "外部crate由Cargo.lock固定；项目库仍为路径依赖，历史复核须使用上面提交/哈希对应的库。"
     },
     {
-      "paths": [
-        "diagnostics/verify_bearer_archive.py"
-      ],
+      "paths": ["diagnostics/verify_bearer_archive.py"],
       "status": "只验证公开产物哈希、事件ID/数量及隐私模式，不检查蓝牙。"
     }
   ],

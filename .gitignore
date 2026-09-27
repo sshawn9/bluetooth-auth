@@ -21,4 +21,7 @@ wheels/
 # Rust build artifacts
 /target/
 
+# Development environment cache
+/.direnv/
+
 /result

@@ -1,10 +1,10 @@
 #define _GNU_SOURCE
 
-#include <errno.h>
 #include <dlfcn.h>
+#include <errno.h>
 #include <fcntl.h>
-#include <stdarg.h>
 #include <spawn.h>
+#include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,15 +52,15 @@ int execvp(const char *file, char *const argv[]) {
 
 int posix_spawnp(pid_t *pid, const char *file,
                  const posix_spawn_file_actions_t *actions,
-                 const posix_spawnattr_t *attributes,
-                 char *const argv[], char *const envp[]) {
+                 const posix_spawnattr_t *attributes, char *const argv[],
+                 char *const envp[]) {
   int (*original)(pid_t *, const char *, const posix_spawn_file_actions_t *,
                   const posix_spawnattr_t *, char *const[], char *const[]) =
       dlsym(RTLD_NEXT, "posix_spawnp");
   const char *redirected = redirect_runtime_path(file);
-  return redirected == NULL ? errno
-                            : original(pid, redirected, actions, attributes,
-                                       argv, envp);
+  return redirected == NULL
+             ? errno
+             : original(pid, redirected, actions, attributes, argv, envp);
 }
 
 int open(const char *path, int flags, ...) {
