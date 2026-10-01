@@ -3,7 +3,7 @@ bumble==0.0.234
 dbus-fast==5.0.17
 cffi==2.1.1
 click==8.5.0
-cryptography==50.0.1
+cryptography==50.0.2
 importlib-resources==7.1.0
 libusb-package==1.0.26.4
 libusb1==3.4.0
