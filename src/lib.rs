@@ -361,7 +361,7 @@ pub async fn advertise() -> bluer::Result<AdvertisementHandle> {
         .await
 }
 
-pub fn query_connection(target_address: Address) -> bluer::Result<bool> {
+pub fn query_connection(target_address: Address) -> io::Result<bool> {
     let mut target = target_address.0;
     target.reverse(); // Linux bdaddr_t stores the least significant address byte first.
 
@@ -372,7 +372,7 @@ pub fn query_connection(target_address: Address) -> bluer::Result<bool> {
     // SAFETY: Only opens an HCI socket; does not bind an adapter or send Bluetooth commands.
     let fd = unsafe { libc::socket(libc::AF_BLUETOOTH, libc::SOCK_RAW | libc::SOCK_CLOEXEC, 1) };
     if fd < 0 {
-        return Err(io::Error::last_os_error().into());
+        return Err(io::Error::last_os_error());
     }
     // SAFETY: The new fd is owned exactly once and closed on every return path.
     let socket = unsafe { OwnedFd::from_raw_fd(fd) };
@@ -385,11 +385,13 @@ pub fn query_connection(target_address: Address) -> bluer::Result<bool> {
         )
     } < 0
     {
-        return Err(io::Error::last_os_error().into());
+        return Err(io::Error::last_os_error());
     }
     let count = u16::from_ne_bytes([buffer[2], buffer[3]]);
     if u16::from_ne_bytes([buffer[0], buffer[1]]) != 0 || count >= CAPACITY {
-        return Err(io::Error::other("Incomplete kernel Bluetooth connection snapshot").into());
+        return Err(io::Error::other(
+            "Incomplete kernel Bluetooth connection snapshot",
+        ));
     }
     let mut matches = buffer[4..4 + 16 * usize::from(count)]
         .as_chunks::<16>()
@@ -402,15 +404,54 @@ pub fn query_connection(target_address: Address) -> bluer::Result<bool> {
         });
     let connection = matches.next();
     if matches.next().is_some() {
-        return Err(io::Error::other("Cannot identify a unique target LE connection").into());
+        return Err(io::Error::other(
+            "Cannot identify a unique target LE connection",
+        ));
     }
     Ok(connection.is_some_and(|entry| {
         u32::from_ne_bytes([entry[12], entry[13], entry[14], entry[15]]) & 0x0004 != 0 // HCI_LM_ENCRYPT
     }))
 }
 
+// BlueZ owning its bus name does not mean hci0 has finished initialization.
+// The caller's connection deadline bounds this wait; never power on the adapter.
+async fn wait_for_adapter() -> bluer::Result<()> {
+    let session = bluer::Session::new().await?;
+    let adapter = session.adapter("hci0")?;
+    loop {
+        match adapter.is_powered().await {
+            Ok(true) => return Ok(()),
+            Ok(false) => {}
+            Err(error)
+                if matches!(
+                    error.kind,
+                    bluer::ErrorKind::NotFound
+                        | bluer::ErrorKind::DoesNotExist
+                        | bluer::ErrorKind::NotReady
+                ) => {}
+            Err(error) => return Err(error),
+        }
+        time::sleep(Duration::from_millis(100)).await;
+    }
+}
+
 pub fn query_or_connect(target: Address, timeout_ms: u64) -> Result<bool, Box<dyn Error>> {
-    if query_connection(target)? {
+    // Query-only authentication stays strict and immediate. A synchronous attempt
+    // may wait for an absent or powered-off adapter within its existing budget.
+    let query = || -> io::Result<bool> {
+        match query_connection(target) {
+            Err(error)
+                if matches!(
+                    error.raw_os_error(),
+                    Some(libc::ENODEV) | Some(libc::ENETDOWN)
+                ) =>
+            {
+                Ok(false)
+            }
+            result => result,
+        }
+    };
+    if query()? {
         return Ok(true);
     }
     let deadline = time::Instant::now()
@@ -435,6 +476,10 @@ pub fn query_or_connect(target: Address, timeout_ms: u64) -> Result<bool, Box<dy
                     Err(TryLockError::Error(error)) => return Err(error.into()),
                 }
             }
+            if query()? {
+                return Ok(true);
+            }
+            wait_for_adapter().await?;
             if query_connection(target)? {
                 return Ok(true);
             }

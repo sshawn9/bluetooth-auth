@@ -139,7 +139,7 @@ PAM 规则限制为配置用户；sudo 也处理该用户作为请求方的情�
 
 ## Noctalia 自动锁屏
 
-启用 `noctaliaAutoLock` 后，指定用户的 systemd 服务在 `graphical-session.target` 启动后常驻运行。
+启用 `noctaliaAutoLock` 后，指定用户的 systemd 服务在 `graphical-session.target` 启动后常驻运行。启动时若 Noctalia 报告尚未运行，最多等待 30 秒；其他错误仍会使服务退出。
 
 每轮读取 Noctalia 锁屏状态，并调用 `query_or_connect`。如果会话未锁定且本次仍无法连接手机，就调用 `noctalia msg session lock`，300 毫秒后再次查询锁屏状态。随后按动作后的状态选择休眠时间：
 
@@ -237,6 +237,8 @@ bluetooth-auth-link --address-file /run/secrets/bluetooth_address --connect -1
 | 负数，规范写法为 `-1` | 退出 `0` | 通知后台连接，本次仍退出 `1`   |
 
 不指定 `--connect` 时默认 `15000`。负数的绝对值不控制超时，后台使用 Nix 的 `connection.timeoutMs`。无连接和普通超时保持安静，运行错误写入 stderr；参数格式错误退出 `2`。
+
+同步连接会先等待 BlueZ 中的 `hci0` 出现并上电，再执行 LE 准备。等待共享锁、适配器就绪、LE 准备和连接共用同一个超时预算。程序不会自行打开适配器；只查询和异步通知仍立即返回。
 
 同步连接和手动 HID 配对辅助程序使用 `/run/bluetooth-auth/hci0.lock`。模块在启用自动连接或任一认证/用户服务集成时创建它；仅打开模块总开关不会创建它。多次运行之间保留这个共享文件，不要删除或替换正在使用的锁文件。异步模式另外要求 `/run/bluetooth-auth/connect.sock`，该 socket 随 sudo、polkit、locker、greetd、Noctalia 自动锁屏或 Keyring 集成启用，单独启用 `autoConnect` 不创建它。
 

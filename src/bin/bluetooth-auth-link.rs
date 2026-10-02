@@ -11,7 +11,7 @@ const SOCKET_PATH: &str = "/run/bluetooth-auth/connect.sock";
     about = "Check the target's encrypted LE connection and optionally connect once",
     after_help = "Requires an existing HID/LE pairing on hci0.\n\
                   Synchronous attempts require the pre-created lock /run/bluetooth-auth/hci0.lock.\n\
-                  Waiting for another attempt, LE preparation and connecting share the synchronous timeout.\n\
+                  Waiting for another attempt and adapter readiness, LE preparation and connecting share the synchronous timeout.\n\
                   Asynchronous requests require /run/bluetooth-auth/connect.sock.\n\
                   LE preparation may disconnect BR/EDR and remove its pairing.\n\
                   Temporary HID and advertising are released on exit; established LE connections are kept.\n\
@@ -46,11 +46,11 @@ fn main() -> ExitCode {
 fn run() -> Result<bool, Box<dyn Error>> {
     let args = Args::parse();
     let target = fs::read_to_string(args.address_file)?.trim().parse()?;
-    if query_connection(target)? {
-        return Ok(true);
-    }
     if args.connect > 0 {
         return query_or_connect(target, args.connect as u64);
+    }
+    if query_connection(target)? {
+        return Ok(true);
     }
     if args.connect < 0 {
         let socket = UnixDatagram::unbound()?;

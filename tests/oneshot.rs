@@ -40,6 +40,7 @@ enum Behavior {
     RejectGatt,
     RejectAdvertisement,
     HangAdvertisement,
+    AdapterMissing,
 }
 
 #[derive(Clone, Debug)]
@@ -50,6 +51,7 @@ struct Registration {
 
 #[derive(Clone, Debug, Default)]
 struct Calls {
+    power_queries: usize,
     gatt: Vec<Registration>,
     advertisements: Vec<Registration>,
     unregister_gatt: usize,
@@ -59,6 +61,7 @@ struct Calls {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 struct AdapterState {
+    powered: bool,
     discoverable: bool,
     connectable: bool,
     pairable: bool,
@@ -68,6 +71,7 @@ struct AdapterState {
 impl Default for AdapterState {
     fn default() -> Self {
         Self {
+            powered: true,
             discoverable: true,
             connectable: true,
             pairable: false,
@@ -113,6 +117,19 @@ impl FakeBluez {
             let mut crossroads = Crossroads::new();
 
             let adapter = crossroads.register("org.bluez.Adapter1", |builder| {
+                builder
+                    .property::<bool, _>("Powered")
+                    .get(|_, data: &mut AdapterData| {
+                        data.calls.lock().unwrap().power_queries += 1;
+                        if data.behavior.load(Ordering::Acquire) == Behavior::AdapterMissing as u8 {
+                            Err(dbus::MethodErr::from((
+                                "org.freedesktop.DBus.Error.UnknownObject",
+                                "hci0 is initializing",
+                            )))
+                        } else {
+                            Ok(data.state.lock().unwrap().powered)
+                        }
+                    });
                 builder
                     .property::<String, _>("Alias")
                     .get(|_, _: &mut AdapterData| Ok("One-shot fake adapter".to_owned()));
@@ -722,7 +739,15 @@ fn noctalia_auto_lock_monitors_and_locks() {
             shell.display(),
             r#"set -eu
 case "$*" in
-  'msg status') IFS= read -r state < "$NOCTALIA_STATE_FILE"; printf 'status\n' >> "$NOCTALIA_LOG"; printf '%s\n' "$state" ;;
+  'msg status')
+    printf 'status\n' >> "$NOCTALIA_LOG"
+    if test -n "${NOCTALIA_READY_FILE:-}" && ! test -e "$NOCTALIA_READY_FILE"; then
+      printf 'error: noctalia is not running\n' >&2
+      exit 1
+    fi
+    IFS= read -r state < "$NOCTALIA_STATE_FILE"
+    printf '%s\n' "$state"
+    ;;
   'msg session lock') printf 'lock\n' >> "$NOCTALIA_LOG"; test "$NOCTALIA_LOCK_FAIL" = 0 || { printf 'simulated lock failure\n'; exit 1; }; test "${NOCTALIA_LOCK_NOOP:-0}" = 0 || exit 0; printf '%s\n' '{"locked":true}' > "$NOCTALIA_STATE_FILE" ;;
   *) exit 64 ;;
 esac
@@ -782,6 +807,29 @@ esac
         }
     };
 
+    // A graphical session may start the monitor before Noctalia's IPC exists.
+    let ready = bus.directory.join("noctalia.ready");
+    let mut command = noctalia("encrypted", 80, r#"{"locked":true}"#, false, [30_000; 4]);
+    command.env("NOCTALIA_READY_FILE", &ready);
+    let mut child = BoundedChild::spawn(&mut command);
+    wait_for_status_calls(2);
+    assert!(child.0.as_mut().unwrap().try_wait().unwrap().is_none());
+    assert_eq!(query_count(&hci_log), 0);
+    fs::write(&ready, b"").unwrap();
+    let deadline = Instant::now() + Duration::from_secs(2);
+    while query_count(&hci_log) == 0 {
+        assert!(
+            Instant::now() < deadline,
+            "monitor did not start after Noctalia became ready"
+        );
+        thread::sleep(Duration::from_millis(10));
+    }
+    assert_eq!(unsafe { libc::kill(child.id() as i32, libc::SIGTERM) }, 0);
+    let output = child.wait(Duration::from_secs(2));
+    assert_eq!(output.status.signal(), Some(libc::SIGTERM));
+    assert!(output.stderr.is_empty(), "startup wait: {output:?}");
+    assert!(fake.snapshot().methods.is_empty());
+
     // A locked, connected session keeps querying but never attempts BLE or locks again.
     provision_lock(&bus.directory);
     let lock_path = bus.directory.join("hci0.lock");
@@ -834,15 +882,19 @@ esac
     // After connecting, a second status call proves a new cycle began.
     // The other three intervals are 30 seconds, beyond the test deadline.
     fake.reset(Behavior::Accept);
+    let connection_ready = bus.directory.join("connected");
     let mut command = noctalia(
-        "delayed",
-        250,
+        "external",
+        1000,
         r#"{"locked":false}"#,
         false,
         [100, 30_000, 30_000, 30_000],
     );
+    command.env("BT_AUTH_HCI_READY_FILE", &connection_ready);
     let child = BoundedChild::spawn(&mut command);
     let calls = fake.wait_for_registrations();
+    // Establish the connection after registration, independent of query counts.
+    fs::write(&connection_ready, b"").unwrap();
     assert_owners_gone(&bus, &calls);
     assert!(!wait_for_status_calls(2).lines().any(|line| line == "lock"));
     assert_registration_counts(&calls, 1, 1);
@@ -1097,6 +1149,78 @@ fn link_query_notify_and_sync_contracts() {
 }
 
 #[test]
+fn link_waits_for_adapter_readiness_within_connection_deadline() {
+    let bus = PrivateBus::start();
+    let shim = compile_shim(&bus.directory);
+    let phone = bus.directory.join("phone");
+    let log = bus.directory.join("hci.log");
+    let ready = bus.directory.join("connected");
+    let preparation_log = bus.directory.join("prepare.log");
+    fs::write(&phone, format!("{TARGET}\n")).unwrap();
+    let fake = FakeBluez::start(&bus.address);
+    fake.reset(Behavior::AdapterMissing);
+    fake.state.lock().unwrap().powered = false;
+    let wait_for_power_queries = |expected: usize| {
+        let deadline = Instant::now() + Duration::from_secs(2);
+        while fake.snapshot().power_queries < expected {
+            assert!(
+                Instant::now() < deadline,
+                "adapter readiness queries did not arrive"
+            );
+            thread::sleep(Duration::from_millis(10));
+        }
+    };
+
+    let mut command = link_command(&bus, &shim, &phone, &log, "external", 2000);
+    command.env("BT_AUTH_HCI_READY_FILE", &ready);
+    let mut child = BoundedChild::spawn(&mut command);
+    wait_for_power_queries(2);
+    assert!(child.0.as_mut().unwrap().try_wait().unwrap().is_none());
+    assert_registration_counts(&fake.snapshot(), 0, 0);
+    assert!(!preparation_log.exists());
+
+    // An adapter that has appeared but is not powered must still be left alone.
+    fake.behavior
+        .store(Behavior::Accept as u8, Ordering::Release);
+    wait_for_power_queries(fake.snapshot().power_queries + 2);
+    assert!(child.0.as_mut().unwrap().try_wait().unwrap().is_none());
+    assert_registration_counts(&fake.snapshot(), 0, 0);
+    assert!(!preparation_log.exists());
+    fake.state.lock().unwrap().powered = true;
+    fake.wait_for_registrations();
+    fs::write(&ready, b"").unwrap();
+    let output = child.wait(Duration::from_secs(2));
+    assert!(output.status.success(), "adapter startup: {output:?}");
+    assert!(output.stderr.is_empty(), "adapter startup: {output:?}");
+    let calls = fake.snapshot();
+    assert_registration_counts(&calls, 1, 1);
+    assert_no_forbidden_methods(&calls);
+    assert_owners_gone(&bus, &calls);
+
+    // Missing and powered-off adapters consume the existing budget without preparation.
+    for behavior in [Behavior::AdapterMissing, Behavior::Accept] {
+        fake.reset(behavior);
+        fake.state.lock().unwrap().powered = false;
+        fs::write(&preparation_log, b"").unwrap();
+        let mut command = link_command(&bus, &shim, &phone, &log, "disconnected", 80);
+        let started = Instant::now();
+        let output = BoundedChild::spawn(&mut command).wait(Duration::from_secs(2));
+        assert!(started.elapsed() >= Duration::from_millis(80));
+        assert_eq!(output.status.code(), Some(1), "adapter timeout: {output:?}");
+        assert!(
+            output.stdout.is_empty() && output.stderr.is_empty(),
+            "adapter timeout: {output:?}"
+        );
+        let calls = fake.snapshot();
+        assert_registration_counts(&calls, 0, 0);
+        assert!(!calls.methods.iter().any(|method| method == "Set"));
+        assert_eq!(query_count(&preparation_log), 0);
+        let released_lock = fs::File::open(bus.directory.join("hci0.lock")).unwrap();
+        released_lock.try_lock().unwrap();
+    }
+}
+
+#[test]
 fn link_lock_wait_rechecks_connection_and_shares_deadline() {
     let bus = PrivateBus::start();
     let shim = compile_shim(&bus.directory);
@@ -1115,8 +1239,8 @@ fn link_lock_wait_rechecks_connection_and_shares_deadline() {
         command.env("BT_AUTH_HCI_READY_FILE", &ready);
         let mut child = BoundedChild::spawn(&mut command);
         let deadline = Instant::now() + Duration::from_secs(2);
-        while query_count(&log) < 2 {
-            assert!(Instant::now() < deadline, "initial queries did not arrive");
+        while query_count(&log) == 0 {
+            assert!(Instant::now() < deadline, "initial query did not arrive");
             thread::sleep(Duration::from_millis(10));
         }
         thread::sleep(Duration::from_millis(1200));
@@ -1196,7 +1320,10 @@ fn preparation_failure_continues_and_timeout_reaps_under_the_lock() {
         .unwrap();
     let lock = fs::File::open(bus.directory.join("hci0.lock")).unwrap();
     assert!(matches!(lock.try_lock(), Err(fs::TryLockError::WouldBlock)));
-    assert!(fake.snapshot().methods.is_empty());
+    // Adapter readiness may already have queried Powered before preparation.
+    let calls = fake.snapshot();
+    assert_registration_counts(&calls, 0, 0);
+    assert_no_forbidden_methods(&calls);
     let output = child.wait(Duration::from_secs(2));
     assert_eq!(output.status.code(), Some(1), "{output:?}");
     assert!(started.elapsed() < Duration::from_millis(1400));
@@ -1268,6 +1395,7 @@ fn hid_server_exclusive_enrollment_restores_adapter_and_lock() {
     assert_eq!(
         fake.adapter_state(),
         AdapterState {
+            powered: true,
             discoverable: false,
             connectable: false,
             pairable: true,

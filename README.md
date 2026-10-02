@@ -139,7 +139,7 @@ The power monitor blocks on D-Bus messages while idle. During a connection attem
 
 ## Noctalia automatic locking
 
-With `noctaliaAutoLock` enabled, a systemd user service for the specified user runs continuously after `graphical-session.target` starts.
+With `noctaliaAutoLock` enabled, a systemd user service for the specified user runs continuously after `graphical-session.target` starts. At startup it waits up to 30 seconds if Noctalia reports that it is not running yet; other errors still stop the service.
 
 Each iteration reads Noctalia's lock state and calls `query_or_connect`. If the session is unlocked and the phone still cannot connect, it calls `noctalia msg session lock`, then queries the lock state again after 300 ms. It then sleeps according to the state after that action:
 
@@ -237,6 +237,8 @@ bluetooth-auth-link --address-file /run/secrets/bluetooth_address --connect -1
 | Negative, conventionally `-1` | Exit `0`  | Notify the background service; this invocation still exits `1`      |
 
 Without `--connect`, the default is `15000`. A negative magnitude does not set a timeout; the background service uses Nix's `connection.timeoutMs`. No connection and an ordinary timeout are silent, runtime errors go to stderr, and invalid arguments exit `2`.
+
+A synchronous attempt waits for `hci0` to appear in BlueZ and become powered before LE preparation. Waiting for the shared lock, adapter readiness, LE preparation, and connecting all use the same timeout budget. It does not power on the adapter itself; query-only and asynchronous invocations remain immediate.
 
 Synchronous connections and the manual HID pairing helper use `/run/bluetooth-auth/hci0.lock`. The module creates it when automatic connection or any authentication/user-service integration is enabled; enabling only the main module switch does not create it. Keep the shared file between runs and never delete or replace it while in use. Asynchronous mode also requires `/run/bluetooth-auth/connect.sock`. The socket is enabled by sudo, polkit, locker, greetd, Noctalia automatic locking, or Keyring integration; `autoConnect` alone does not create it.
 

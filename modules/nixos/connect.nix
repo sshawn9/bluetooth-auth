@@ -25,7 +25,7 @@ in
     type = lib.types.ints.between 1 2147483647;
     default = 7000;
     example = 5000;
-    description = "Maximum duration of one HID connection attempt and LE preparation, in milliseconds, shared by authentication helpers and background services.";
+    description = "Maximum duration of one HID connection attempt, including waiting for the shared lock and adapter readiness and LE preparation, in milliseconds, shared by authentication helpers and background services.";
   };
 
   config = lib.mkIf (socketEnabled || autoConnectEnabled) {

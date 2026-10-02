@@ -44,8 +44,10 @@
             inputsFrom = [ self'.packages.bluetooth-auth ];
             packages = [
               pkgs.clippy
+              pkgs.rust-analyzer
               pkgs.rustfmt
             ];
+            RUST_SRC_PATH = "${pkgs.rustPlatform.rustLibSrc}";
           };
         };
 
