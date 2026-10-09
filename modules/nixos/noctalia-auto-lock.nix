@@ -51,6 +51,7 @@ in
       path = [
         pkgs.coreutils
         "/etc/profiles/per-user/${cfg.trustedUser}"
+        "/run/current-system/sw"
       ];
       startLimitIntervalSec = 0;
 

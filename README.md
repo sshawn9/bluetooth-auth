@@ -152,7 +152,7 @@ Each iteration reads Noctalia's lock state and calls `query_or_connect`. If the 
 
 While locked it still checks and connects the phone as needed; restoring a connection does not unlock the session. This is a persistent process with dynamic sleeps, not a systemd timer.
 
-Noctalia must be available in the user environment. Before starting `graphical-session.target`, import `WAYLAND_DISPLAY` into the user systemd environment; the service also uses that user's `XDG_RUNTIME_DIR`. The NixOS module defines the user service and limits it with `ConditionUser`; no Home Manager module is needed.
+Noctalia must be installed in the system profile or the trusted user's profile. The service searches the trusted user's profile before the system profile. Before starting `graphical-session.target`, import `WAYLAND_DISPLAY` into the user systemd environment; the service also uses that user's `XDG_RUNTIME_DIR`. The NixOS module defines the user service and limits it with `ConditionUser`; no Home Manager module is needed.
 
 ## GNOME Keyring unlocking
 
